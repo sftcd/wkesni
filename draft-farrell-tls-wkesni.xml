@@ -88,7 +88,7 @@
         </t>
 
         <t>[[This idea could: a) wither on the vine, b) be published
-            it's own RFC, or c) end up as a PR for <xref target="I-D.ietf-tls-esni"/>.
+            as it's own RFC, or c) end up as a PR for <xref target="I-D.ietf-tls-esni"/>.
             There is no absolute need for this to be in the RFC that
             defines ESNI, so (b) seems feasible it there's enough
             interest, hence this draft.
@@ -115,10 +115,13 @@
                        the hour via a cronjob</t>
                 <t> ESNIKeys are "current" for an hour, and published with
                     a TTL of 1800 </t>
-                <t> Old ESNIKeys are still usable for 3 hours</t>
+                <t> Old ESNIKeys are still usable for 3 hours from time
+                    of generation</t>
                 <t> Web server has a set of "hidden" sites (each represented
                     as a $HIDDEN value) and a
                     "cover" site ($COVER)</t>
+                <t> $COVER will typically be the value used in the
+                    ESNIKeys public_name field for ESNIKeys version 0xff02</t>
                 <t> The cronjob creates creates a JSON file for each hidden
                     site at https://$COVER/.well-known/esni/$HIDDEN.json</t>
                 <t> Each JSON file contains an array with the ESNIKeys RR
@@ -193,15 +196,12 @@
                 using ESNI, via different $COVER (or public_name) web
                 servers.
             </t>
-            <t>As ESNIKeys is (regregabbly:-) an extensible structure,
+            <t>As ESNIKeys is (regrettably:-) an extensible structure,
                 it may be necessary to publish different ESNIKeys 
                 values to get best interopability.
             </t> 
         </list>
     </t>
-
-    <t>The zone factory SHOULD publish all the ESNIKeys values
-        that are presented in the JSON file.</t>
 
     <t>The zone factory SHOULD check that the presented ESNIKeys
         values work with the $HIDDEN server before publication.
@@ -212,6 +212,10 @@
         of a "safe" URL on $HIDDEN to use, or maybe it could
         use HTTP HEAD? Figuring that out is TBD.]]
     </t>
+
+    <t>The zone factory SHOULD publish all the ESNIKeys values
+        that are presented in the JSON file, and that pass
+        the check above..</t>
 
     <t>The zone factory SHOULD only publish ESNIKeys values
         that are in the latest version of the JSON file.
