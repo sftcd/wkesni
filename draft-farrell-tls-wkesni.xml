@@ -74,7 +74,7 @@
             universal deployment, but just for cases where the zone file (or 
             equivalent) that
             includes the ESNIKeys RR is on some machine, which we here call a
-            "zone factory" (ZF), to which the web server doesn't have write access. 
+            "zone factory," to which the web server doesn't have write access. 
         </t>
 
         <t>
