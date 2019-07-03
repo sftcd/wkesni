@@ -1,0 +1,336 @@
+
+
+
+
+TLS                                                           S. Farrell
+Internet-Draft                                    Trinity College Dublin
+Intended status: Experimental                               July 3, 2019
+Expires: January 4, 2020
+
+
+                A well-known URI for publishing ESNIKeys
+                      draft-farrell-tls-wkesni-00
+
+Abstract
+
+   We propose use of a well-known URI at which web servers can publish
+   ESNIKeys as a way to help get those published in the DNS.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on January 4, 2020.
+
+Copyright Notice
+
+   Copyright (c) 2019 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
+   publication of this document.  Please review these documents
+   carefully, as they describe your rights and restrictions with respect
+   to this document.  Code Components extracted from this document must
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
+
+
+
+
+
+
+Farrell                  Expires January 4, 2020                [Page 1]
+
+Internet-Draft           Well-Known URI for ESNI               July 2019
+
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
+   3.  Example Use of .well-known for ESNIKeys . . . . . . . . . . .   3
+   4.  The JSON structure for ESNIKeys . . . . . . . . . . . . . . .   4
+   5.  Security Considerations . . . . . . . . . . . . . . . . . . .   5
+   6.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   5
+   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   5
+   8.  Normative References  . . . . . . . . . . . . . . . . . . . .   5
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   6
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   6
+
+1.  Introduction
+
+   Encrypted Server Name Indication (ESNI) [I-D.ietf-tls-esni] for
+   TLS1.3 [RFC8446] defines a confidentiality mechanism for server names
+   in TLS.  That requires publication of an ESNIKEys data structure in
+   the DNS.
+
+   Many web servers will have an API that can be used to dynamically
+   update ESNIKeys in the DNS.  Some implementations/deployments
+   however, will not, so web server implementers could benefit from a
+   mechanism to use in such cases.  We define such a mechanism here.
+   Note that this is not intended for universal deployment, but just for
+   cases where the zone file (or equivalent) that includes the ESNIKeys
+   RR is on some machine, which we here call a "zone factory" (ZF), to
+   which the web server doesn't have write access.
+
+   We propose use of a well-known URI on the web server that allows the
+   zone factory for that web server to poll for changes to ESNIKeys RR
+   values.  For example, if a web server generates new ESNIKeys hourly
+   and publishes those at the .well-known URI, its zone factory server
+   can poll that URI.  When the zone factory sees new values, it can
+   check if those work, and if they do, then update the zone file and
+   re-publish the zone.
+
+   [[This idea could: a) wither on the vine, b) be published it's own
+   RFC, or c) end up as a PR for [I-D.ietf-tls-esni].  There is no
+   absolute need for this to be in the RFC that defines ESNI, so (b)
+   seems feasible it there's enough interest, hence this draft.  The
+   source for this is in https://github.com/sftcd/wkesni/ PRs are
+   welcome there too.]]
+
+
+
+
+
+
+
+
+Farrell                  Expires January 4, 2020                [Page 2]
+
+Internet-Draft           Well-Known URI for ESNI               July 2019
+
+
+2.  Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+3.  Example Use of .well-known for ESNIKeys
+
+   An example deployment could be as follows:
+
+   o  Web server generates new ESNIKeys hourly at N past the hour via a
+      cronjob
+   o  ESNIKeys are "current" for an hour, and published with a TTL of
+      1800
+   o  Old ESNIKeys are still usable for 3 hours
+   o  Web server has a set of "hidden" sites (each represented as a
+      $HIDDEN value) and a "cover" site ($COVER)
+   o  The cronjob creates creates a JSON file for each hidden site at
+      https://$COVER/.well-known/esni/$HIDDEN.json
+   o  Each JSON file contains an array with the ESNIKeys RR values for
+      that particular $HIDDEN as shown in Figure 1 - the values in
+      Figure 1 with ellipses are the RR values we want to eventually see
+      in the DNS
+   o  On the zone factory, a cronjob runs at N+3 past the hour, it knows
+      all the names involved and checks to see if the content at those
+      well-known URIs has changed or not
+   o  If the content has changed the cronjob attempts to use the
+      ESNIKeys, and for each $HIDDEN where that works, it updates the
+      zone file and re-publishes the zone containing only the new
+      ESNIKeys RR values
+
+       [
+           {
+               "ESNIKeys.version": 0xff01,
+               "desired-ttl": 1800,
+               "ESNIKeys": "/wH5QHc...="
+           },
+           {
+               "ESNIKeys.version": 0xff02,
+               "desired-ttl": 1800,
+               "ESNIKeys": "FF02897...OA"
+           }
+       ]
+
+                           Figure 1: Sample JSON
+
+
+
+
+Farrell                  Expires January 4, 2020                [Page 3]
+
+Internet-Draft           Well-Known URI for ESNI               July 2019
+
+
+4.  The JSON structure for ESNIKeys
+
+   [[Since the specifics of the JSON structure in Figure 1 are very
+   likely to change, this is mostly TBD.  What is here for now, is what
+   the author has currently implemented simply because it worked ok and
+   was easy to do:-)]]
+
+   The JSON file at the well-known URI MUST contain an array with one or
+   more elements.  Each element of the array MUST have these fields:
+
+   o  ESNIKeys.version: contains a number with the value of the version
+      field of the ESNIKeys.  This is needed (today) as different
+      versions are published in the DNS differently.  (Draft-02 used a
+      TXT RR and is still all that is usable with some early test
+      deployments, draft-03 uses a new RRTYPE from the experimental
+      range.)
+   o  desired-ttl: contains a number indicating the TTL that the web
+      server would like to see used for this RR.  The zone factory MUST
+      NOT use a longer TTL.
+   o  ESNIKeys: contains the RRVALUE value to be used, either as a
+      base64 encoded string (for ESNIKeys.version of 0xff01) or as an
+      ASCII-HEX string (for ESNIKeys.version of 0xff02).
+
+   The JSON file contains an array for a couple of reasons:
+
+   o  While ESNI is still in draft form, it may be necessary to publish
+      different versions of the ESNIKeys structure.
+   o  For some deployments, the same $HIDDEN could be accessible, using
+      ESNI, via different $COVER (or public_name) web servers.
+   o  As ESNIKeys is (regregabbly:-) an extensible structure, it may be
+      necessary to publish different ESNIKeys values to get best
+      interopability.
+
+   The zone factory SHOULD publish all the ESNIKeys values that are
+   presented in the JSON file.
+
+   The zone factory SHOULD check that the presented ESNIKeys values work
+   with the $HIDDEN server before publication.  A "special" TLS client
+   may be needed for this check, that does not require the ESNIKeys
+   value to have already been published in the DNS.  [[I guess that
+   could call for the zone factory to know of a "safe" URL on $HIDDEN to
+   use, or maybe it could use HTTP HEAD?  Figuring that out is TBD.]]
+
+   The zone factory SHOULD only publish ESNIKeys values that are in the
+   latest version of the JSON file.  This leaves the control of "expiry"
+   with the web server, so long as the ESNIKeys presented actually work.
+   [[An alternative could be to have the new values just be appended to
+
+
+
+
+Farrell                  Expires January 4, 2020                [Page 4]
+
+Internet-Draft           Well-Known URI for ESNI               July 2019
+
+
+   the zone, but that'd require some form of "notAfter" value in the
+   JSON file which seems unnecessary and more complex.]]
+
+   The ESNI specification [I-D.ietf-tls-esni] defines how and where the
+   ESNIKeys RR for $HIDDEN needs to be published in the DNS.
+
+   A possibly interesting (unintended) consequence of this design is
+   that once a TLS client has first gotten ESNIKeys from the DNS for
+   $HIDDEN with the draft-03 ESNIKeys structure containing the
+   public_name field, the TLS client would know both $COVER and $HIDDEN
+   and so could later probe for this .well-known as an alternative to
+   doing so via DoT/DoH.  Probably not something a web browser might do,
+   but could be fun for other applications maybe.
+
+5.  Security Considerations
+
+   This document defines another way to publish ESNIKeys.  If the wrong
+   keys were read from here and publised in the DNS, then clients using
+   ESNI would do the wrong thing.  So: Don't do that:-)
+
+6.  Acknowledgements
+
+   [[Your name here.]]
+
+7.  IANA Considerations
+
+   [[TBD: IANA registration of a .well-known]]
+
+8.  Normative References
+
+   [I-D.ietf-tls-esni]
+              Rescorla, E., Oku, K., Sullivan, N., and C. Wood,
+              "Encrypted Server Name Indication for TLS 1.3", draft-
+              ietf-tls-esni-03 (work in progress), March 2019.
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+   [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
+              Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
+              <https://www.rfc-editor.org/info/rfc8446>.
+
+
+
+
+Farrell                  Expires January 4, 2020                [Page 5]
+
+Internet-Draft           Well-Known URI for ESNI               July 2019
+
+
+Appendix A.  Change Log
+
+   [[RFC editor: please remove this before publication.]]
+
+   Nothing yet.
+
+Author's Address
+
+   Stephen Farrell
+   Trinity College Dublin
+   Dublin  2
+   Ireland
+
+   Phone: +353-1-896-2354
+   EMail: stephen.farrell@cs.tcd.ie
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Farrell                  Expires January 4, 2020                [Page 6]
