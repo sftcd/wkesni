@@ -66,8 +66,8 @@ Table of Contents
    4.  The JSON structure for ESNIKeys . . . . . . . . . . . . . . .   4
    5.  Security Considerations . . . . . . . . . . . . . . . . . . .   5
    6.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   5
-   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   5
-   8.  Normative References  . . . . . . . . . . . . . . . . . . . .   5
+   7.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   6
+   8.  Normative References  . . . . . . . . . . . . . . . . . . . .   6
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   7
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   7
 
@@ -128,13 +128,14 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
 
    o  Web server generates new ESNIKeys hourly at N past the hour via a
       cronjob
-   o  ESNIKeys are "current" for an hour, and published with a TTL of
-      1800
-   o  Old ESNIKeys are still usable for 3 hours from time of generation
-   o  Web server has a set of "hidden" sites (each represented as a
-      $HIDDEN value) and a "cover" site ($COVER)
-   o  $COVER will typically be the value used in the ESNIKeys
-      public_name field for ESNIKeys version 0xff02
+   o  ESNIKeys are "current" for an hour, published with a TTL of 1800,
+      and remain usable for 3 hours from the time of generation
+   o  Web server has a set of "hidden" sites - the DNS name for each
+      hidden web site is each here represented as $HIDDEN, which will
+      end up as a realSNI value to be encrypted inside an ESNI extension
+   o  Web server has a "cover" site ($COVER), where $COVER will
+      typically be the DNS name used in the ESNIKeys public_name field
+      for ESNIKeys version 0xff02
    o  The cronjob creates creates a JSON file for each hidden site at
       https://$COVER/.well-known/esni/$HIDDEN.json
    o  Each JSON file contains an array with the ESNIKeys RR values for
@@ -148,7 +149,6 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
       ESNIKeys, and for each $HIDDEN where that works, it updates the
       zone file and re-publishes the zone containing only the new
       ESNIKeys RR values
-
 
 
 
@@ -234,7 +234,7 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
    use, or maybe it could use HTTP HEAD?  Figuring that out is TBD.]]
 
    The zone factory SHOULD publish all the ESNIKeys values that are
-   presented in the JSON file, and that pass the check above..
+   presented in the JSON file, and that pass the check above.
 
    The zone factory SHOULD only publish ESNIKeys values that are in the
    latest version of the JSON file.  This leaves the control of "expiry"
@@ -242,6 +242,13 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
    [[An alternative could be to have the new values just be appended to
    the zone, but that'd require some form of "notAfter" value in the
    JSON file which seems unnecessary and more complex.]]
+
+   From the point of view of the zone factory, the KeyShareEntry values
+   within each element of the JSON array are entirely independent.  The
+   zone factory MUST NOT assume that there is any specific relationship
+   between the ESNIKeys values in one JSON structure, nor between the
+   set of JSON structures for the set of $HIDDEN sites that share a
+   $COVER.
 
    The ESNI specification [I-D.ietf-tls-esni] defines how and where the
    ESNIKeys RR for $HIDDEN needs to be published in the DNS.
@@ -257,23 +264,16 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
 5.  Security Considerations
 
    This document defines another way to publish ESNIKeys.  If the wrong
-   keys were read from here and publised in the DNS, then clients using
+   keys were read from here and published in the DNS, then clients using
    ESNI would do the wrong thing.  So: Don't do that:-)
 
 6.  Acknowledgements
 
    Thanks to Niall O'Reilly for a quick review.
 
-7.  IANA Considerations
 
-   [[TBD: IANA registration of a .well-known]]
 
-8.  Normative References
 
-   [I-D.ietf-tls-esni]
-              Rescorla, E., Oku, K., Sullivan, N., and C. Wood,
-              "Encrypted Server Name Indication for TLS 1.3", draft-
-              ietf-tls-esni-03 (work in progress), March 2019.
 
 
 
@@ -281,6 +281,18 @@ Farrell                  Expires January 4, 2020                [Page 5]
 
 Internet-Draft           Well-Known URI for ESNI               July 2019
 
+
+7.  IANA Considerations
+
+   [[TBD: IANA registration of a .well-known.  Also TBD - how to handle
+   I18N for $COVER and $HIDDEN within such a URL.]]
+
+8.  Normative References
+
+   [I-D.ietf-tls-esni]
+              Rescorla, E., Oku, K., Sullivan, N., and C. Wood,
+              "Encrypted Server Name Indication for TLS 1.3", draft-
+              ietf-tls-esni-03 (work in progress), March 2019.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -294,18 +306,6 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/info/rfc8446>.
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

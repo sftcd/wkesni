@@ -111,16 +111,17 @@
         <t>An example deployment could be as follows:
 
            <list style="symbols">
-               <t> Web server generates new ESNIKeys hourly at N past 
-                       the hour via a cronjob</t>
-                <t> ESNIKeys are "current" for an hour, and published with
-                    a TTL of 1800 </t>
-                <t> Old ESNIKeys are still usable for 3 hours from time
+                <t> Web server generates new ESNIKeys hourly at N past 
+                    the hour via a cronjob</t>
+                <t> ESNIKeys are "current" for an hour, published with
+                    a TTL of 1800, and remain usable for 3 hours from the time
                     of generation</t>
-                <t> Web server has a set of "hidden" sites (each represented
-                    as a $HIDDEN value) and a
-                    "cover" site ($COVER)</t>
-                <t> $COVER will typically be the value used in the
+                <t> Web server has a set of "hidden" sites - the DNS name
+                    for each hidden web site is each here represented
+                    as $HIDDEN, which will end up as a realSNI value to be encrypted
+                    inside an ESNI extension</t>
+                <t> Web server has a "cover" site ($COVER), where
+                    $COVER will typically be the DNS name used in the
                     ESNIKeys public_name field for ESNIKeys version 0xff02</t>
                 <t> The cronjob creates creates a JSON file for each hidden
                     site at https://$COVER/.well-known/esni/$HIDDEN.json</t>
@@ -215,7 +216,7 @@
 
     <t>The zone factory SHOULD publish all the ESNIKeys values
         that are presented in the JSON file, and that pass
-        the check above..</t>
+        the check above.</t>
 
     <t>The zone factory SHOULD only publish ESNIKeys values
         that are in the latest version of the JSON file.
@@ -227,6 +228,16 @@
         in the JSON file which seems unnecessary and more 
         complex.]]
     </t>
+
+    <t>From the point of view of the zone factory, 
+        the KeyShareEntry values within each element of the
+        JSON array are entirely independent. The zone
+        factory MUST NOT assume that there is any 
+        specific relationship between the ESNIKeys
+        values in one JSON structure, nor between the set of
+        JSON structures for the set of $HIDDEN sites
+        that share a $COVER.
+    </t> 
 
     <t>The ESNI specification 
         <xref target="I-D.ietf-tls-esni"/> defines
@@ -250,7 +261,7 @@
 
     <section title="Security Considerations">
         <t>This document defines another way to publish ESNIKeys. If the wrong
-            keys were read from here and publised in the DNS, then clients
+            keys were read from here and published in the DNS, then clients
             using ESNI would do the wrong thing. So: Don't do that:-)</t>
 
     </section>
@@ -260,7 +271,8 @@
     </section>
 
     <section title="IANA Considerations">
-      <t>[[TBD: IANA registration of a .well-known]]</t>
+        <t>[[TBD: IANA registration of a .well-known. Also TBD - how to handle I18N for
+            $COVER and $HIDDEN within such a URL.]]</t>
     </section>
   </middle>
 
