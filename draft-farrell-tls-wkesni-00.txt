@@ -9,7 +9,7 @@ Expires: January 4, 2020
 
 
                 A well-known URI for publishing ESNIKeys
-                      draft-farrell-tls-wkesni-01
+                      draft-farrell-tls-wkesni-00
 
 Abstract
 
@@ -216,7 +216,7 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
       ESNI, via different $COVER (or public_name) web servers.
    o  As ESNIKeys is (regrettably:-) an extensible structure, it may be
       necessary to publish different ESNIKeys values to get best
-      interoperability.
+      interopability.
 
 
 
@@ -262,7 +262,7 @@ Internet-Draft           Well-Known URI for ESNI               July 2019
 
 6.  Acknowledgements
 
-   Thanks to Niall O'Reilly for a quick review.
+   [[Your name here.]]
 
 7.  IANA Considerations
 

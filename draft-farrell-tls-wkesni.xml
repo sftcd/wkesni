@@ -15,7 +15,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-farrell-tls-wkesni-00" ipr="trust200902" >
+<rfc category="exp" docName="draft-farrell-tls-wkesni-01" ipr="trust200902" >
   <front>
     <title abbrev="Well-Known URI for ESNI">A well-known URI for publishing ESNIKeys</title>
 
@@ -198,7 +198,7 @@
             </t>
             <t>As ESNIKeys is (regrettably:-) an extensible structure,
                 it may be necessary to publish different ESNIKeys 
-                values to get best interopability.
+                values to get best interoperability.
             </t> 
         </list>
     </t>
@@ -256,7 +256,7 @@
     </section>
 
     <section title="Acknowledgements">
-        <t>[[Your name here.]]</t>
+        <t>Thanks to Niall O'Reilly for a quick review.</t>
     </section>
 
     <section title="IANA Considerations">
