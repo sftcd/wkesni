@@ -2,8 +2,9 @@
 <!-- this is version 5 of this xml2rfc template -->
 <!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
 <!ENTITY rfc2119 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
-<!ENTITY rfc8174 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
-<!ENTITY rfc8446 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY rfc8174 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8174.xml">
+<!ENTITY rfc8446 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8446.xml">
+<!ENTITY rfc8615 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8615.xml">
 <!ENTITY I-D.ietf-tls-esni SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni">
 
 ]>
@@ -81,10 +82,10 @@
         </t>
 
         <t>
-            We propose use of a well-known URI on the web server that 
+            We propose use of a well-known URI <xref target="RFC8615"/> on the web server that 
             allows the zone factory for that web server to poll for changes 
             to ESNIKeys RR values. For example, if a web server generates new 
-            ESNIKeys hourly and publishes those at the .well-known URI, its 
+            ESNIKeys hourly and publishes those at the well-known URI, its 
             zone factory  server can poll that URI.  When the zone factory sees new 
             values, it can check if those work, and if they do, then update the 
             zone file and re-publish the zone.
@@ -109,7 +110,7 @@
         when, they appear in all capitals, as shown here.</t>
       </section>
 
-    <section title="Example Use of .well-known for ESNIKeys">
+    <section title="Example use of the well-known URI for ESNI">
 
         <t>An example deployment could be as follows:
 
@@ -120,7 +121,7 @@
                     a TTL of 1800, and remain usable for 3 hours from the time
                     of generation</t>
                 <t> Web server has a set of "hidden" sites - the DNS name
-                    for each hidden web site is each here represented
+                    for each hidden web site is here represented
                     as $HIDDEN, which will end up as a realSNI value to be encrypted
                     inside an ESNI extension</t>
                 <t> Web server has a "cover" site ($COVER), where
@@ -144,6 +145,29 @@
             </list>
         </t>
 
+    </section>
+
+    <section title="The esni well-known URI">
+
+         <t>When a web server ($COVER) wants to publish ESNIKeys information 
+             for a hidden site ($HIDDEN) then it provides the JSON content
+             defined in <xref target="jsonstr"/> at:
+            https://$COVER/.well-known/esni/$HIDDEN.json
+        </t>
+
+        <t>The well-known URI defined here MUST be an https URL and therefore the
+            zone factory verifies the correct $COVER is being accessed. If
+            there is any failure in accessing the well-known URI, then the
+            zone factory MUST NOT modify the zone. </t> 
+
+    </section>
+
+
+<section anchor="jsonstr" title="The JSON structure for ESNIKeys">
+
+  <t>[[Since the specifics of the JSON structure in <xref target="sample-json"/> are very 
+      likely to change, this is mostly TBD. What is here for now, is what the author
+      has currently implemented simply because it worked ok and was easy to do:-)]]</t>
 <figure anchor="sample-json" title="Sample JSON" >
 <artwork><![CDATA[
     [
@@ -160,14 +184,6 @@
     ]
   ]]></artwork>
 </figure>
-
-    </section>
-
-<section title="The JSON structure for ESNIKeys">
-
-  <t>[[Since the specifics of the JSON structure in <xref target="sample-json"/> are very 
-      likely to change, this is mostly TBD. What is here for now, is what the author
-      has currently implemented simply because it worked ok and was easy to do:-)]]</t>
 
     <t>The JSON file at the well-known URI MUST contain an array
         with one or more elements. Each element of the array
@@ -206,6 +222,10 @@
             </t> 
         </list>
     </t>
+
+</section>
+
+<section title="Zone factory behaviour">
 
     <t>The zone factory SHOULD check that the presented ESNIKeys
         values work with the $HIDDEN server before publication.
@@ -265,7 +285,9 @@
     <section title="Security Considerations">
         <t>This document defines another way to publish ESNIKeys. If the wrong
             keys were read from here and published in the DNS, then clients
-            using ESNI would do the wrong thing. So: Don't do that:-)</t>
+            using ESNI would do the wrong thing, likely resulting in 
+            denial of service, or worse, when TLS clients attempt to use ESNI with
+            a hidden web site. So: Don't do that:-)</t>
 
     </section>
 
@@ -284,6 +306,7 @@
       <?rfc include='reference.RFC.2119'?>
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
+      <?rfc include='reference.RFC.8615'?>
       &I-D.ietf-tls-esni;
 
     </references>
@@ -298,7 +321,7 @@
 
       <t>From -00 to -01:
           <list style="symbols">
-              <t>Fixed typos and made minor clarifications/edits.</t>
+              <t>Re-structured a bit after re-reading rfc8615</t>
           </list>
       </t>
 
