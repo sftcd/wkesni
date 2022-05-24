@@ -1,12 +1,12 @@
 # XML2RFC=/Users/paul/Documents/xml2rfc-1.35/xml2rfc.tcl
-XML2RFC=xml2rfc
+XML2RFC=xml2rfc --text --legacy
 
 DATE=`date +%s`
 
 all: core 
 
 core: 
-	$(XML2RFC) draft-farrell-tls-wkesni.xml draft-farrell-tls-wkesni.txt
+	$(XML2RFC) draft-farrell-tls-wkesni.xml
 
 upload:
 	scp draft-farrell-tls-wkesni.txt  down.dsg.cs.tcd.ie:/var/www/misc/draft-farrell-tls-wkesni.txt

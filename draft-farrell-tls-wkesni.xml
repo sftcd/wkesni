@@ -17,7 +17,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-farrell-tls-wkesni-02" ipr="trust200902" >
+<rfc category="exp" docName="draft-farrell-tls-wkesni-03" ipr="trust200902" >
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
@@ -43,7 +43,7 @@
       </address>
     </author>
 
-    <date year="2021"/>
+    <date year="2022"/>
 
     <area>Security Area</area>
 
@@ -97,12 +97,7 @@
             they do, then update the zone file and re-publish the zone.
         </t>
 
-        <t>[[This idea could: a) wither on the vine, b) be published
-            as it's own RFC, or c) end up as a PR for <xref target="I-D.ietf-tls-esni"/>.
-            There is no absolute need for this to be in the RFC that
-            defines ECH, so (b) seems feasible if there's enough
-            interest, hence this draft.
-            The source for this is in https://github.com/sftcd/wkesni/ 
+        <t>[[The source for this is in https://github.com/sftcd/wkesni/ 
             PRs are welcome there too.]]
         </t>
 
@@ -173,9 +168,15 @@
 
   <t>[[Since the specifics of the JSON structure in <xref target="sample-json"/> are very 
       likely to change, this is mostly TBD. What is here for now, is what the author
-      has currently implemented simply because it worked ok and was easy to do:-)]]</t>
+      has currently implemented simply because it worked ok and was easy to do:-)
+    One issue raised as a result of the dispatch presentation
+    is whether or not anything beyond the ECHConfigList might make
+    sense to represent in the JSON response. One example could be
+    the inner ClientHello ALPN extension, if that might somehow be
+    useful to the TLS cilent (which really should know in that case).
+    The scope in that respect and the correct level of generality
+        to cover here is something to consider as this evolves.]]</t>
 
-  <t>[[Might change this due to retry-configs and now that I've implemented split-mode]]</t>
 <figure anchor="sample-json" title="Sample JSON" >
 <artwork><![CDATA[
     [
@@ -322,6 +323,12 @@
 
     <section title="Change Log ">
       <t>[[RFC editor: please remove this before publication.]]</t>
+
+      <t>From -02 to -03:
+          <list style="symbols">
+              <t>noted scope issue</t>
+          </list>
+      </t>
 
       <t>From -01 to -02:
           <list style="symbols">
