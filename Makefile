@@ -6,6 +6,9 @@ DATE=`date +%s`
 all: core 
 
 core: 
+	$(XML2RFC) draft-ietf-tls-wkech.xml
+
+oldcore: 
 	$(XML2RFC) draft-farrell-tls-wkesni.xml
 
 upload:
