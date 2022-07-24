@@ -28,6 +28,10 @@
 
 # This works as per draft-ietf-tls-wkech
 
+# Caution: don't mess with output format here unless you make
+# equivalent changes in (your equivalent of) regen-echkeys.sh - both scripts 
+# should deal with the same thing
+
 # variables/settings
 
 # Our goal here is to ensure that we only re-publish ECHConfigList
