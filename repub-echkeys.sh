@@ -117,7 +117,6 @@ function donsupdate()
     # port can be empty for 443 so has to be last
     port=$4
 
-    echo "Doing nsupdate stuff for $host/$port/$ttl/$echval"
     if [[ "$port" == "443" || "$port" == "" ]]
     then
         nscmd="update delete $host HTTPS\n
@@ -131,14 +130,7 @@ function donsupdate()
                send\n
                quit"
     fi
-    echo -e $nscmd | nsupdate >/dev/null 2>&1
-    nres=$?
-    if [[ "$nres" == "0" ]]
-    then
-        echo 0
-    else
-        echo 1
-    fi
+    echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
 }
 
 NOW=$(whenisitagain)
@@ -297,6 +289,12 @@ do
                 done
             fi
         done
+        # ignore ECH errors for a test domain so we can check publication
+        if [[ "$backend" == "foo.ie" ]]
+        then
+            echerror="false"
+            echworked="true"
+        fi
         if [ "$echerror" == "false" ]  && [ "$echworked" == "true" ]
         then
             # success... all ports ok so bank that one...
@@ -305,13 +303,14 @@ do
                 if [[ "$DOTEST" == "no" ]]
                 then
                     #echo "Will try publish for $backend/$port"
+                    sleep 3
                     nres=`donsupdate $backend $list $desired_ttl $port`
                     if [[ "$nres" == "0" ]]
                     then 
                         echo "Published for $backend/$port"
                         publishedsomething="true"
                     else
-                        echo "Failure in publishing for $backend/$port"
+                        echo "Failure ($nres) in publishing for $backend/$port"
                     fi
                 else
                     echo "Just testing so won't add $backend/$port"
