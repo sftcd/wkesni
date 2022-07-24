@@ -80,13 +80,18 @@ function whenisitagain()
     /bin/date -u +%Y%m%d-%H%M%S
 }
 
+# split an ECFConfigList into a set of "singleton" ECHConfigList's
+# so we can test each key individually
+# example usage input is base64 encoded ECHconfigList
+#   list=$echconfiglist
+#   splitlists=`splitlist`
+# result is a space sep list of single-entry base64 encoded ECHConfigLists
+# this assumes encoding is valid and does no error checking, however the
+# output will be fed into s_client and then parsed so we'll only publish
+# values that, in the end, work. And bash will just return empty strings
+# if there's an internal length out-of-bounds error
 function splitlist()
 {
-    # example usage input is base64 encoded ECHconfigList
-    #   list=$echconfiglist
-    #   splitlists=`splitlist`
-    # result is a space sep list of single-entry base64 encoded ECHConfigLists
-    # this assumes encoding is valid and does no error checking
     olist=""
     ah_echlist=`echo $list | base64 -d | xxd -ps -c 200 | tr -d '\n'`
     ah_olen=${ah_echlist:0:4}
@@ -109,6 +114,10 @@ function splitlist()
     echo -e "$olist"
 }
 
+# given a host, a base64 ECHConfigList a TTL and an optional port
+# (default 443), use the bind9 nsupdate tool to publish that value
+# in the DNS, we return the return value from the nsupdate tool,
+# which is 0 for success and non-zero otherwise
 function donsupdate()
 {
     host=$1
