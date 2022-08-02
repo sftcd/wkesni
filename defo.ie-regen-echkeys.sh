@@ -213,7 +213,7 @@ do
     shift
 done
 
-echo "Checking if new ECHKeys needed for $BACKEND"
+echo "Checking if new ECHKeys needed for $FRONTEND"
 
 # Plan:
 
