@@ -40,29 +40,36 @@
 : ${OSSL:=$HOME/code/openssl}
 export LD_LIBRARY_PATH=$OSSL
 
+# Top of ECH key file directories
+: ${ECHTOP:=$HOME/ech}
+
 # BACKENDS can be >1, use a space-separated list
 : ${BACKENDS:="draft-13.esni.defo.ie"}
 
 # This script only works for one FRONTEND, generalise if you wish:-)
 : ${FRONTEND:="cover.defo.ie"}
 
+# A timeout in case accessing the FRONTEND .well-known is gonna
+# fail - this is 10 seconds
+: ${CURLTIMEOUT:="10s"}
+
 # check that the that OpenSSL build is built
 if [ ! -f $OSSL/apps/openssl ]
 then
     echo "OpenSSL not built - exiting"
-    exit 99
+    exit 1
 fi
 
 # check that the echcli.sh script is present in that OpenSSL build
 if [ ! -f $OSSL/esnistuff/echcli.sh ]
 then
     echo "OpenSSL not built with ECH - exiting"
-    exit 98
+    exit 2
 fi
 
 # We need a directory to store long-ish term values, just so we can check
 # if they've changed or not
-FEDIR="$HOME/ech/$FRONTEND"
+FEDIR="$ECHTOP/$FRONTEND"
 if [ ! -d $FEDIR ]
 then
     mkdir -p $FEDIR
@@ -198,7 +205,15 @@ do
     path=".well-known/ech/$back.json"
     URL="https://$FRONTEND/$path"
     # grab .well-known stuff
-    curl -s $URL -o $TMPF
+    timeout $CURLTIMEOUT curl -s $URL -o $TMPF
+    tres=$?
+    if [[ "$tres" == "124" ]]
+    then
+        # timeout returns 124 if it timed out, or else the
+        # result from curl otherwise
+        echo "Timed out after $CURLTIMEOUT waiting for $FRONTEND"
+        exit 2
+    fi
     if [ ! -s $TMPF ]
     then
         echo "Can't get content from $URL - skipping $back"
@@ -348,5 +363,5 @@ done
 # clean up TMP dir, it should be empty, if not the error will improve us:-)
 rmdir $FETMP
 
-# exit returning "1" for "I did stuff"
-exit 1
+# exit returning "0" for "I did stuff that seemed to work"
+exit 0

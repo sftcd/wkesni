@@ -49,7 +49,7 @@
 
 # variables/settings
 
-# where this repo tends to live
+# where the OpenSSL repo tends to live, for me
 : ${OSSL:=$HOME/code/openssl}
 export LD_LIBRARY_PATH=$OSSL
 
@@ -69,61 +69,56 @@ then
     exit 98
 fi
 
-# ECH key file directory is common for all defo.ie instances
-: ${ECHSTUFF:=/etc/apache2/ech}
+# Top of ECH key file directories
+: ${ECHTOP:=$HOME/ech}
 
 # This is where most or all $DURATION-lived ECH keys live
 # When they get to 2*$DURATION old they'll be moved to $ECHOLD
-ECHDIR="$ECHSTUFF/echkeydir"
+ECHDIR="$ECHTOP/echkeydir"
 # Where old stuff goes
 ECHOLD="$ECHDIR/old"
 
-if [[ ! -d $ECHSTUFF || ! -d $ECHDIR || ! -d $ECHOLD ]]
-then
-    echo "Some ECH key dirs absent - exiting"
-    exit 1
-fi
-
-# Various possible "prime" durationns - we publish keys for
-# 2 x this duration and add a new key each time and retire
-# (as in don't load to server) old keys after 3 x this duration.
+# Key lifecycle durations - we publish keys for 2 x the "main"
+# duration and add a new key each time and retire (as in don't 
+# load to server) old keys after 3 x this duration.
 # So, keys remain usable for 3 x this, and are visible to the
 # Internet for 2 x this. 
-# We ask that the RR TTL containing such keys be half the
-# duration.
+# Old keys are just moved into $ECHOLD for now. Deleting may
+# well be better for more production-like scenarios.
+# We request a TTL for that the RR containing keys be half 
+# the duration.
 DURATION="3600" # 1 hour
 
 # Our FRONTEND and BACKEND DNS names
-# BACKEND needs to be just one name here (for now)
-: ${BACKENDS:="tolerantnetworks.com my-own.net my-own.ie"}
-
-# Where we keep long term keys, can be space-sep list if needed
-LONGTERMKEYS="$ECHDIR/$BACKEND.ech"
-
 # This script only works for one FRONTEND, generalise if you wish:-)
 : ${FRONTEND:="foo.ie"}
 
-# FRONTEND DocRoot where we make ECH info available via .well-known
-: ${DOCROOT:="/var/www/foo.ie/www"}
-DOCROOTDIR="$DOCROOT/.well-known/ech"
+# BACKENDS should be a space separated list of names
+: ${BACKENDS:="box2.tolerantnetworks.com my-own.net my-own.ie"}
 
-# uid for writing files to DocRoot
+# Long term key files, can be space-sep list if needed
+# These won't be expired out ever, and will be added to
+# the list of keys we ask be published. This is mostly
+# for testing.
+LONGTERMKEYS="$ECHDIR/$BACKEND.ech"
+
+# FRONTEND DocRoot where we make ECH info available via .well-known
+# This directory naming needs to match your web server config, so
+# likely needs changing.
+: ${DOCROOT:="/var/www/$FRONTEND/www"}
+WKECHDIR="$DOCROOT/.well-known/ech"
+
+# uid for writing files to DocRoot, whoever runs this script
+# needs to be able to sudo to that uid
 : ${WWWUSER:="www-data"}
 
-if [[ ! -d $DOCROOT ]]
+# check if we can sudo to that
+sudo -u $WWWUSER ls $DOCROOT
+sres=$?
+if [[ "$sres" != "0" ]]
 then
-    echo "$FRONTEND - $DOCROOT missing - exiting"
-    exit 2
-fi
-# make this one if needed
-if [ ! -d $DOCROOTDIR ]
-then
-    sudo -u $WWWUSER mkdir -p $DOCROOTDIR
-fi
-if [ ! -d $DOCROOTDIR ]
-then
-    echo "$FRONTEND - $DOCROOTDIR missing - exiting"
-    exit 2
+    echo "Can't sudo to $WWWUSER - exiting"
+    exit 9
 fi
 
 # just one port this time - make this space-sep for >1
@@ -155,14 +150,14 @@ function usage()
 	echo ""
 	echo "The following should work:"
 	echo "    $0 "
-    exit 99
+    exit 97
 }
 
 # options may be followed by one colon to indicate they have a required argument
 if ! options=$(/usr/bin/getopt -s bash -o hd: -l help,duration: -- "$@")
 then
     # something went wrong, getopt will put out an error message for us
-    exit 1
+    exit 4
 fi
 #echo "|$options|"
 eval set -- "$options"
@@ -172,13 +167,54 @@ do
         -h|--help) usage;;
         -d|--duration) DURATION=$2; shift;;
         (--) shift; break;;
-        (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
+        (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 5;;
         (*)  break;;
     esac
     shift
 done
 
 echo "Checking if new ECHKeys needed for $FRONTEND"
+
+# check for and sometimes make directories as needed
+# the first two should already exist
+if [ ! -d $ECHTOP ]
+then
+    echo "$ECHTOP ECH key dir missing - exiting"
+    exit 1
+fi
+if [[ ! -d $DOCROOT ]]
+then
+    echo "$FRONTEND - $DOCROOT missing - exiting"
+    exit 3
+fi
+# the rest we'll try create, if needed
+if [ ! -d $WKECHDIR ]
+then
+    sudo -u $WWWUSER mkdir -p $WKECHDIR
+fi
+if [ ! -d $WKECHDIR ]
+then
+    echo "$FRONTEND - $WKECHDIR missing - exiting"
+    exit 2
+fi
+if [ ! -d $ECHDIR ]
+then
+    mkdir -p $ECHDIR
+fi
+if [ ! -d $ECHDIR ]
+then
+    echo "$ECHDIR missing - exiting"
+    exit 7
+fi
+if [ ! -d $ECHOLD ]
+then
+    mkdir -p $ECHOLD
+fi
+if [ ! -d $ECHOLD ]
+then
+    echo "$ECHOLD missing - exiting"
+    exit 8
+fi
 
 # Plan:
 
@@ -188,19 +224,6 @@ echo "Checking if new ECHKeys needed for $FRONTEND"
 #   - generate new instance of ECHKeys (same for all ports)
 #   - push updated JSON (for all keys) to DocRoot dest
 #   - retire any keys >3*DURATION old
-
-if [ ! -d $ECHDIR ]
-then
-    mkdir -p $ECHDIR
-fi
-if [ ! -d $ECHOLD ]
-then
-    mkdir -p $ECHOLD
-fi
-if [ ! -d $DOCROOTDIR ]
-then 
-    sudo -u $WWWUSER mkdir $DOCROOTDIR
-fi
 
 files2check="$ECHDIR/*.pem.ech"
 
@@ -268,8 +291,8 @@ then
     res=$?
     if [[ "$res" != "1" ]]
     then
-        exit "Error generating $ECHDIR/$keyn.pem.ech"
-        exit 28
+        echo "Error generating $ECHDIR/$keyn.pem.ech"
+        exit 6
     fi
 
     newjsonfile="false"
@@ -311,7 +334,7 @@ EOF
     then 
         for back in $BACKENDS
         do
-            sudo -u $WWWUSER cp $TMPF $DOCROOTDIR/$back.json
+            sudo -u $WWWUSER cp $TMPF $WKECHDIR/$back.json
         done
     fi
     rm -f $TMPF
@@ -324,3 +347,4 @@ then
     sudo service apache2 restart
 fi
 
+exit 0
