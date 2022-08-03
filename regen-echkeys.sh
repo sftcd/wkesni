@@ -329,6 +329,7 @@ then
     }
 ]
 EOF
+    chmod a+r $TMPF
     # copy that to DocRoot
     if [[ "$newjsonfile" == "true" ]]
     then 
@@ -337,14 +338,15 @@ EOF
             sudo -u $WWWUSER cp $TMPF $WKECHDIR/$back.json
         done
     fi
-    rm -f $TMPF
+    #rm -f $TMPF
 fi
 
 if [[ "$actiontaken" != "false" ]]
 then
     # restart services 
     echo "Took action - better restart services"
-    sudo service apache2 restart
+    # nginx case of local build below
+    (cd $HOME/code/nginx; sudo make upgrade;)
 fi
 
 exit 0
