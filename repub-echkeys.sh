@@ -139,14 +139,18 @@ function donsupdate()
 
     if [[ "$port" == "443" || "$port" == "" ]]
     then
+        # the 1 is the priority, we don't distinguish
+        # the "." is the HTTPS/SVCB TargetName
         nscmd="update delete $host HTTPS\n
                update add $host $ttl HTTPS 1 . ech=$echval\n
                send\n
                quit"
     else
+        # turns out one is supposed to use the authority as 
+        # the TargetName, rather than the "." above
         oname="_$port._https.$host"
         nscmd="update delete $oname HTTPS\n
-               update add $oname $ttl HTTPS 1 . ech=$echval\n
+               update add $oname $ttl HTTPS 1 $host ech=$echval\n
                send\n
                quit"
     fi
