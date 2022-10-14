@@ -4,8 +4,11 @@
 
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
-Intended status: Experimental                           October 14, 2022
-Expires: April 17, 2023
+Intended status: Experimental                                    R. Salz
+Expires: April 17, 2023                              Akamai Technologies
+                                                             B. Schwartz
+                                                              Google LLC
+                                                        October 14, 2022
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -50,10 +53,7 @@ Copyright Notice
 
 
 
-
-
-
-Farrell                  Expires April 17, 2023                 [Page 1]
+Farrell, et al.          Expires April 17, 2023                 [Page 1]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -71,7 +71,7 @@ Table of Contents
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   6
    10. Normative References  . . . . . . . . . . . . . . . . . . . .   6
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   7
-   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .   7
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   7
 
 1.  Introduction
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell                  Expires April 17, 2023                 [Page 2]
+Farrell, et al.          Expires April 17, 2023                 [Page 2]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell                  Expires April 17, 2023                 [Page 3]
+Farrell, et al.          Expires April 17, 2023                 [Page 3]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell                  Expires April 17, 2023                 [Page 4]
+Farrell, et al.          Expires April 17, 2023                 [Page 4]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell                  Expires April 17, 2023                 [Page 5]
+Farrell, et al.          Expires April 17, 2023                 [Page 5]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell                  Expires April 17, 2023                 [Page 6]
+Farrell, et al.          Expires April 17, 2023                 [Page 6]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -344,7 +344,7 @@ Appendix A.  Change Log
 
    The -00 WG draft replaces draft-farrell-tls-wkesni-03.
 
-Author's Address
+Authors' Addresses
 
    Stephen Farrell
    Trinity College Dublin
@@ -355,6 +355,16 @@ Author's Address
    EMail: stephen.farrell@cs.tcd.ie
 
 
+   Rich Salz
+   Akamai Technologies
+
+   EMail: rsalz@akamai.com
+
+
+   Benjamin Schwartz
+   Google LLC
+
+   EMail: bemasc@google.com
 
 
 
@@ -379,14 +389,4 @@ Author's Address
 
 
 
-
-
-
-
-
-
-
-
-
-
-Farrell                  Expires April 17, 2023                 [Page 7]
+Farrell, et al.          Expires April 17, 2023                 [Page 7]

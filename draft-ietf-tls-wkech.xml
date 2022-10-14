@@ -43,6 +43,20 @@
       </address>
     </author>
 
+    <author initials="R." surname="Salz" fullname="Rich Salz">
+        <organization>Akamai Technologies</organization>
+        <address>
+            <email>rsalz@akamai.com</email>
+        </address>
+    </author>
+
+    <author initials="B." surname="Schwartz" fullname="Benjamin Schwartz">
+      <organization>Google LLC</organization>
+      <address>
+        <email>bemasc@google.com</email>
+      </address>
+    </author>
+
     <date year="2022"/>
 
     <area>Security Area</area>
