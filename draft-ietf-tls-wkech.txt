@@ -4,8 +4,8 @@
 
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
-Intended status: Experimental                              July 24, 2022
-Expires: January 25, 2023
+Intended status: Experimental                           October 14, 2022
+Expires: April 17, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -31,7 +31,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on January 25, 2023.
+   This Internet-Draft will expire on April 17, 2023.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Farrell                 Expires January 25, 2023                [Page 1]
+Farrell                  Expires April 17, 2023                 [Page 1]
 
-Internet-Draft           Well-Known URI for ECH                July 2022
+Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 Table of Contents
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Farrell                 Expires January 25, 2023                [Page 2]
+Farrell                  Expires April 17, 2023                 [Page 2]
 
-Internet-Draft           Well-Known URI for ECH                July 2022
+Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 2.  Terminology
@@ -165,9 +165,9 @@ Internet-Draft           Well-Known URI for ECH                July 2022
 
 
 
-Farrell                 Expires January 25, 2023                [Page 3]
+Farrell                  Expires April 17, 2023                 [Page 3]
 
-Internet-Draft           Well-Known URI for ECH                July 2022
+Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 5.  The JSON structure for ECHConfigList values
@@ -221,9 +221,9 @@ Internet-Draft           Well-Known URI for ECH                July 2022
 
 
 
-Farrell                 Expires January 25, 2023                [Page 4]
+Farrell                  Expires April 17, 2023                 [Page 4]
 
-Internet-Draft           Well-Known URI for ECH                July 2022
+Internet-Draft           Well-Known URI for ECH             October 2022
 
 
    o  As ECHConfigList is (regrettably:-) an extensible structure, it
@@ -277,9 +277,9 @@ Internet-Draft           Well-Known URI for ECH                July 2022
 
 
 
-Farrell                 Expires January 25, 2023                [Page 5]
+Farrell                  Expires April 17, 2023                 [Page 5]
 
-Internet-Draft           Well-Known URI for ECH                July 2022
+Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 7.  Security Considerations
@@ -304,13 +304,15 @@ Internet-Draft           Well-Known URI for ECH                July 2022
    [I-D.ietf-dnsop-svcb-https]
               Schwartz, B., Bishop, M., and E. Nygren, "Service binding
               and parameter specification via the DNS (DNS SVCB and
-              HTTPS RRs)", draft-ietf-dnsop-svcb-https-10 (work in
-              progress), May 2022.
+              HTTPS RRs)", draft-ietf-dnsop-svcb-https-11 (work in
+              progress), October 2022, <https://www.ietf.org/archive/id/
+              draft-ietf-dnsop-svcb-https-11.txt>.
 
    [I-D.ietf-tls-esni]
-              Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
-              Encrypted Client Hello", draft-ietf-tls-esni-14 (work in
-              progress), February 2022.
+              Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
+              Encrypted Client Hello", draft-ietf-tls-esni-15 (work in
+              progress), October 2022, <https://www.ietf.org/archive/id/
+              draft-ietf-tls-esni-15.txt>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -331,11 +333,9 @@ Internet-Draft           Well-Known URI for ECH                July 2022
 
 
 
-
-
-Farrell                 Expires January 25, 2023                [Page 6]
+Farrell                  Expires April 17, 2023                 [Page 6]
 
-Internet-Draft           Well-Known URI for ECH                July 2022
+Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 Appendix A.  Change Log
@@ -389,4 +389,4 @@ Author's Address
 
 
 
-Farrell                 Expires January 25, 2023                [Page 7]
+Farrell                  Expires April 17, 2023                 [Page 7]
