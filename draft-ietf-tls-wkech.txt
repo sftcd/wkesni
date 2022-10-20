@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: April 17, 2023                              Akamai Technologies
+Expires: April 23, 2023                              Akamai Technologies
                                                              B. Schwartz
                                                               Google LLC
-                                                        October 14, 2022
+                                                        October 20, 2022
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -16,8 +16,11 @@ Expires: April 17, 2023                              Akamai Technologies
 
 Abstract
 
-   We propose use of a well-known URI at which web servers can publish
-   ECHConfigList values as a way to help get those published in the DNS.
+   We propose use of a well-known URI at which an HTTP origin can inform
+   its authoritative DNS server about information that should appear in
+   this origin's DNS zone.  These instructions can include Encrypted
+   ClientHello configurations, allowing the origin to publish and rotate
+   its own ECH keys.
 
 Status of This Memo
 
@@ -34,7 +37,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on April 17, 2023.
+   This Internet-Draft will expire on April 23, 2023.
 
 Copyright Notice
 
@@ -47,31 +50,32 @@ Copyright Notice
    publication of this document.  Please review these documents
    carefully, as they describe your rights and restrictions with respect
    to this document.  Code Components extracted from this document must
-   include Simplified BSD License text as described in Section 4.e of
-   the Trust Legal Provisions and are provided without warranty as
-   described in the Simplified BSD License.
 
 
 
-Farrell, et al.          Expires April 17, 2023                 [Page 1]
+Farrell, et al.          Expires April 23, 2023                 [Page 1]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
+
+   include Simplified BSD License text as described in Section 4.e of
+   the Trust Legal Provisions and are provided without warranty as
+   described in the Simplified BSD License.
 
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
    3.  Example use of the well-known URI for ECH . . . . . . . . . .   3
-   4.  The ech well-known URI  . . . . . . . . . . . . . . . . . . .   3
-   5.  The JSON structure for ECHConfigList values . . . . . . . . .   4
+   4.  The dns-zone-info well-known URI  . . . . . . . . . . . . . .   3
+   5.  The JSON structure for origin-specific DNS zone info  . . . .   4
    6.  Zone factory behaviour  . . . . . . . . . . . . . . . . . . .   5
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   6
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   6
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   6
    10. Normative References  . . . . . . . . . . . . . . . . . . . .   6
-   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   7
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   7
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   8
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   8
 
 1.  Introduction
 
@@ -91,7 +95,10 @@ Table of Contents
    universal deployment, but rather for cases where the web server
    doesn't have write access to the relevant zone file (or equivalent).
    That zone file will eventually include an HTTPS or SVCB RR
-   [I-D.ietf-dnsop-svcb-https] containing an ECHConfigList.
+   [I-D.ietf-dnsop-svcb-https] containing an ECHConfigList.  This
+   mechanism is extensible to deliver other kinds of information about
+   the origin, but in this specification it only provides the
+   functionality necessary to configure ECH.
 
    We use the term "zone factory" for the entity that does have write
    access to the zone file.  We assume the zone factory (ZF) can also
@@ -99,6 +106,14 @@ Table of Contents
 
    We propose use of a well-known URI [RFC8615] on the web server that
    allows ZF to poll for changes to ECHConfigList values.  For example,
+
+
+
+Farrell, et al.          Expires April 23, 2023                 [Page 2]
+
+Internet-Draft           Well-Known URI for ECH             October 2022
+
+
    if a web server generates new ECHConfigList values hourly and
    publishes those at the well-known URI, ZF can poll that URI.  When ZF
    sees new values, it can check if those work, and if they do, then
@@ -106,13 +121,6 @@ Table of Contents
 
    [[The source for this is in https://github.com/sftcd/wkesni/ PRs are
    welcome there too.]]
-
-
-
-Farrell, et al.          Expires April 17, 2023                 [Page 2]
-
-Internet-Draft           Well-Known URI for ECH             October 2022
-
 
 2.  Terminology
 
@@ -131,136 +139,148 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    o  ECHConfigList values are "current" for an hour, published with a
       TTL of 1800, and remain usable for 3 hours from the time of
       generation
-   o  Web server has a set of "backend" sites - the DNS name for each
-      such site is here represented as $BACKEND, which will end up as an
-      SNI value to be encrypted inside an ECH extension
-   o  Web server has a "front-end" site ($FRONT), where $FRONT will
-      typically be the DNS name used in the ECHConfigList public_name
-      field for ECHConfig version 0xff0d
-   o  A cronjob creates creates a JSON file for each backend site at
-      https://$FRONT/.well-known/ech/$BACKEND.json
-   o  Each JSON file contains an array with the ECHConfigList values
-      values for that particular $BACKEND as shown in Figure 1 - the
-      values in Figure 1 with ellipses are the values we want to
-      eventually see in the DNS
+   o  A cronjob creates creates a JSON file containing the ECHConfigList
+      site at https://$ORIGIN/.well-known/dns-zone-info
+   o  The JSON file contains an array with the ECHConfigList values
+      values as shown in Figure 1 - the values in Figure 1 with ellipses
+      are the values we want to eventually see in the DNS
    o  On the zone factory, a cronjob runs at N+3 past the hour, it knows
       all the names involved and checks to see if the content at those
       well-known URIs has changed or not
    o  If the content has changed the cronjob attempts to use the
-      ECHConfigList values, and for each $BACKEND where that works, it
-      updates the zone file and re-publishes the zone containing only
-      the new ECHConfigList values
+      ECHConfigList values, and if that works, it updates the zone file
+      for $ORIGIN and re-publishes the zone containing only the new
+      ECHConfigList values
 
-4.  The ech well-known URI
+4.  The dns-zone-info well-known URI
 
-   When a web server ($FRONT) wants to publish ECHConfigList information
-   for a backend site ($BACKEND) then it provides the JSON content
-   defined in Section 5 at: https://$FRONT/.well-known/ech/$BACKEND.json
+   If a web server ($ORIGIN) wants to convey information to the Zone
+   Factory, it publishes the JSON content defined in Section 5 at:
+   https://$ORIGIN/.well-known/dns-zone-info
 
    The well-known URI defined here MUST be an https URL and therefore
-   the zone factory verifies the correct $FRONT is being accessed.  If
+   the zone factory verifies the correct $ORIGIN is being accessed.  If
    there is any failure in accessing the well-known URI, then the zone
    factory MUST NOT modify the zone.
 
 
 
-
-Farrell, et al.          Expires April 17, 2023                 [Page 3]
+Farrell, et al.          Expires April 23, 2023                 [Page 3]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
 
-5.  The JSON structure for ECHConfigList values
+5.  The JSON structure for origin-specific DNS zone info
 
-   [[Since the specifics of the JSON structure in Figure 1 are very
-   likely to change, this is mostly TBD.  What is here for now, is what
-   the author has currently implemented simply because it worked ok and
-   was easy to do:-) One issue raised as a result of the dispatch
-   presentation is whether or not anything beyond the ECHConfigList
-   might make sense to represent in the JSON response.  One example
-   could be the inner ClientHello ALPN extension, if that might somehow
-   be useful to the TLS cilent (which really should know in that case).
-   The scope in that respect and the correct level of generality to
-   cover here is something to consider as this evolves.]]
+   [[The JSON structure is a work in progress.]]
 
-       [
+       {
+           "endpoints": [{
+               "priority": 1,
+               "target": "cdn.example.",
+               "ech": "AD7+DQA65wAgAC..AA=="
+           }, {
+               "priority": 1,
+               "port": 8413,
+               "ech": "AD7+DQA65wAgAC..AA=="
+           }]
+       }
+
+               Figure 1: Sample JSON for ECH without aliases
+
            {
-               "desired-ttl": 1800,
-               "ports": [ 443, 8413 ],
-               "echconfiglist": "AD7+DQA65wAgAC..AA=="
-           },
-           {
-               "desired-ttl": 1800,
-               "ports": [ 443, 8413 ],
-               "echconfiglist": "AD7+DQA65wAgAC..AA=="
+               "alias": "cdn.example.net:443"
            }
-       ]
 
-                           Figure 1: Sample JSON
+                    Figure 2: Sample JSON with aliasing
 
-   The JSON file at the well-known URI MUST contain an array with one or
-   more elements.  Each element of the array MUST have these fields:
+   The JSON file at the well-known URI MUST contain an object with
+   either an "endpoints" key or an "alias" key.  If the "endpoints" key
+   is present, its value is an array whose elements represent HTTPS
+   records in ServiceMode.  Each element MAY contain one or more keys
+   from the JSON HTTP Origin Info registry (see IANA Considerations).
+   The initial registry entries are:
 
-   o  desired-ttl: contains a number indicating the TTL that the web
-      server would like to see used for this RR.  The zone factory MUST
-      NOT use a longer TTL.
-   o  ports: this has a list of the TCP ports on which the web server
-      with the relevant key pair will listen (needed to produce the
-      correct zone file).
-   o  ECHConfigList: contains the value to be used as a base64 encoded
-      string.
+   o  priority: The value is a positive integer corresponding to the
+      SvcPriority.  If omitted, the zone factory SHOULD infer increasing
+      SvcPriority from the order of the endpoints array.
+   o  target: The value is a fully qualified domain name, corresponding
+      to the HTTPS record's TargetName.  If omitted, the zone factory
+      SHOULD infer a value of ".".
+   o  port: The value is a non-negative integer, corresponding to the
+      value of the "port" SvcParamKey.
+   o  ech: The value is an ECHConfigList as a base64 encoded string,
+      corresponding to the value of the "ech" SvcParamKey.
 
-   The JSON file contains an array for a couple of reasons:
-
-   o  As TLS authentication doesn't really distinguish ports, servers on
-      the same host could in any case cheat on one another, so we may as
-      well just read one JSON file per name.
-   o  Different ports could map to different sets of ECHConfig values
-
-
+   An empty endpoint object corresponds to an HTTPS record with inferred
+   SvcPriority, TargetName=".", and no ECH support.  An empty record of
+   this kind can be useful as a simple way to enable the HTTPS record's
+   HSTS behavior.
 
 
 
-Farrell, et al.          Expires April 17, 2023                 [Page 4]
+
+
+Farrell, et al.          Expires April 23, 2023                 [Page 4]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
 
-   o  As ECHConfigList is (regrettably:-) an extensible structure, it
-      may be necessary to publish different ECHConfigList values to get
-      best interoperability.
+   If the object contains an "alias" key, its value MUST be an
+   "authority" (Section 3.2 of [RFC3986]).  This indicates that $ORIGIN
+   is hosted on the same endpoints as this target, and is equivalent to
+   an HTTPS AliasMode record.  A zone factory might implement this
+   directive by publishing an AliasMode record, publishing a CNAME
+   record, copying HTTPS records from the target zone, or fetching
+   https://$TARGET/.well-known/dns-zone-info" (if it exists).
+
+   This arrangement provides the following important properties:
+
+   o  Origins can indicate that different ECHConfigs are used on
+      different ports.
+   o  Origins can indicate that multiple CDNs are in use, each with its
+      own ECHConfig.
+   o  Origins that simply alias to a single target can indicate this
+      without copying the ECHConfig and other parameters, which can
+      interfere with key rotation and other maintenance.
+   o  "port" and "target" are generally sufficient to uniquely identify
+      a ServiceMode record, so zone factories can use the endpoint list
+      to add ECH to pre-existing ServiceMode records that may have other
+      SvcParams.
 
 6.  Zone factory behaviour
 
-   The zone factory SHOULD check that the presented ECHConfigList values
-   work with the $BACKEND server before publication.  A "special" TLS
-   client may be needed for this check, that does not require the
-   ECHConfigList value to have already been published in the DNS.  [[I
-   guess that calls for the zone factory to know of a "safe" URL on
-   $BACKEND to try, or maybe it could use HTTP HEAD?  Figuring that out
-   is TBD.  The ZF could also try a GREASEd ECH and see if the retry-
-   configs it gets back is one of the ECHConfig values in the
-   ECHConfigList.]]
+   The zone factory SHOULD check that the presented endpoints work and
+   provide access to $ORIGIN before publication.  A "special" TLS client
+   may be needed for this check, that does not require the ECHConfigList
+   value to have already been published in the DNS.  [[I guess that
+   calls for the zone factory to know of a "safe" URL on $ORIGIN to try,
+   or maybe it could use HTTP HEAD?  Figuring that out is TBD.  The ZF
+   could also try a GREASEd ECH and see if the retry-configs it gets
+   back is one of the ECHConfig values in the ECHConfigList.]]
 
    A careful zone factory could explode the ECHConfigList value
    presented into "singleton" values with one public key in each and
-   test each for each port claimed.
+   test each for each endpoint.
 
-   The zone factory SHOULD publish all the ECHConfigList values that are
-   presented in the JSON file, and that pass the check above.
+   The zone factory SHOULD publish all the endpoints that are presented
+   in the JSON file, and that pass the check above.
 
-   The zone factory SHOULD only publish ECHConfigList values that are in
-   the latest version of the JSON file.  This leaves the control of
-   "expiry" with the web server, so long as the ECHConfigList values
-   presented actually work.  [[An alternative could be to have the new
-   values just be appended to the zone, but that'd require some form of
-   "notAfter" value in the JSON file which seems unnecessary and more
-   complex.]]
+   The zone factory MUST set a DNS TTL short enough that any generated
+   records expire from DNS caches before the JSON object's HTTP cache
+   lifetime expires.  The zone factory MUST refresh the JSON object and
+   regenerate the zone before it expires each time.  This ensures that
+   ECHConfigs are not used longer than intended by the origin, while
+   permitting the zone factory to limit the TTL if desired.
 
-   The SCVB and HTTPS RR specification [I-D.ietf-dnsop-svcb-https]
-   defines how and where the ECHConfigList values for $BACKEND needs to
-   be published in the DNS.  The zone factory is assumed to be in
-   control of how ECHConfigList values are included in such RRs.
+
+
+
+
+Farrell, et al.          Expires April 23, 2023                 [Page 5]
+
+Internet-Draft           Well-Known URI for ECH             October 2022
+
 
    A possibly interesting (unintended) consequence of this design is
    that once a TLS client has first gotten an ECHConfigList from the DNS
@@ -274,13 +294,6 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    purpose might be worth considering.  But the JSON stuff here may
    still be needed if implementations (such as mine:-) tend to only
    return one ECHConfig in retry-configs.]]
-
-
-
-Farrell, et al.          Expires April 17, 2023                 [Page 5]
-
-Internet-Draft           Well-Known URI for ECH             October 2022
-
 
 7.  Security Considerations
 
@@ -296,8 +309,10 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 9.  IANA Considerations
 
-   [[TBD: IANA registration of a .well-known.  Also TBD - how to handle
-   I18N for $FRONT and $BACKEND within such a URL.]]
+   If approved, this specification requests the creation of an IANA
+   registry named "JSON HTTP Origin Info" with a Standards Action
+   registration policy, containing a field named "Name" whose value is a
+   UTF-8 string.
 
 10.  Normative References
 
@@ -305,8 +320,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
               Schwartz, B., Bishop, M., and E. Nygren, "Service binding
               and parameter specification via the DNS (DNS SVCB and
               HTTPS RRs)", draft-ietf-dnsop-svcb-https-11 (work in
-              progress), October 2022, <https://www.ietf.org/archive/id/
-              draft-ietf-dnsop-svcb-https-11.txt>.
+              progress), October 2022.
 
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
@@ -314,10 +328,25 @@ Internet-Draft           Well-Known URI for ECH             October 2022
               progress), October 2022, <https://www.ietf.org/archive/id/
               draft-ietf-tls-esni-15.txt>.
 
+
+
+
+
+
+Farrell, et al.          Expires April 23, 2023                 [Page 6]
+
+Internet-Draft           Well-Known URI for ECH             October 2022
+
+
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
+              Resource Identifier (URI): Generic Syntax", STD 66,
+              RFC 3986, DOI 10.17487/RFC3986, January 2005,
+              <https://www.rfc-editor.org/info/rfc3986>.
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
@@ -333,7 +362,34 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell, et al.          Expires April 17, 2023                 [Page 6]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Farrell, et al.          Expires April 23, 2023                 [Page 7]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -389,4 +445,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.          Expires April 17, 2023                 [Page 7]
+Farrell, et al.          Expires April 23, 2023                 [Page 8]

@@ -68,8 +68,13 @@
     <keyword>ECH</keyword>
 
     <abstract>
-        <t>We propose use of a well-known URI at which web servers can publish ECHConfigList values
-            as a way to help get those published in the DNS.</t> 
+        <t>
+            We propose use of a well-known URI at which an HTTP origin can
+            inform its authoritative DNS server about information that should
+            appear in this origin's DNS zone.  These instructions can include
+            Encrypted ClientHello configurations, allowing the origin to
+            publish and rotate its own ECH keys.
+        </t> 
     </abstract>
   </front>
 
@@ -94,7 +99,10 @@
             universal deployment, but rather for cases where the web server
             doesn't have write access to the relevant zone file (or 
             equivalent). That zone file will eventually include an HTTPS or SVCB 
-            RR <xref target="I-D.ietf-dnsop-svcb-https"/> containing an ECHConfigList. 
+            RR <xref target="I-D.ietf-dnsop-svcb-https"/> containing an ECHConfigList.
+            This mechanism is extensible to deliver other kinds of information about
+            the origin, but in this specification it only provides the functionality
+            necessary to configure ECH.
         </t>
 
         <t>
@@ -135,17 +143,10 @@
                 <t> ECHConfigList values are "current" for an hour, published with
                     a TTL of 1800, and remain usable for 3 hours from the time
                     of generation</t>
-                <t> Web server has a set of "backend" sites - the DNS name
-                    for each such site is here represented as $BACKEND, which 
-                    will end up as an SNI value to be encrypted
-                    inside an ECH extension</t>
-                <t> Web server has a "front-end" site ($FRONT), where
-                    $FRONT will typically be the DNS name used in the
-                    ECHConfigList public_name field for ECHConfig version 0xff0d</t>
-                <t> A cronjob creates creates a JSON file for each backend
-                    site at https://$FRONT/.well-known/ech/$BACKEND.json</t>
-                <t> Each JSON file contains an array with the ECHConfigList values
-                    values for that particular $BACKEND as shown in 
+                <t> A cronjob creates creates a JSON file containing the ECHConfigList
+                    site at https://$ORIGIN/.well-known/dns-zone-info</t>
+                <t> The JSON file contains an array with the ECHConfigList values
+                    values as shown in 
                 <xref target="sample-json"/>  - the values in 
                 <xref target="sample-json"/> with ellipses are the values we
                     want to eventually see in the DNS</t>
@@ -154,87 +155,112 @@
                     if the content at those well-known URIs has changed or
                     not</t>
                 <t> If the content has changed the cronjob attempts to use
-                    the ECHConfigList values, and for each $BACKEND where that works, it
-                    updates the zone file and re-publishes the zone 
+                    the ECHConfigList values, and if that works, it
+                    updates the zone file for $ORIGIN and re-publishes the zone 
                     containing only the new ECHConfigList values</t>
             </list>
         </t>
 
     </section>
 
-    <section title="The ech well-known URI">
+    <section title="The dns-zone-info well-known URI">
 
-         <t>When a web server ($FRONT) wants to publish ECHConfigList information 
-             for a backend site ($BACKEND) then it provides the JSON content
-             defined in <xref target="jsonstr"/> at:
-            https://$FRONT/.well-known/ech/$BACKEND.json
+         <t>
+            If a web server ($ORIGIN) wants to convey information to the Zone
+            Factory, it publishes the JSON content
+            defined in <xref target="jsonstr"/> at:
+            https://$ORIGIN/.well-known/dns-zone-info
         </t>
 
         <t>The well-known URI defined here MUST be an https URL and therefore the
-            zone factory verifies the correct $FRONT is being accessed. If
+            zone factory verifies the correct $ORIGIN is being accessed. If
             there is any failure in accessing the well-known URI, then the
             zone factory MUST NOT modify the zone. </t> 
 
     </section>
 
 
-<section anchor="jsonstr" title="The JSON structure for ECHConfigList values">
+<section anchor="jsonstr" title="The JSON structure for origin-specific DNS zone info">
 
-  <t>[[Since the specifics of the JSON structure in <xref target="sample-json"/> are very 
-      likely to change, this is mostly TBD. What is here for now, is what the author
-      has currently implemented simply because it worked ok and was easy to do:-)
-    One issue raised as a result of the dispatch presentation
-    is whether or not anything beyond the ECHConfigList might make
-    sense to represent in the JSON response. One example could be
-    the inner ClientHello ALPN extension, if that might somehow be
-    useful to the TLS cilent (which really should know in that case).
-    The scope in that respect and the correct level of generality
-        to cover here is something to consider as this evolves.]]</t>
+  <t>[[The JSON structure is a work in progress.]]</t>
 
-<figure anchor="sample-json" title="Sample JSON" >
+<figure anchor="sample-json" title="Sample JSON for ECH without aliases" >
 <artwork><![CDATA[
-    [
-        {
-            "desired-ttl": 1800,
-            "ports": [ 443, 8413 ],
-            "echconfiglist": "AD7+DQA65wAgAC..AA=="
-        },
-        {
-            "desired-ttl": 1800,
-            "ports": [ 443, 8413 ],
-            "echconfiglist": "AD7+DQA65wAgAC..AA=="
-        }
-    ]
+    {
+        "endpoints": [{
+            "priority": 1,
+            "target": "cdn.example.",
+            "ech": "AD7+DQA65wAgAC..AA=="
+        }, {
+            "priority": 1,
+            "port": 8413,
+            "ech": "AD7+DQA65wAgAC..AA=="
+        }]
+    }
   ]]></artwork>
 </figure>
 
-    <t>The JSON file at the well-known URI MUST contain an array
-        with one or more elements. Each element of the array
-        MUST have these fields:
+<figure anchor="sample-json-alias" title="Sample JSON with aliasing" >
+    <artwork><![CDATA[
+        {
+            "alias": "cdn.example.net:443"
+        }
+    ]]></artwork>
+</figure>
+
+    <t>
+        The JSON file at the well-known URI MUST contain an object
+        with either an "endpoints" key or an "alias" key.  If the
+        "endpoints" key is present, its value is an array whose elements
+        represent HTTPS records in ServiceMode. Each element MAY contain
+        one or more keys from the JSON HTTP Origin Info registry (see
+        IANA Considerations).  The initial registry entries are:
         <list style="symbols">
-            <t>desired-ttl: contains a number indicating the TTL that
-                the web server would like to see used for this RR.
-                The zone factory MUST NOT use a longer TTL.
+            <t>priority: The value is a positive integer corresponding to the
+                SvcPriority.  If omitted, the zone factory SHOULD infer increasing
+                SvcPriority from the order of the endpoints array.
             </t>
-            <t>ports: this has a list of the TCP ports on which the web server
-            with the relevant key pair will listen (needed to produce
-            the correct zone file). </t>
-            <t>ECHConfigList: contains the value to be used
-                as a base64 encoded string.
+            <t>target: The value is a fully qualified domain name, corresponding to
+                the HTTPS record's TargetName. If omitted, the zone factory SHOULD
+                infer a value of ".".
+            </t>
+            <t>port: The value is a non-negative integer, corresponding to the value of
+                 the "port" SvcParamKey.</t>
+            <t>ech: The value is an ECHConfigList as a base64 encoded string,
+                corresponding to the value of the "ech" SvcParamKey.
             </t>
         </list>
+        An empty endpoint object corresponds to an HTTPS record with inferred
+        SvcPriority, TargetName=".", and no ECH support.  An empty record of this
+        kind can be useful as a simple way to enable the HTTPS record's HSTS behavior.
     </t>
 
-    <t>The JSON file contains an array for a couple of reasons:
+    <t>
+        If the object contains an "alias" key, its value MUST be an "authority"
+        (Section 3.2 of <xref target="RFC3986"/>).  This indicates that $ORIGIN
+        is hosted on the same endpoints as this target, and is equivalent to
+        an HTTPS AliasMode record.  A zone factory might implement this directive
+        by publishing an AliasMode record, publishing a CNAME record, copying
+        HTTPS records from the target zone, or fetching
+        https://$TARGET/.well-known/dns-zone-info" (if it exists).
+    </t>
+
+    <t>
+        This arrangement provides the following important properties:
         <list style="symbols">
-            <t>As TLS authentication doesn't really distinguish ports, 
-            servers on the same host could in any case cheat on one
-                another, so we may as well just read one JSON file per name.</t>
-            <t>Different ports could map to different sets of ECHConfig values</t>
-            <t>As ECHConfigList is (regrettably:-) an extensible structure,
-                it may be necessary to publish different ECHConfigList 
-                values to get best interoperability.
-            </t> 
+            <t>Origins can indicate that different ECHConfigs are used on
+                different ports.</t>
+            <t>Origins can indicate that multiple CDNs are in use, each with
+                its own ECHConfig.</t>
+            <t>Origins that simply alias to a single target can indicate this
+                without copying the ECHConfig and other parameters, which
+                can interfere with key rotation and other maintenance.
+            </t>
+            <t>"port" and "target" are generally sufficient to uniquely identify
+                a ServiceMode record, so zone factories can use the endpoint list
+                to add ECH to pre-existing ServiceMode records that may have other
+                SvcParams.
+            </t>
         </list>
     </t>
 
@@ -242,13 +268,13 @@
 
 <section title="Zone factory behaviour">
 
-    <t>The zone factory SHOULD check that the presented ECHConfigList
-        values work with the $BACKEND server before publication.
+    <t>The zone factory SHOULD check that the presented endpoints
+        work and provide access to $ORIGIN before publication.
         A "special" TLS client may be needed for this check,
         that does not require the ECHConfigList value to have 
         already been published in the DNS.
         [[I guess that calls for the zone factory to know
-        of a "safe" URL on $BACKEND to try, or maybe it could
+        of a "safe" URL on $ORIGIN to try, or maybe it could
         use HTTP HEAD? Figuring that out is TBD. The ZF could also
         try a GREASEd ECH and see if the retry-configs it gets back
         is one of the ECHConfig values in the ECHConfigList.]]
@@ -256,46 +282,28 @@
 
     <t>A careful zone factory could explode the ECHConfigList value
        presented into "singleton" values with one public key in each
-       and test each for each port claimed.</t>
+       and test each for each endpoint.</t>
 
-    <t>The zone factory SHOULD publish all the ECHConfigList values
+    <t>The zone factory SHOULD publish all the endpoints
         that are presented in the JSON file, and that pass
         the check above.</t>
 
-    <t>The zone factory SHOULD only publish ECHConfigList values
-        that are in the latest version of the JSON file.
-        This leaves the control of "expiry" with the
-        web server, so long as the ECHConfigList values presented
-        actually work. [[An alternative could be to 
-        have the new values just be appended to the zone,
-        but that'd require some form of "notAfter" value
-        in the JSON file which seems unnecessary and more 
-        complex.]]
-    </t>
-
-    <t>The SCVB and HTTPS RR specification <xref target="I-D.ietf-dnsop-svcb-https"/> 
-        defines how and where the ECHConfigList values for $BACKEND
-        needs to be published in the DNS. The zone factory is 
-        assumed to be in control of how ECHConfigList values are
-        included in such RRs.
+    <t>The zone factory MUST set a DNS TTL short enough that any
+        generated records expire from DNS caches before the JSON
+        object's HTTP cache lifetime expires.  The zone factory
+        MUST refresh the JSON object and regenerate the zone
+        before it expires each time.  This ensures that ECHConfigs
+        are not used longer than intended by the origin, while
+        permitting the zone factory to limit the TTL if desired.
     </t>
 
 <t>A possibly interesting (unintended) consequence of this
    design is that once a
-  TLS client has first gotten an ECHConfigList from the DNS for
-  $BACKEND with the ECHConfigList structure containing
-  the public_name field, the TLS client would know both
-  $FRONT and $BACKEND and so could later probe for this
+  TLS client has connected to $ORIGIN, it could probe for this
   .well-known as an alternative to doing so via DoT/DoH.
   Probably not something a web browser might do, but
   could be fun for other applications maybe.
   </t>
-
-  <t>[[The extent to which retry-configs could be used for
-      a similar purpose might be worth considering. But the
-      JSON stuff here may still be needed if implementations
-      (such as mine:-) tend to only return one ECHConfig in
-      retry-configs.]]</t>
 
 </section>
 
@@ -314,8 +322,11 @@
     </section>
 
     <section title="IANA Considerations">
-        <t>[[TBD: IANA registration of a .well-known. Also TBD - how to handle I18N for
-            $FRONT and $BACKEND within such a URL.]]</t>
+        <t>If approved, this specification requests the creation of an IANA
+            registry named "JSON HTTP Origin Info" with a Standards Action
+            registration policy, containing a field named "Name"
+            whose value is a UTF-8 string.
+        </t>
     </section>
   </middle>
 
@@ -325,6 +336,7 @@
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
+      <?rfc include='reference.RFC.3986'?>
       &I-D.ietf-tls-esni;
       &I-D.ietf-dnsop-svcb-https;
 
