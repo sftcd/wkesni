@@ -70,12 +70,22 @@
     <abstract>
         <t>
             We propose use of a well-known URI at which an HTTP origin can
-            inform its authoritative DNS server, or other interested parties,
+            inform an authoritative DNS server, or other interested parties,
             about this origin's Service Bindings, i.e. its "HTTPS" DNS records.
             These instructions can include Encrypted ClientHello (ECH)
             configurations, allowing the origin to publish and rotate its own
             ECH keys.
-        </t> 
+        </t>
+
+        <t>
+            AUTHORS NOTE: This
+            version proposes changing from the highly ECHConfig specific
+            approach of -00 to a much more generic approach.  The authors
+            are seeking feedback from the Working Group as
+            to which of these approaches may be more likely to garner
+            rough consensus.  If the WG feel this is worse than
+            -00 we're fine with reverting.
+        </t>
     </abstract>
   </front>
 
