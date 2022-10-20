@@ -322,11 +322,15 @@
     </section>
 
     <section title="IANA Considerations">
+        <t>[[TBD: IANA registration of a .well-known. Also TBD - how to handle I18N for
+            $FRONT and $BACKEND within such a URL.]]</t>
+
         <t>If approved, this specification requests the creation of an IANA
             registry named "JSON HTTP Origin Info" with a Standards Action
             registration policy, containing a field named "Name"
             whose value is a UTF-8 string.
         </t>
+
     </section>
   </middle>
 

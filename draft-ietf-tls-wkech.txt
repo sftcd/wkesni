@@ -283,17 +283,10 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
    A possibly interesting (unintended) consequence of this design is
-   that once a TLS client has first gotten an ECHConfigList from the DNS
-   for $BACKEND with the ECHConfigList structure containing the
-   public_name field, the TLS client would know both $FRONT and $BACKEND
-   and so could later probe for this .well-known as an alternative to
-   doing so via DoT/DoH.  Probably not something a web browser might do,
-   but could be fun for other applications maybe.
-
-   [[The extent to which retry-configs could be used for a similar
-   purpose might be worth considering.  But the JSON stuff here may
-   still be needed if implementations (such as mine:-) tend to only
-   return one ECHConfig in retry-configs.]]
+   that once a TLS client has connected to $ORIGIN, it could probe for
+   this .well-known as an alternative to doing so via DoT/DoH.  Probably
+   not something a web browser might do, but could be fun for other
+   applications maybe.
 
 7.  Security Considerations
 
@@ -308,6 +301,9 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    Thanks to Niall O'Reilly for a quick review of -00.
 
 9.  IANA Considerations
+
+   [[TBD: IANA registration of a .well-known.  Also TBD - how to handle
+   I18N for $FRONT and $BACKEND within such a URL.]]
 
    If approved, this specification requests the creation of an IANA
    registry named "JSON HTTP Origin Info" with a Standards Action
@@ -328,6 +324,10 @@ Internet-Draft           Well-Known URI for ECH             October 2022
               progress), October 2022, <https://www.ietf.org/archive/id/
               draft-ietf-tls-esni-15.txt>.
 
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
 
 
 
@@ -337,11 +337,6 @@ Farrell, et al.          Expires April 23, 2023                 [Page 6]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
-
-   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
-              Requirement Levels", BCP 14, RFC 2119,
-              DOI 10.17487/RFC2119, March 1997,
-              <https://www.rfc-editor.org/info/rfc2119>.
 
    [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
               Resource Identifier (URI): Generic Syntax", STD 66,
@@ -359,6 +354,11 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    [RFC8615]  Nottingham, M., "Well-Known Uniform Resource Identifiers
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
+
+
+
+
+
 
 
 
