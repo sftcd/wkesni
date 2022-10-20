@@ -70,10 +70,11 @@
     <abstract>
         <t>
             We propose use of a well-known URI at which an HTTP origin can
-            inform its authoritative DNS server about information that should
-            appear in this origin's DNS zone.  These instructions can include
-            Encrypted ClientHello configurations, allowing the origin to
-            publish and rotate its own ECH keys.
+            inform its authoritative DNS server, or other interested parties,
+            about this origin's Service Bindings, i.e. its "HTTPS" DNS records.
+            These instructions can include Encrypted ClientHello (ECH)
+            configurations, allowing the origin to publish and rotate its own
+            ECH keys.
         </t> 
     </abstract>
   </front>
@@ -137,39 +138,37 @@
 
         <t>An example deployment could be as follows:
 
-           <list style="symbols">
+           <list style="numbers">
                 <t> Web server generates new ECHConfigList values hourly at N past 
-                    the hour via a cronjob</t>
-                <t> ECHConfigList values are "current" for an hour, published with
-                    a TTL of 1800, and remain usable for 3 hours from the time
-                    of generation</t>
-                <t> A cronjob creates creates a JSON file containing the ECHConfigList
-                    site at https://$ORIGIN/.well-known/dns-zone-info</t>
-                <t> The JSON file contains an array with the ECHConfigList values
-                    values as shown in 
-                <xref target="sample-json"/>  - the values in 
-                <xref target="sample-json"/> with ellipses are the values we
-                    want to eventually see in the DNS</t>
-                <t> On the zone factory, a cronjob runs at N+3 past the
-                    hour, it knows all the names involved and checks to see
-                    if the content at those well-known URIs has changed or
-                    not</t>
-                <t> If the content has changed the cronjob attempts to use
-                    the ECHConfigList values, and if that works, it
-                    updates the zone file for $ORIGIN and re-publishes the zone 
-                    containing only the new ECHConfigList values</t>
+                    the hour via some regular, automated process (e.g. a cronjob)</t>
+                <t> ECHConfigList values are "current" for an hour, and remain usable
+                    for 3 hours from the time of generation</t>
+                <t> The cronjob updates the ECHConfigList values in a JSON resource at
+                    at https://$ORIGIN/.well-known/origin-svcb, as shown in 
+                    <xref target="sample-json"/>.</t>
+                <t> On the zone factory, an HTTP client retrieves this JSON resource.
+                    It attempts to connect to the origin using these values and confirms
+                    that they are working.</t>
+                <t> The zone factory observes that the JSON resource
+                    has an HTTP freshness lifetime of 3600 seconds, and chooses a DNS
+                    TTL of 1800.  It updates the zone file for $ORIGIN and re-publishes
+                    the zone containing only the new ECHConfigList values.</t>
+                <t> When the TTL of the DNS records approaches the remaining freshness
+                    lifetime of the JSON resource, the zone factory attempts to refresh
+                    its cached copy of the JSON resource.  If the resource has changed,
+                    it repeats this process.</t>
             </list>
         </t>
 
     </section>
 
-    <section title="The dns-zone-info well-known URI">
+    <section title="The origin-svcb well-known URI">
 
          <t>
             If a web server ($ORIGIN) wants to convey information to the Zone
             Factory, it publishes the JSON content
             defined in <xref target="jsonstr"/> at:
-            https://$ORIGIN/.well-known/dns-zone-info
+            https://$ORIGIN/.well-known/origin-svcb
         </t>
 
         <t>The well-known URI defined here MUST be an https URL and therefore the
@@ -216,23 +215,36 @@
         one or more keys from the JSON HTTP Origin Info registry (see
         IANA Considerations).  The initial registry entries are:
         <list style="symbols">
-            <t>priority: The value is a positive integer corresponding to the
-                SvcPriority.  If omitted, the zone factory SHOULD infer increasing
-                SvcPriority from the order of the endpoints array.
+            <t>
+                priority: The value is a positive integer corresponding to the
+                SvcPriority.  If omitted, the zone factory SHOULD infer
+                numerically increasing SvcPriority from the order of the
+                endpoints array.
             </t>
-            <t>target: The value is a fully qualified domain name, corresponding to
-                the HTTPS record's TargetName. If omitted, the zone factory SHOULD
-                infer a value of ".".
+            <t>
+                target: The value is a string containing a fully qualified
+                domain name, corresponding to the HTTPS record's TargetName.
+                The default value is ".".
             </t>
-            <t>port: The value is a non-negative integer, corresponding to the value of
-                 the "port" SvcParamKey.</t>
-            <t>ech: The value is an ECHConfigList as a base64 encoded string,
-                corresponding to the value of the "ech" SvcParamKey.
+            <t>
+                port: The value is a non-negative integer, corresponding to
+                the value of the "port" SvcParamKey.
+            </t>
+            <t>
+                ech: The value is a string containing an ECHConfigList encoded
+                in Base64 <xref target="RFC4648"/>, corresponding to the value
+                of the "ech" SvcParamKey.
             </t>
         </list>
         An empty endpoint object corresponds to an HTTPS record with inferred
-        SvcPriority, TargetName=".", and no ECH support.  An empty record of this
-        kind can be useful as a simple way to enable the HTTPS record's HSTS behavior.
+        SvcPriority, TargetName=".", and no ECH support.  An empty record of
+        this kind can be useful as a simple way to make use of the HTTPS RR
+        type's HSTS behavior.
+    </t>
+
+    <t>
+        [[TODO: What does the zone factory do if it encounters an unrecognized
+        field?]]
     </t>
 
     <t>
@@ -242,21 +254,27 @@
         an HTTPS AliasMode record.  A zone factory might implement this directive
         by publishing an AliasMode record, publishing a CNAME record, copying
         HTTPS records from the target zone, or fetching
-        https://$TARGET/.well-known/dns-zone-info" (if it exists).
+        https://$TARGET/.well-known/origin-svcb" (if it exists).
     </t>
 
     <t>
         This arrangement provides the following important properties:
         <list style="symbols">
-            <t>Origins can indicate that different ECHConfigs are used on
-                different ports.</t>
-            <t>Origins can indicate that multiple CDNs are in use, each with
-                its own ECHConfig.</t>
-            <t>Origins that simply alias to a single target can indicate this
+            <t>
+                Origins can indicate that different ECHConfigs are used on
+                different ports.
+            </t>
+            <t>
+                Origins can indicate that multiple CDNs are in use, each with
+                its own ECHConfig.
+            </t>
+            <t>
+                Origins that simply alias to a single target can indicate this
                 without copying the ECHConfig and other parameters, which
                 can interfere with key rotation and other maintenance.
             </t>
-            <t>"port" and "target" are generally sufficient to uniquely identify
+            <t>
+                "port" and "target" are generally sufficient to uniquely identify
                 a ServiceMode record, so zone factories can use the endpoint list
                 to add ECH to pre-existing ServiceMode records that may have other
                 SvcParams.
@@ -270,7 +288,7 @@
 
     <t>The zone factory SHOULD check that the presented endpoints
         work and provide access to $ORIGIN before publication.
-        A "special" TLS client may be needed for this check,
+        A bespoke TLS client may be needed for this check,
         that does not require the ECHConfigList value to have 
         already been published in the DNS.
         [[I guess that calls for the zone factory to know
@@ -297,14 +315,6 @@
         permitting the zone factory to limit the TTL if desired.
     </t>
 
-<t>A possibly interesting (unintended) consequence of this
-   design is that once a
-  TLS client has connected to $ORIGIN, it could probe for this
-  .well-known as an alternative to doing so via DoT/DoH.
-  Probably not something a web browser might do, but
-  could be fun for other applications maybe.
-  </t>
-
 </section>
 
 
@@ -315,6 +325,25 @@
             denial of service, or a privacy leak, or worse, when TLS clients attempt to use ECH with
             a backend web site. So: Don't do that:-)</t>
 
+        <t>
+            Although this configuration resource MAY be publicly
+            accessible, general HTTP clients SHOULD NOT attempt to use this
+            resource in lieu of HTTPS records queries through their preferred
+            DNS server:
+            <list style="symbols">
+                <t>
+                    The bootstrap connection would not be able to use ECH,
+                    so it would reveal all the information that ECH seeks
+                    to protect.
+                </t>
+                <t>
+                    The origin could serve the user with a uniquely
+                    identifying configuration, potentially resulting in an
+                    unexpected tracking vector.
+                </t>
+            </list>
+        </t>
+             
     </section>
 
     <section title="Acknowledgements">
@@ -341,6 +370,7 @@
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
       <?rfc include='reference.RFC.3986'?>
+      <?rfc include='reference.RFC.4648'?>
       &I-D.ietf-tls-esni;
       &I-D.ietf-dnsop-svcb-https;
 

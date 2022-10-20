@@ -17,10 +17,10 @@ Expires: April 23, 2023                              Akamai Technologies
 Abstract
 
    We propose use of a well-known URI at which an HTTP origin can inform
-   its authoritative DNS server about information that should appear in
-   this origin's DNS zone.  These instructions can include Encrypted
-   ClientHello configurations, allowing the origin to publish and rotate
-   its own ECH keys.
+   its authoritative DNS server, or other interested parties, about this
+   origin's Service Bindings, i.e. its "HTTPS" DNS records.  These
+   instructions can include Encrypted ClientHello (ECH) configurations,
+   allowing the origin to publish and rotate its own ECH keys.
 
 Status of This Memo
 
@@ -67,7 +67,7 @@ Table of Contents
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
    3.  Example use of the well-known URI for ECH . . . . . . . . . .   3
-   4.  The dns-zone-info well-known URI  . . . . . . . . . . . . . .   3
+   4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   3
    5.  The JSON structure for origin-specific DNS zone info  . . . .   4
    6.  Zone factory behaviour  . . . . . . . . . . . . . . . . . . .   5
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   6
@@ -134,34 +134,34 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
    An example deployment could be as follows:
 
-   o  Web server generates new ECHConfigList values hourly at N past the
-      hour via a cronjob
-   o  ECHConfigList values are "current" for an hour, published with a
-      TTL of 1800, and remain usable for 3 hours from the time of
-      generation
-   o  A cronjob creates creates a JSON file containing the ECHConfigList
-      site at https://$ORIGIN/.well-known/dns-zone-info
-   o  The JSON file contains an array with the ECHConfigList values
-      values as shown in Figure 1 - the values in Figure 1 with ellipses
-      are the values we want to eventually see in the DNS
-   o  On the zone factory, a cronjob runs at N+3 past the hour, it knows
-      all the names involved and checks to see if the content at those
-      well-known URIs has changed or not
-   o  If the content has changed the cronjob attempts to use the
-      ECHConfigList values, and if that works, it updates the zone file
-      for $ORIGIN and re-publishes the zone containing only the new
-      ECHConfigList values
+   1.  Web server generates new ECHConfigList values hourly at N past
+       the hour via some regular, automated process (e.g. a cronjob)
+   2.  ECHConfigList values are "current" for an hour, and remain usable
+       for 3 hours from the time of generation
+   3.  The cronjob updates the ECHConfigList values in a JSON resource
+       at at https://$ORIGIN/.well-known/origin-svcb, as shown in
+       Figure 1.
+   4.  On the zone factory, an HTTP client retrieves this JSON resource.
+       It attempts to connect to the origin using these values and
+       confirms that they are working.
+   5.  The zone factory observes that the JSON resource has an HTTP
+       freshness lifetime of 3600 seconds, and chooses a DNS TTL of
+       1800.  It updates the zone file for $ORIGIN and re-publishes the
+       zone containing only the new ECHConfigList values.
+   6.  When the TTL of the DNS records approaches the remaining
+       freshness lifetime of the JSON resource, the zone factory
+       attempts to refresh its cached copy of the JSON resource.  If the
+       resource has changed, it repeats this process.
 
-4.  The dns-zone-info well-known URI
+4.  The origin-svcb well-known URI
 
    If a web server ($ORIGIN) wants to convey information to the Zone
    Factory, it publishes the JSON content defined in Section 5 at:
-   https://$ORIGIN/.well-known/dns-zone-info
+   https://$ORIGIN/.well-known/origin-svcb
 
    The well-known URI defined here MUST be an https URL and therefore
    the zone factory verifies the correct $ORIGIN is being accessed.  If
-   there is any failure in accessing the well-known URI, then the zone
-   factory MUST NOT modify the zone.
+
 
 
 
@@ -169,6 +169,9 @@ Farrell, et al.          Expires April 23, 2023                 [Page 3]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
+
+   there is any failure in accessing the well-known URI, then the zone
+   factory MUST NOT modify the zone.
 
 5.  The JSON structure for origin-specific DNS zone info
 
@@ -202,20 +205,17 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    The initial registry entries are:
 
    o  priority: The value is a positive integer corresponding to the
-      SvcPriority.  If omitted, the zone factory SHOULD infer increasing
-      SvcPriority from the order of the endpoints array.
-   o  target: The value is a fully qualified domain name, corresponding
-      to the HTTPS record's TargetName.  If omitted, the zone factory
-      SHOULD infer a value of ".".
+      SvcPriority.  If omitted, the zone factory SHOULD infer
+      numerically increasing SvcPriority from the order of the endpoints
+      array.
+   o  target: The value is a string containing a fully qualified domain
+      name, corresponding to the HTTPS record's TargetName.  The default
+      value is ".".
    o  port: The value is a non-negative integer, corresponding to the
       value of the "port" SvcParamKey.
-   o  ech: The value is an ECHConfigList as a base64 encoded string,
-      corresponding to the value of the "ech" SvcParamKey.
-
-   An empty endpoint object corresponds to an HTTPS record with inferred
-   SvcPriority, TargetName=".", and no ECH support.  An empty record of
-   this kind can be useful as a simple way to enable the HTTPS record's
-   HSTS behavior.
+   o  ech: The value is a string containing an ECHConfigList encoded in
+      Base64 [RFC4648], corresponding to the value of the "ech"
+      SvcParamKey.
 
 
 
@@ -226,13 +226,21 @@ Farrell, et al.          Expires April 23, 2023                 [Page 4]
 Internet-Draft           Well-Known URI for ECH             October 2022
 
 
+   An empty endpoint object corresponds to an HTTPS record with inferred
+   SvcPriority, TargetName=".", and no ECH support.  An empty record of
+   this kind can be useful as a simple way to make use of the HTTPS RR
+   type's HSTS behavior.
+
+   [[TODO: What does the zone factory do if it encounters an
+   unrecognized field?]]
+
    If the object contains an "alias" key, its value MUST be an
    "authority" (Section 3.2 of [RFC3986]).  This indicates that $ORIGIN
    is hosted on the same endpoints as this target, and is equivalent to
    an HTTPS AliasMode record.  A zone factory might implement this
    directive by publishing an AliasMode record, publishing a CNAME
    record, copying HTTPS records from the target zone, or fetching
-   https://$TARGET/.well-known/dns-zone-info" (if it exists).
+   https://$TARGET/.well-known/origin-svcb" (if it exists).
 
    This arrangement provides the following important properties:
 
@@ -251,7 +259,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 6.  Zone factory behaviour
 
    The zone factory SHOULD check that the presented endpoints work and
-   provide access to $ORIGIN before publication.  A "special" TLS client
+   provide access to $ORIGIN before publication.  A bespoke TLS client
    may be needed for this check, that does not require the ECHConfigList
    value to have already been published in the DNS.  [[I guess that
    calls for the zone factory to know of a "safe" URL on $ORIGIN to try,
@@ -266,14 +274,6 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    The zone factory SHOULD publish all the endpoints that are presented
    in the JSON file, and that pass the check above.
 
-   The zone factory MUST set a DNS TTL short enough that any generated
-   records expire from DNS caches before the JSON object's HTTP cache
-   lifetime expires.  The zone factory MUST refresh the JSON object and
-   regenerate the zone before it expires each time.  This ensures that
-   ECHConfigs are not used longer than intended by the origin, while
-   permitting the zone factory to limit the TTL if desired.
-
-
 
 
 
@@ -282,11 +282,12 @@ Farrell, et al.          Expires April 23, 2023                 [Page 5]
 Internet-Draft           Well-Known URI for ECH             October 2022
 
 
-   A possibly interesting (unintended) consequence of this design is
-   that once a TLS client has connected to $ORIGIN, it could probe for
-   this .well-known as an alternative to doing so via DoT/DoH.  Probably
-   not something a web browser might do, but could be fun for other
-   applications maybe.
+   The zone factory MUST set a DNS TTL short enough that any generated
+   records expire from DNS caches before the JSON object's HTTP cache
+   lifetime expires.  The zone factory MUST refresh the JSON object and
+   regenerate the zone before it expires each time.  This ensures that
+   ECHConfigs are not used longer than intended by the origin, while
+   permitting the zone factory to limit the TTL if desired.
 
 7.  Security Considerations
 
@@ -295,6 +296,16 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    clients using ECH would do the wrong thing, likely resulting in
    denial of service, or a privacy leak, or worse, when TLS clients
    attempt to use ECH with a backend web site.  So: Don't do that:-)
+
+   Although this configuration resource MAY be publicly accessible,
+   general HTTP clients SHOULD NOT attempt to use this resource in lieu
+   of HTTPS records queries through their preferred DNS server:
+
+   o  The bootstrap connection would not be able to use ECH, so it would
+      reveal all the information that ECH seeks to protect.
+   o  The origin could serve the user with a uniquely identifying
+      configuration, potentially resulting in an unexpected tracking
+      vector.
 
 8.  Acknowledgements
 
@@ -318,6 +329,15 @@ Internet-Draft           Well-Known URI for ECH             October 2022
               HTTPS RRs)", draft-ietf-dnsop-svcb-https-11 (work in
               progress), October 2022.
 
+
+
+
+
+Farrell, et al.          Expires April 23, 2023                 [Page 6]
+
+Internet-Draft           Well-Known URI for ECH             October 2022
+
+
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
               Encrypted Client Hello", draft-ietf-tls-esni-15 (work in
@@ -329,19 +349,14 @@ Internet-Draft           Well-Known URI for ECH             October 2022
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
 
-
-
-
-
-Farrell, et al.          Expires April 23, 2023                 [Page 6]
-
-Internet-Draft           Well-Known URI for ECH             October 2022
-
-
    [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
               Resource Identifier (URI): Generic Syntax", STD 66,
               RFC 3986, DOI 10.17487/RFC3986, January 2005,
               <https://www.rfc-editor.org/info/rfc3986>.
+
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
+              Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
+              <https://www.rfc-editor.org/info/rfc4648>.
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
@@ -354,21 +369,6 @@ Internet-Draft           Well-Known URI for ECH             October 2022
    [RFC8615]  Nottingham, M., "Well-Known Uniform Resource Identifiers
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
