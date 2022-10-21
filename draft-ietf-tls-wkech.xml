@@ -17,7 +17,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-00" ipr="trust200902" >
+<rfc category="exp" docName="draft-ietf-tls-wkech-01" ipr="trust200902" >
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
@@ -189,7 +189,7 @@
     </section>
 
 
-<section anchor="jsonstr" title="The JSON structure for origin-specific DNS zone info">
+<section anchor="jsonstr" title="The JSON structure for origin service binding info">
 
   <t>[[The JSON structure is a work in progress.]]</t>
 
@@ -395,6 +395,12 @@
       <t>[[RFC editor: please remove this before publication.]]</t>
 
       <t>The -00 WG draft replaces draft-farrell-tls-wkesni-03.</t>
+
+      <t>
+        Version 01 changed from a special-purpose design, carrying only
+        ECHConfigs and port numbers, to a more general approach based on
+        Service Bindings.
+      </t>
 
     </section>
   </back>
