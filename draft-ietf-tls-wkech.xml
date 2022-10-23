@@ -17,7 +17,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-01" ipr="trust200902" >
+<rfc category="exp" docName="draft-ietf-tls-wkech-02" ipr="trust200902" >
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
@@ -400,6 +400,10 @@
         Version 01 changed from a special-purpose design, carrying only
         ECHConfigs and port numbers, to a more general approach based on
         Service Bindings.
+      </t>
+
+      <t>
+        Placeholder for changes from -01 to -02.
       </t>
 
     </section>
