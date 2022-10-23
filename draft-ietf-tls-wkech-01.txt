@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: April 24, 2023                              Akamai Technologies
+Expires: April 26, 2023                              Akamai Technologies
                                                              B. Schwartz
                                                               Google LLC
-                                                        October 21, 2022
+                                                        October 23, 2022
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on April 24, 2023.
+   This Internet-Draft will expire on April 26, 2023.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.          Expires April 24, 2023                 [Page 1]
+Farrell, et al.          Expires April 26, 2023                 [Page 1]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.          Expires April 24, 2023                 [Page 2]
+Farrell, et al.          Expires April 26, 2023                 [Page 2]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell, et al.          Expires April 24, 2023                 [Page 3]
+Farrell, et al.          Expires April 26, 2023                 [Page 3]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell, et al.          Expires April 24, 2023                 [Page 4]
+Farrell, et al.          Expires April 26, 2023                 [Page 4]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell, et al.          Expires April 24, 2023                 [Page 5]
+Farrell, et al.          Expires April 26, 2023                 [Page 5]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-Farrell, et al.          Expires April 24, 2023                 [Page 6]
+Farrell, et al.          Expires April 26, 2023                 [Page 6]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -344,7 +344,8 @@ Internet-Draft           Well-Known URI for ECH             October 2022
               Schwartz, B., Bishop, M., and E. Nygren, "Service binding
               and parameter specification via the DNS (DNS SVCB and
               HTTPS RRs)", draft-ietf-dnsop-svcb-https-11 (work in
-              progress), October 2022.
+              progress), October 2022, <https://www.ietf.org/archive/id/
+              draft-ietf-dnsop-svcb-https-11.txt>.
 
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
@@ -388,8 +389,7 @@ Internet-Draft           Well-Known URI for ECH             October 2022
 
 
 
-
-Farrell, et al.          Expires April 24, 2023                 [Page 7]
+Farrell, et al.          Expires April 26, 2023                 [Page 7]
 
 Internet-Draft           Well-Known URI for ECH             October 2022
 
@@ -445,4 +445,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.          Expires April 24, 2023                 [Page 8]
+Farrell, et al.          Expires April 26, 2023                 [Page 8]
