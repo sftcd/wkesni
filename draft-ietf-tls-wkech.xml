@@ -57,7 +57,7 @@
       </address>
     </author>
 
-    <date year="2022"/>
+    <date year="2023"/>
 
     <area>Security Area</area>
 
@@ -403,7 +403,7 @@
       </t>
 
       <t>
-        Placeholder for changes from -01 to -02.
+        Version 02 is just a keep-alive
       </t>
 
     </section>
