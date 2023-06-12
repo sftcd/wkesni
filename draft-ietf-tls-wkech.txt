@@ -5,14 +5,14 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: October 23, 2023                            Akamai Technologies
+Expires: December 12, 2023                           Akamai Technologies
                                                              B. Schwartz
-                                                              Google LLC
-                                                          April 21, 2023
+                                                    Meta Platforms, Inc.
+                                                           June 10, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
-                        draft-ietf-tls-wkech-02
+                        draft-ietf-tls-wkech-03
 
 Abstract
 
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on October 23, 2023.
+   This Internet-Draft will expire on December 12, 2023.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 1]
+Farrell, et al.         Expires December 12, 2023               [Page 1]
 
-Internet-Draft           Well-Known URI for ECH               April 2023
+Internet-Draft           Well-Known URI for ECH                June 2023
 
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 2]
+Farrell, et al.         Expires December 12, 2023               [Page 2]
 
-Internet-Draft           Well-Known URI for ECH               April 2023
+Internet-Draft           Well-Known URI for ECH                June 2023
 
 
    We use the term "zone factory" for the entity that does have write
@@ -165,9 +165,9 @@ Internet-Draft           Well-Known URI for ECH               April 2023
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 3]
+Farrell, et al.         Expires December 12, 2023               [Page 3]
 
-Internet-Draft           Well-Known URI for ECH               April 2023
+Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 4.  The origin-svcb well-known URI
@@ -221,9 +221,9 @@ Internet-Draft           Well-Known URI for ECH               April 2023
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 4]
+Farrell, et al.         Expires December 12, 2023               [Page 4]
 
-Internet-Draft           Well-Known URI for ECH               April 2023
+Internet-Draft           Well-Known URI for ECH                June 2023
 
 
    o  target: The value is a string containing a fully qualified domain
@@ -277,9 +277,9 @@ Internet-Draft           Well-Known URI for ECH               April 2023
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 5]
+Farrell, et al.         Expires December 12, 2023               [Page 5]
 
-Internet-Draft           Well-Known URI for ECH               April 2023
+Internet-Draft           Well-Known URI for ECH                June 2023
 
 
    could also try a GREASEd ECH and see if the retry-configs it gets
@@ -333,9 +333,9 @@ Internet-Draft           Well-Known URI for ECH               April 2023
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 6]
+Farrell, et al.         Expires December 12, 2023               [Page 6]
 
-Internet-Draft           Well-Known URI for ECH               April 2023
+Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 10.  Normative References
@@ -389,9 +389,9 @@ Internet-Draft           Well-Known URI for ECH               April 2023
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 7]
+Farrell, et al.         Expires December 12, 2023               [Page 7]
 
-Internet-Draft           Well-Known URI for ECH               April 2023
+Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 Appendix A.  Change Log
@@ -405,6 +405,8 @@ Appendix A.  Change Log
    Service Bindings.
 
    Version 02 is just a keep-alive
+
+   Version 03 reflects some implementation experience with -02
 
 Authors' Addresses
 
@@ -424,11 +426,9 @@ Authors' Addresses
 
 
    Benjamin Schwartz
-   Google LLC
+   Meta Platforms, Inc.
 
-   EMail: bemasc@google.com
-
-
+   EMail: ietf@bemasc.net
 
 
 
@@ -445,4 +445,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires October 23, 2023                [Page 8]
+Farrell, et al.         Expires December 12, 2023               [Page 8]

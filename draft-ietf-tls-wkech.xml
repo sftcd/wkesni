@@ -17,7 +17,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-02" ipr="trust200902" >
+<rfc category="exp" docName="draft-ietf-tls-wkech-03" ipr="trust200902" >
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
@@ -51,9 +51,9 @@
     </author>
 
     <author initials="B." surname="Schwartz" fullname="Benjamin Schwartz">
-      <organization>Google LLC</organization>
+      <organization>Meta Platforms, Inc.</organization>
       <address>
-        <email>bemasc@google.com</email>
+        <email>ietf@bemasc.net</email>
       </address>
     </author>
 
@@ -404,6 +404,10 @@
 
       <t>
         Version 02 is just a keep-alive
+      </t>
+
+      <t>
+         Version 03 reflects some implementation experience with -02
       </t>
 
     </section>
