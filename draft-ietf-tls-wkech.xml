@@ -160,11 +160,10 @@
                     It attempts to connect to the origin using these values and confirms
                     that they are working.</t>
                 <t> The zone factory observes that the JSON resource
-                    has an HTTP freshness lifetime of 3600 seconds, and chooses a DNS
+                    has a regenfreq of 3600 seconds, and chooses a DNS
                     TTL of 1800.  It updates the zone file for $ORIGIN and re-publishes
                     the zone containing only the new ECHConfigList values.</t>
-                <t> When the TTL of the DNS records approaches the remaining freshness
-                    lifetime of the JSON resource, the zone factory attempts to refresh
+                <t> When regenfreq seconds have passed, the zone factory attempts to refresh
                     its cached copy of the JSON resource.  If the resource has changed,
                     it repeats this process.</t>
             </list>
@@ -197,10 +196,12 @@
 <artwork><![CDATA[
     {
         "endpoints": [{
+            "regenfreq": 3600,
             "priority": 1,
             "target": "cdn.example.",
             "ech": "AD7+DQA65wAgAC..AA=="
         }, {
+            "regenfreq": 3600,
             "priority": 1,
             "port": 8413,
             "ech": "AD7+DQA65wAgAC..AA=="
@@ -225,6 +226,11 @@
         one or more keys from the JSON HTTP Origin Info registry (see
         IANA Considerations).  The initial registry entries are:
         <list style="symbols">
+            <t>
+                regenfreq: the number of seconds between key generation
+                actions at the origin, i.e. a replacement ECHConfigList may be
+                generated this often.
+            </t>
             <t>
                 priority: The value is a positive integer corresponding to the
                 SvcPriority.  If omitted, the zone factory SHOULD infer
@@ -316,13 +322,12 @@
         that are presented in the JSON file, and that pass
         the check above.</t>
 
-    <t>The zone factory MUST set a DNS TTL short enough that any
-        generated records expire from DNS caches before the JSON
-        object's HTTP cache lifetime expires.  The zone factory
-        MUST refresh the JSON object and regenerate the zone
-        before it expires each time.  This ensures that ECHConfigs
-        are not used longer than intended by the origin, while
-        permitting the zone factory to limit the TTL if desired.
+    <t>The zone factory SHOULD set a DNS TTL short enough so that any
+        cached DNS resource records are likely to have expired before the JSON
+        object's content is likely to have changed.  The zone factory
+        MUST attempt to refresh the JSON object and regenerate the zone
+        before this time.  This aims to ensure that ECHConfigs
+        are not used longer than intended by the origin.
     </t>
 
 </section>

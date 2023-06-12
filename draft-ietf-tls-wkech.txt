@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: December 12, 2023                           Akamai Technologies
+Expires: December 14, 2023                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                           June 10, 2023
+                                                           June 12, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 12, 2023.
+   This Internet-Draft will expire on December 14, 2023.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires December 12, 2023               [Page 1]
+Farrell, et al.         Expires December 14, 2023               [Page 1]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires December 12, 2023               [Page 2]
+Farrell, et al.         Expires December 14, 2023               [Page 2]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -150,14 +150,13 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    4.  On the zone factory, an HTTP client retrieves this JSON resource.
        It attempts to connect to the origin using these values and
        confirms that they are working.
-   5.  The zone factory observes that the JSON resource has an HTTP
-       freshness lifetime of 3600 seconds, and chooses a DNS TTL of
-       1800.  It updates the zone file for $ORIGIN and re-publishes the
-       zone containing only the new ECHConfigList values.
-   6.  When the TTL of the DNS records approaches the remaining
-       freshness lifetime of the JSON resource, the zone factory
-       attempts to refresh its cached copy of the JSON resource.  If the
-       resource has changed, it repeats this process.
+   5.  The zone factory observes that the JSON resource has a regenfreq
+       of 3600 seconds, and chooses a DNS TTL of 1800.  It updates the
+       zone file for $ORIGIN and re-publishes the zone containing only
+       the new ECHConfigList values.
+   6.  When regenfreq seconds have passed, the zone factory attempts to
+       refresh its cached copy of the JSON resource.  If the resource
+       has changed, it repeats this process.
 
 
 
@@ -165,7 +164,8 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 
-Farrell, et al.         Expires December 12, 2023               [Page 3]
+
+Farrell, et al.         Expires December 14, 2023               [Page 3]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -187,10 +187,12 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
        {
            "endpoints": [{
+               "regenfreq": 3600,
                "priority": 1,
                "target": "cdn.example.",
                "ech": "AD7+DQA65wAgAC..AA=="
            }, {
+               "regenfreq": 3600,
                "priority": 1,
                "port": 8413,
                "ech": "AD7+DQA65wAgAC..AA=="
@@ -212,20 +214,22 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    from the JSON HTTP Origin Info registry (see IANA Considerations).
    The initial registry entries are:
 
-   o  priority: The value is a positive integer corresponding to the
-      SvcPriority.  If omitted, the zone factory SHOULD infer
-      numerically increasing SvcPriority from the order of the endpoints
-      array.
+   o  regenfreq: the number of seconds between key generation actions at
+      the origin, i.e. a replacement ECHConfigList may be generated this
+      often.
 
 
 
 
-
-Farrell, et al.         Expires December 12, 2023               [Page 4]
+Farrell, et al.         Expires December 14, 2023               [Page 4]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
 
+   o  priority: The value is a positive integer corresponding to the
+      SvcPriority.  If omitted, the zone factory SHOULD infer
+      numerically increasing SvcPriority from the order of the endpoints
+      array.
    o  target: The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
       value is ".".
@@ -270,18 +274,17 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    The zone factory SHOULD check that the presented endpoints work and
    provide access to $ORIGIN before publication.  A bespoke TLS client
    may be needed for this check, that does not require the ECHConfigList
-   value to have already been published in the DNS.  [[I guess that
-   calls for the zone factory to know of a "safe" URL on $ORIGIN to try,
-   or maybe it could use HTTP HEAD?  Figuring that out is TBD.  The ZF
 
 
 
-
-Farrell, et al.         Expires December 12, 2023               [Page 5]
+Farrell, et al.         Expires December 14, 2023               [Page 5]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
 
+   value to have already been published in the DNS.  [[I guess that
+   calls for the zone factory to know of a "safe" URL on $ORIGIN to try,
+   or maybe it could use HTTP HEAD?  Figuring that out is TBD.  The ZF
    could also try a GREASEd ECH and see if the retry-configs it gets
    back is one of the ECHConfig values in the ECHConfigList.]]
 
@@ -292,12 +295,12 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    The zone factory SHOULD publish all the endpoints that are presented
    in the JSON file, and that pass the check above.
 
-   The zone factory MUST set a DNS TTL short enough that any generated
-   records expire from DNS caches before the JSON object's HTTP cache
-   lifetime expires.  The zone factory MUST refresh the JSON object and
-   regenerate the zone before it expires each time.  This ensures that
-   ECHConfigs are not used longer than intended by the origin, while
-   permitting the zone factory to limit the TTL if desired.
+   The zone factory SHOULD set a DNS TTL short enough so that any cached
+   DNS resource records are likely to have expired before the JSON
+   object's content is likely to have changed.  The zone factory MUST
+   attempt to refresh the JSON object and regenerate the zone before
+   this time.  This aims to ensure that ECHConfigs are not used longer
+   than intended by the origin.
 
 7.  Security Considerations
 
@@ -326,17 +329,19 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    [[TBD: IANA registration of a .well-known.  Also TBD - how to handle
    I18N for $FRONT and $BACKEND within such a URL.]]
 
+
+
+
+
+Farrell, et al.         Expires December 14, 2023               [Page 6]
+
+Internet-Draft           Well-Known URI for ECH                June 2023
+
+
    If approved, this specification requests the creation of an IANA
    registry named "JSON HTTP Origin Info" with a Standards Action
    registration policy, containing a field named "Name" whose value is a
    UTF-8 string.
-
-
-
-Farrell, et al.         Expires December 12, 2023               [Page 6]
-
-Internet-Draft           Well-Known URI for ECH                June 2023
-
 
 10.  Normative References
 
@@ -384,12 +389,7 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 
-
-
-
-
-
-Farrell, et al.         Expires December 12, 2023               [Page 7]
+Farrell, et al.         Expires December 14, 2023               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -445,4 +445,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires December 12, 2023               [Page 8]
+Farrell, et al.         Expires December 14, 2023               [Page 8]
