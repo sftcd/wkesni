@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: December 14, 2023                           Akamai Technologies
+Expires: December 15, 2023                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                           June 12, 2023
+                                                           June 13, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 14, 2023.
+   This Internet-Draft will expire on December 15, 2023.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 1]
+Farrell, et al.         Expires December 15, 2023               [Page 1]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 2]
+Farrell, et al.         Expires December 15, 2023               [Page 2]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -125,8 +125,8 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    sees new values, it can check if those work, and if they do, then
    update the zone file and re-publish the zone.
 
-   [[The source for this is in https://github.com/sftcd/wkesni/ PRs are
-   welcome there too.]]
+   [[The source for this is in https://github.com/sftcd/wkesni/ Issues
+   and PRs are welcome there too.]]
 
 2.  Terminology
 
@@ -150,12 +150,12 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    4.  On the zone factory, an HTTP client retrieves this JSON resource.
        It attempts to connect to the origin using these values and
        confirms that they are working.
-   5.  The zone factory observes that the JSON resource has a regenfreq
-       of 3600 seconds, and chooses a DNS TTL of 1800.  It updates the
-       zone file for $ORIGIN and re-publishes the zone containing only
-       the new ECHConfigList values.
-   6.  When regenfreq seconds have passed, the zone factory attempts to
-       refresh its cached copy of the JSON resource.  If the resource
+   5.  The zone factory observes that the JSON resource has a
+       regeninterval of 3600 seconds, and chooses a DNS TTL of 1800.  It
+       updates the zone file for $ORIGIN and re-publishes the zone
+       containing only the new ECHConfigList values.
+   6.  When regeninterval seconds have passed, the zone factory attempts
+       to refresh its cached copy of the JSON resource.  If the resource
        has changed, it repeats this process.
 
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 3]
+Farrell, et al.         Expires December 15, 2023               [Page 3]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -187,12 +187,12 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
        {
            "endpoints": [{
-               "regenfreq": 3600,
+               "regeninterval": 3600,
                "priority": 1,
                "target": "cdn.example.",
                "ech": "AD7+DQA65wAgAC..AA=="
            }, {
-               "regenfreq": 3600,
+               "regeninterval": 3600,
                "priority": 1,
                "port": 8413,
                "ech": "AD7+DQA65wAgAC..AA=="
@@ -214,14 +214,14 @@ Internet-Draft           Well-Known URI for ECH                June 2023
    from the JSON HTTP Origin Info registry (see IANA Considerations).
    The initial registry entries are:
 
-   o  regenfreq: the number of seconds between key generation actions at
-      the origin, i.e. a replacement ECHConfigList may be generated this
-      often.
+   o  regeninterval: the number of seconds between key generation
+      actions at the origin, i.e. a replacement ECHConfigList may be
+      generated this often.
 
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 4]
+Farrell, et al.         Expires December 15, 2023               [Page 4]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 5]
+Farrell, et al.         Expires December 15, 2023               [Page 5]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 6]
+Farrell, et al.         Expires December 15, 2023               [Page 6]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for ECH                June 2023
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 7]
+Farrell, et al.         Expires December 15, 2023               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                June 2023
 
@@ -445,4 +445,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires December 14, 2023               [Page 8]
+Farrell, et al.         Expires December 15, 2023               [Page 8]

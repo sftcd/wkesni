@@ -23,9 +23,8 @@
 # THE SOFTWARE.
 
 # ECH keys update as per draft-ietf-tls-wkech-02
-# with the addition of 'regenfreq' to the JSON
+# with the addition of 'regentinterval' to the JSON
 # and (so far) without support for the 'alias' option
-# or the 'target' option (in the JSON)
 # This is a work-in-progress, DON'T DEPEND ON THIS!!
 
 # This script handles ECH key updating for an ECH front-end (in ECH split-mode),
@@ -201,13 +200,23 @@ function donsupdate()
     echval=$2
     ttl=$3
     priority=$4
-    # port can be empty for 443 so has to be last
-    port=$5
-
-    if [[ "$port" == "443" || "$port" == "" ]]
+    target=$5
+    port=$6
+    # All params are needed
+    if [[ $host == "" \
+          || $echval == "" \
+          || $ttl = "" \
+          || $priority = "" \
+          || $target == "" \
+          || $port == "" ]]
+    then
+        # non-random failure code
+        echo 57
+    fi
+    if [[ "$port" == "443" ]]
     then
         nscmd="update delete $host HTTPS\n
-               update add $host $ttl HTTPS $priority . ech=$echval\n
+               update add $host $ttl HTTPS $priority $target ech=$echval\n
                send\n
                quit"
     else
@@ -226,7 +235,8 @@ function usage()
     echo "  -d specifies key update frequency in seconds (for testing really)"
     echo "  -h means print this"
     echo "  -n means to not verify that ECH is working before publishing"
-    echo "  -r roles can be \"$FESTR\" or \"$FESTR,$BESTR\" or \"$ZFSTR\" (default is \"$ROLES\")"
+    echo "  -r roles can be \"$FESTR\" or \"$FESTR,$BESTR\" or \"$ZFSTR\" " \
+         "(default is \"$ROLES\")"
     echo "  -t means to test $ZFSTR role up to, but not including, publication"
 
 	echo ""
@@ -447,7 +457,7 @@ then
     echo "New key generated when latest is $dur old"
     echo "Old keys retired when older than $durt3"
     echo "Keys published until older than $durt2"
-    echo "Desired TTL will be $duro2"
+    echo "Keys deleted when older than $durt5"
 
     for file in $files2check
     do
@@ -478,6 +488,9 @@ then
     echo "Oldest moveable PEM file is $oldf (age: $oldest)"
     echo "Newest moveable PEM file is $newf (age: $newest)"
 
+    feport=$(hostport2port $FRONTEND)
+    fehost=$(hostport2host $FRONTEND)
+
     # delete files older than 5*DURATION
     oldies="$ECHOLD/*"
     for file in $oldies
@@ -498,10 +511,9 @@ then
     if ((newest >= dur))
     then
         echo "Time for a new key pair (newest as old or older than $dur)"
-        actiontaken="true"
         $OSSL/apps/openssl ech \
             -ech_version 0xfe0d \
-            -public_name $FRONTEND \
+            -public_name $fehost \
             -pemout $ECHDIR/$keyn.pem.ech
         res=$?
         if [[ "$res" != "1" ]]
@@ -509,8 +521,8 @@ then
             echo "Error generating $ECHDIR/$keyn.pem.ech"
             exit 15
         fi
+        actiontaken="true"
 
-        # move zonefrag to below DocRoot
         newjsonfile="false"
         # include long-term keys
         mergefiles="$LONGTERMKEYS"
@@ -530,21 +542,18 @@ then
 
     if [[ "$actiontaken" != "false" ]]
     then
-        # let's put a json file at https://$FRONTEND/.well-known/ech/$FRONTEND.json
+        # put a json file at https://$FRONTEND/.well-known/$WESTR/$FRONTEND.json
         # containing one ECHConfigList for all services for this epoch 
         TMPF=`mktemp /tmp/mergedech-XXXX`
         $OSSL/esnistuff/mergepems.sh -o $TMPF $mergefiles
-        echconfiglist=`cat $TMPF | sed -n '/BEGIN ECHCONFIG/,/END ECHCONFIG/p' | head -n -1 | tail -n -1`
-        feport=$(hostport2port $FRONTEND)
-        fehost=$(hostport2host $FRONTEND)
+        echconfiglist=`cat $TMPF | sed -n '/BEGIN ECHCONFIG/,/END ECHCONFIG/p' \
+            | head -n -1 | tail -n -1`
         cat <<EOF >$TMPF
-{
-    "front-end" : [{
-        "regen-freq" : $dur,
-        "port":  $feport,
-        "ech": "$echconfiglist"
-    }]
-}
+[{
+    "regentinterval" : $dur,
+    "port":  $feport,
+    "ech": "$echconfiglist"
+}]
 EOF
         chmod a+r $TMPF
         # copy that to DocRoot
@@ -578,10 +587,10 @@ then
         entries=`cat $TMPF | jq length`
         for ((index=0;index!=$entries;index++))
         do
-            regenfreq=`cat $TMPF | jq ".[$index].regenfreq"`
+            regentinterval=`cat $TMPF | jq ".[$index].regentinterval"`
             feport=`cat $TMPF | jq ".[$index].port"`
             ech=`cat $TMPF | jq ".[$index].ech"`
-            if [[ "$ech" == "" || "$regenfreq" == "" ]]
+            if [[ "$ech" == "" || "$regentinterval" == "" ]]
             then
                 continue
             fi
@@ -596,7 +605,7 @@ then
                 beistr="
     {
         \"priority\" : 1,
-        \"regenfreq\" : $((dur < regenfreq ? dur : regenfreq)),
+        \"regentinterval\" : $((dur < regentinterval ? dur : regentinterval)),
         \"port\" : $beport,
         \"ech\" : $ech
     }"
@@ -717,9 +726,9 @@ then
             listarr=( $splitlists )
             listcount=${#listarr[@]}
             priority=`echo $arrent | jq .priority`
-            regenfreq=`echo $arrent | jq .regenfreq`
-            desired_ttl=$((regenfreq/2))
-            #echo "desired_ttl: $desired_ttl"
+            regentinterval=`echo $arrent | jq .regentinterval`
+            target=`echo $arrent | jq .target`
+            desired_ttl=$((regentinterval/2))
             # now test for each port and ECHConfig within the ECHConfigList
             echerror="false"
             if [[ "$VERIFY" == "no" ]]
@@ -756,7 +765,6 @@ then
                     $OSSL/esnistuff/echcli.sh -P $singletonlist -H $backend \
                         -c $FRONTEND -s $FRONTEND -p $port >/dev/null 2>&1
                     res=$?
-                    #echo "Test result is $res"
                     if [[ "$res" != "0" ]]
                     then
                             echo "ECH single error at $backend $port $singletonlist"
@@ -774,8 +782,21 @@ then
                 if [[ "$DOTEST" == "no" ]]
                 then
                     #echo "Will try publish for $backend/$port"
+                    if [[ "$port" == "" ]]
+                    then
+                        port=443
+                    fi
+                    if [[ "$target" == "" ]]
+                    then
+                        if [[ "$port" == "443" ]]
+                        then
+                            target="."
+                        else
+                            target=$backend
+                        fi
+                    fi
                     sleep 3
-                    nres=`donsupdate $backend $list $desired_ttl $priority $port`
+                    nres=`donsupdate $backend $list $desired_ttl $priority $target $port`
                     if [[ "$nres" == "0" ]]
                     then 
                         echo "Published for $backend/$port"

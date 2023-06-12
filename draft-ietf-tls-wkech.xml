@@ -131,7 +131,7 @@
         </t>
 
         <t>[[The source for this is in https://github.com/sftcd/wkesni/ 
-            PRs are welcome there too.]]
+            Issues and PRs are welcome there too.]]
         </t>
 
       </section>
@@ -160,10 +160,10 @@
                     It attempts to connect to the origin using these values and confirms
                     that they are working.</t>
                 <t> The zone factory observes that the JSON resource
-                    has a regenfreq of 3600 seconds, and chooses a DNS
+                    has a regeninterval of 3600 seconds, and chooses a DNS
                     TTL of 1800.  It updates the zone file for $ORIGIN and re-publishes
                     the zone containing only the new ECHConfigList values.</t>
-                <t> When regenfreq seconds have passed, the zone factory attempts to refresh
+                <t> When regeninterval seconds have passed, the zone factory attempts to refresh
                     its cached copy of the JSON resource.  If the resource has changed,
                     it repeats this process.</t>
             </list>
@@ -196,12 +196,12 @@
 <artwork><![CDATA[
     {
         "endpoints": [{
-            "regenfreq": 3600,
+            "regeninterval": 3600,
             "priority": 1,
             "target": "cdn.example.",
             "ech": "AD7+DQA65wAgAC..AA=="
         }, {
-            "regenfreq": 3600,
+            "regeninterval": 3600,
             "priority": 1,
             "port": 8413,
             "ech": "AD7+DQA65wAgAC..AA=="
@@ -227,7 +227,7 @@
         IANA Considerations).  The initial registry entries are:
         <list style="symbols">
             <t>
-                regenfreq: the number of seconds between key generation
+                regeninterval: the number of seconds between key generation
                 actions at the origin, i.e. a replacement ECHConfigList may be
                 generated this often.
             </t>
