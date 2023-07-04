@@ -69,22 +69,12 @@
 
     <abstract>
         <t>
-            We propose use of a well-known URI at which an HTTP origin can
+            We define a well-known URI at which an HTTP origin can
             inform an authoritative DNS server, or other interested parties,
             about this origin's Service Bindings, i.e. its "HTTPS" DNS records.
             These instructions can include Encrypted ClientHello (ECH)
-            configurations, allowing the origin to publish and rotate its own
-            ECH keys.
-        </t>
-
-        <t>
-            AUTHORS NOTE: This
-            version proposes changing from the highly ECHConfig specific
-            approach of -00 to a much more generic approach.  The authors
-            are seeking feedback from the Working Group as
-            to which of these approaches may be more likely to garner
-            rough consensus.  If the WG feel this is worse than
-            -00 we're fine with reverting.
+            configurations, allowing the origin, in collaboration with DNS
+            infrastructure elements, to publish and rotate its own ECH keys.
         </t>
     </abstract>
   </front>
@@ -130,7 +120,7 @@
             they do, then update the zone file and re-publish the zone.
         </t>
 
-        <t>[[The source for this is in https://github.com/sftcd/wkesni/ 
+        <t>[[The source for this draft is in https://github.com/sftcd/wkesni/ 
             Issues and PRs are welcome there too.]]
         </t>
 
@@ -149,15 +139,16 @@
         <t>An example deployment could be as follows:
 
            <list style="numbers">
-                <t> Web server generates new ECHConfigList values hourly at N past 
-                    the hour via some regular, automated process (e.g. a cronjob)</t>
+               <t> Web server generates new ECHConfigList values every "regeninterval" 
+               seconds via some regular, automated process (e.g. a cronjob)</t>
                 <t> ECHConfigList values are "current" for an hour, and remain usable
                     for 3 hours from the time of generation</t>
                 <t> The cronjob updates the ECHConfigList values in a JSON resource at
                     at https://$ORIGIN/.well-known/origin-svcb, as shown in 
                     <xref target="sample-json"/>.</t>
-                <t> On the zone factory, an HTTP client retrieves this JSON resource.
-                    It attempts to connect to the origin using these values and confirms
+                <t> On the zone factory, another regularaly executed job uses 
+                    an HTTP client to retrieve this JSON resource.
+                    It also attempts to connect to the origin using these ECH values and confirms
                     that they are working.</t>
                 <t> The zone factory observes that the JSON resource
                     has a regeninterval of 3600 seconds, and chooses a DNS
@@ -182,7 +173,7 @@
 
         <t>The well-known URI defined here MUST be an https URL and therefore the
             zone factory verifies the correct $ORIGIN is being accessed. If
-            there is any failure in accessing the well-known URI, then the
+            no new ECH value resulting "works" then the
             zone factory MUST NOT modify the zone. </t> 
 
     </section>
@@ -319,7 +310,7 @@
        and test each for each endpoint.</t>
 
     <t>The zone factory SHOULD publish all the endpoints
-        that are presented in the JSON file, and that pass
+        that are presented in the JSON file that pass
         the check above.</t>
 
     <t>The zone factory SHOULD set a DNS TTL short enough so that any
@@ -344,7 +335,7 @@
             Although this configuration resource MAY be publicly
             accessible, general HTTP clients SHOULD NOT attempt to use this
             resource in lieu of HTTPS records queries through their preferred
-            DNS server:
+            DNS server for the following reasons:
             <list style="symbols">
                 <t>
                     The bootstrap connection would not be able to use ECH,
@@ -412,7 +403,7 @@
       </t>
 
       <t>
-         Version 03 reflects some implementation experience with -02
+        Version 03 reflects some local implementation experience with -02
       </t>
 
     </section>
