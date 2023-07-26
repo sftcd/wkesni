@@ -17,7 +17,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-03" ipr="trust200902" >
+<rfc category="exp" docName="draft-ietf-tls-wkech-04" ipr="trust200902" >
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
@@ -204,7 +204,8 @@
 <figure anchor="sample-json-alias" title="Sample JSON with aliasing" >
     <artwork><![CDATA[
         {
-            "alias": "cdn.example.net:443"
+            "alias": "cdn.example.net"
+            "regeninterval": 108000
         }
     ]]></artwork>
 </figure>
@@ -255,13 +256,17 @@
     </t>
 
     <t>
-        If the object contains an "alias" key, its value MUST be an "authority"
-        (Section 3.2 of <xref target="RFC3986"/>).  This indicates that $ORIGIN
+        If the object contains an "alias" key, its value MUST be a DNS name
+        that could be used as the TargetName of an HTTPS resource record.
+        This indicates that $ORIGIN
         is hosted on the same endpoints as this target, and is equivalent to
         an HTTPS AliasMode record.  A zone factory might implement this directive
         by publishing an AliasMode record, publishing a CNAME record, copying
         HTTPS records from the target zone, or fetching
         https://$TARGET/.well-known/origin-svcb" (if it exists).
+        In this case, the regeninterval indicates that the $ORIGIN does
+        not plan to change the content at the URL for at least that number of
+        seconds.
     </t>
 
     <t>
@@ -404,6 +409,11 @@
 
       <t>
         Version 03 reflects some local implementation experience with -02
+      </t>
+
+      <t>
+          Version 04 matches a bash script implementation and results of IETF-117
+          discussion (or it will after that discussion:-).
       </t>
 
     </section>

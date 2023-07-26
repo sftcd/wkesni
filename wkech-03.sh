@@ -23,7 +23,7 @@
 # THE SOFTWARE.
 
 # ECH keys update as per draft-ietf-tls-wkech-02
-# with the addition of 'regentinterval' to the JSON
+# with the addition of 'regeninterval' to the JSON
 # and (so far) without support for the 'alias' option
 # This is a work-in-progress, DON'T DEPEND ON THIS!!
 
@@ -83,6 +83,15 @@ DEFBACKENDS="defo.ie \
              draft-13.esni.defo.ie:11413 \
              draft-13.esni.defo.ie:12413 \
              draft-13.esni.defo.ie:12414"
+DRTOP="/var/www/"
+BEDOCROOTS="$DRTOP/defo.ie \
+            $DRTOP/draft-13.esni.defo.ie/8413 \
+            $DRTOP/draft-13.esni.defo.ie/8414 \
+            $DRTOP/draft-13.esni.defo.ie/9413 \
+            $DRTOP/draft-13.esni.defo.ie/10413 \
+            $DRTOP/draft-13.esni.defo.ie/11413 \
+            $DRTOP/draft-13.esni.defo.ie/12413 \
+            $DRTOP/draft-13.esni.defo.ie/12414"
 
 # Our FRONTEND and BACKEND DNS names
 # This script only works for one FRONTEND, generalise if you wish:-)
@@ -92,9 +101,12 @@ DEFBACKENDS="defo.ie \
 : ${BACKENDS:="$DEFBACKENDS"}
 
 # Back-end DocRoot where we make ECH info available via .well-known
-: ${DOCROOT:="/var/www/html/cover"}
+: ${FEDOCROOT:="/var/www/cover"}
+
+# Fixed by draft but may change as we go
 WESTR="origin-svcb"
-WKECHDIR="$DOCROOT/.well-known/$WESTR"
+FEWKECHDIR="$FEDOCROOT/.well-known"
+FEWKECHFILE="$FEDOCROOT/.well-known/$WESTR"
 
 # uid for writing files to DocRoot, whoever runs this script
 # needs to be able to sudo to that uid
@@ -229,9 +241,45 @@ function donsupdate()
     echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
 }
 
+# given a host, a base64 ECHConfigList a TTL and an optional port
+# (default 443), use the bind9 nsupdate tool to publish that value
+# in the DNS, we return the return value from the nsupdate tool,
+# which is 0 for success and non-zero otherwise
+function doaliasupdate()
+{
+    host=$1
+    port=$2
+    alias=$3
+    alport=$4
+    ttl=300
+    # All params are needed
+    if [[ $host == "" \
+          || $alias == "" \
+          || $alport == "" \
+          || $port == "" ]]
+    then
+        # non-random failure code
+        echo 67
+    fi
+    if [[ "$port" == "443" ]]
+    then
+        nscmd="update delete $host HTTPS\n
+               update add $host $ttl HTTPS 0 $alias\n
+               send\n
+               quit"
+    else
+        oname="_$port._https.$host"
+        nscmd="update delete $oname HTTPS\n
+               update add $oname $ttl HTTPS 0 $alias\n
+               send\n
+               quit"
+    fi
+    echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
+}
+
 function usage()
 {
-    echo "$0 [-h] [-r roles] [-d duration] - generate new ECHKeys for defo.ie"
+    echo "$0 [-h] [-r roles] [-d duration] - generate new ECHKeys as needed."
     echo "  -d specifies key update frequency in seconds (for testing really)"
     echo "  -h means print this"
     echo "  -n means to not verify that ECH is working before publishing"
@@ -374,7 +422,7 @@ then
         echo "Can't see $FETMP - exiting"
         exit 11
     fi
-    # check we can run nsupdate
+    # check we can see nsupdate
     wns=`which nsupdate`
     if [[ "$wns" == "" ]]
     then
@@ -410,26 +458,13 @@ then
 	    echo "$ECHOLD missing - exiting"
 	    exit 13
 	fi
-    if [ ! -d $WKECHDIR ]
+    if [ ! -d $FEWKECHDIR ]
     then
-        sudo -u $WWWUSER mkdir -p $WKECHDIR
+        sudo -u $WWWUSER mkdir -p $FEWKECHDIR
     fi
-    if [ ! -d $WKECHDIR ]
+    if [ ! -d $FEWKECHDIR ]
     then
-        echo "$FRONTEND - $WKECHDIR missing - exiting"
-        exit 14
-    fi
-fi
-
-if [[ $ROLES == *"$BESTR"* ]]
-then
-    if [ ! -d $WKECHDIR ]
-    then
-        sudo -u $WWWUSER mkdir -p $WKECHDIR
-    fi
-    if [ ! -d $WKECHDIR ]
-    then
-        echo "$FRONTEND - $WKECHDIR missing - exiting"
+        echo "$FRONTEND - $FEWKECHDIR missing - exiting"
         exit 14
     fi
 fi
@@ -542,7 +577,7 @@ then
 
     if [[ "$actiontaken" != "false" ]]
     then
-        # put a json file at https://$FRONTEND/.well-known/$WESTR/$FRONTEND.json
+        # put a json file at https://$FRONTEND/.well-known/$WESTR/$fehost.json
         # containing one ECHConfigList for all services for this epoch 
         TMPF=`mktemp /tmp/mergedech-XXXX`
         $OSSL/esnistuff/mergepems.sh -o $TMPF $mergefiles
@@ -550,7 +585,8 @@ then
             | head -n -1 | tail -n -1`
         cat <<EOF >$TMPF
 [{
-    "regentinterval" : $dur,
+    "regeninterval" : $dur,
+    "priority" : 1,
     "port":  $feport,
     "ech": "$echconfiglist"
 }]
@@ -559,11 +595,10 @@ EOF
         # copy that to DocRoot
         if [[ "$newjsonfile" == "true" ]]
         then 
-            sudo -u $WWWUSER cp $TMPF $WKECHDIR/$fehost.json
+            sudo -u $WWWUSER cp $TMPF $FEWKECHFILE
         fi
         rm -f $TMPF
     fi
-
 fi
 
 if [[ $ROLES == *"$BESTR"* ]]
@@ -575,86 +610,47 @@ then
     # if we're local to fe then grab file that way
     if [[ $ROLES == *"$FESTR"* ]]
     then
-        cp $WKECHDIR/$fehost.json $TMPF
+        # shared mode, easy peasy copy
+        cp $FEWKECHFILE $TMPF
     else
-        # split-mode!
-        timeout $CURLTIMEOUT curl -o $TMPF -s https://$FRONTEND/.well-known/$WESTR/$fehost.json
+        # split-mode! - read from frontend
+        timeout $CURLTIMEOUT curl -o $TMPF -s https://$FRONTEND/.well-known/$WESTR
     fi
-    declare -A jarr
-    if [ ! -z $TMPF ]
-    then
-        first_stanza="{ \"endpoints\" : ["
-        entries=`cat $TMPF | jq length`
-        for ((index=0;index!=$entries;index++))
-        do
-            regentinterval=`cat $TMPF | jq ".[$index].regentinterval"`
-            feport=`cat $TMPF | jq ".[$index].port"`
-            ech=`cat $TMPF | jq ".[$index].ech"`
-            if [[ "$ech" == "" || "$regentinterval" == "" ]]
-            then
-                continue
-            fi
-            if [[ "$port" == "" ]]
-            then
-                port=443
-            fi
-            for be in $BACKENDS
-            do
-                behost=$(hostport2host $be)
-                beport=$(hostport2port $be)
-                beistr="
-    {
-        \"priority\" : 1,
-        \"regentinterval\" : $((dur < regentinterval ? dur : regentinterval)),
-        \"port\" : $beport,
-        \"ech\" : $ech
-    }"
-                if [[ "${jarr[$behost]}" == "" ]]
-                then
-                    jarr[$behost]="$first_stanza $beistr"
-                else
-                    jarr[$behost]+=",$beistr"
-                fi
-            done
-        done
-    else
-        # nothing to do?
-        echo "Nothing to do"
-    fi
-    # write each collected per-behost info out to DocRoot
-    last_stanza="] }"
-    for behost in "${!jarr[@]}"
+    # if that's different from what we had then copy it over
+    # TODO: what to validate?
+    for bedocroot in $BEDOCROOTS
     do
-        arrent="${jarr[$behost]} $last_stanza"
-        sudo -u $WWWUSER echo $arrent > $WKECHDIR/$behost.json
+        wkechfile=$bedocroot/.well-known/origin-svcb
+        if [ -f $wkechfile ]
+        then
+            if ! cmp -s $TMPF $wkechfile
+            then
+                sudo -u $WWWUSER cp $TMPF $wkechfile
+            fi
+        else
+            sudo -u $WWWUSER cp $TMPF $wkechfile
+        fi
     done
-    unset jarr
 fi
 
 if [[ $ROLES == $ZFSTR ]]
 then
     # bit more complicated:-)
-    echo "Checking for ECHConfigList values at $FRONTEND"
     todos=""
-    declare -A jarr
     for back in $BACKENDS
     do
         behost=$(hostport2host $back)
-        if [[ "${jarr[$behost]}" == "" ]]
-        then
-            jarr[$behost]="{}"
-        fi
-    done
-    for behost in "${!jarr[@]}"
-    do
+        beport=$(hostport2port $back)
+        echo "Checking for ECHConfigList values at $behost:$beport"
         # pull URL, and see if that has new stuff ...
         TMPF=`mktemp`
-        path=".well-known/$WESTR/$behost.json"
-        URL="https://$FRONTEND/$path"
+        path=".well-known/$WESTR"
+        # URL below should really be $behost, but needs change to defo.ie test setup
+        URL="https://$back/$path"
         # grab .well-known stuff
         if [[ "$DOTEST" == "yes" ]]
         then
-            cp $WKECHDIR/$behost.json $TMPF
+            cp $FEWKECHFILE $TMPF
         else
             timeout $CURLTIMEOUT curl -s $URL -o $TMPF
             tres=$?
@@ -663,7 +659,7 @@ then
         then
             # timeout returns 124 if it timed out, or else the
             # result from curl otherwise
-            echo "Timed out after $CURLTIMEOUT waiting for $FRONTEND"
+            echo "Timed out after $CURLTIMEOUT waiting for $back"
             exit 2
         fi
         if [ ! -s $TMPF ]
@@ -672,11 +668,11 @@ then
             rm -f $TMPF
         else
             newcontent=""
-            if [ ! -f  $FEDIR/$behost.json ]
+            if [ ! -f  $FEDIR/$behost.$beport.json ]
             then
                 newcontent="yes"
             else
-                newcontent=`diff -q $TMPF $FEDIR/$behost.json`
+                newcontent=`diff -q $TMPF $FEDIR/$behost.$beport.json`
             fi
             if [[ "$newcontent" != "" ]]
             then
@@ -687,8 +683,8 @@ then
                     rm -f $TMPF
                 else
                     echo "New content for $behost, something to do"
-                    todos="$todos $behost"
-                    mv $TMPF $FETMP/$behost.json
+                    todos="$todos $back"
+                    mv $TMPF $FETMP/$behost.$beport.json
                 fi
             else
                 # content was same, ditch TMPF
@@ -700,24 +696,47 @@ then
 
     for backend in $todos
     do
-        # Remember if we did or didn't publish something - if we did, then
+        # Remember if we did or didn't publish something - if we do, then
         # we'll "promote" the JSON file from the tmp dir to the longer term
         # one. We do that even if some of the JSON file entries don't work
         # on the basis that it's correct to publish keys that work and if
         # the FRONTEND fixes broken things, then we'll pick up on that and
         # publish.
+        behost=$(hostport2host $back)
+        beport=$(hostport2port $back)
         publishedsomething="false"
-        #echo "Trying ECH to $backend"
-        entries=`cat $FETMP/$backend.json | jq .endpoints | jq length`
+        #echo "Trying ECH to $backend $beport"
+        entries=`cat $FETMP/$behost.$beport.json | jq .endpoints | jq length`
         #echo "entries: $entries"
         if [[ "$entries" == "" ]]
         then
+            alias=`cat $FETMP/$behost.$beport.json | jq .alias | sed -e 's/"//g'`
+            if [[ "$alias" == "" ]]
+            then
+                continue
+            fi
+            alhost=$(hostport2host $alias)
+            alport=$(hostport2port $alias)
+            echworked="false"
+            # first test entire list then each element
+            $OSSL/esnistuff/echcli.sh -H $behost -c $alhost \
+                -s $alhost -p $alport >/dev/null 2>&1
+            res=$?
+            #echo "Test result is $res"
+            if [[ "$res" != "0" ]]
+            then
+                echo "ECH alias error for $behost via $alias"
+                echerror="true"
+            else 
+                echo "ECH alias fine for $behost via $alias"
+                echworked="true"
+            fi
             continue
         fi
         for ((index=0;index!=$entries;index++))
         do
             echo "$backend Array element: $((index+1)) of $entries"
-            arrent=`cat $FETMP/$backend.json | jq .endpoints | jq .[$index]`
+            arrent=`cat $FETMP/$behost.$beport.json | jq .endpoints | jq .[$index]`
             port=`echo $arrent | jq .port`
             #echo "port: $port"
             list=`echo $arrent | jq .ech | sed -e 's/\"//g'`
@@ -726,9 +745,9 @@ then
             listarr=( $splitlists )
             listcount=${#listarr[@]}
             priority=`echo $arrent | jq .priority`
-            regentinterval=`echo $arrent | jq .regentinterval`
+            regeninterval=`echo $arrent | jq .regeninterval`
             target=`echo $arrent | jq .target`
-            desired_ttl=$((regentinterval/2))
+            desired_ttl=$((regeninterval/2))
             # now test for each port and ECHConfig within the ECHConfigList
             echerror="false"
             if [[ "$VERIFY" == "no" ]]
@@ -748,6 +767,18 @@ then
                 else 
                     echo "ECH list fine for $backend $port"
                     echworked="true"
+                fi
+                if [[ "$echworked" == "true" ]]
+                then
+                    # publish
+                    nres=`doliasupdate $backend $alhost $alport`
+                    if [[ "$nres" == "0" ]]
+                    then 
+                        echo "Published for $backend/$port"
+                        publishedsomething="true"
+                    else
+                        echo "Failure ($nres) in publishing for $backend/$port"
+                    fi
                 fi
             fi
             # could speed up this if full list is singleton but better 
@@ -816,10 +847,10 @@ then
         then
             # we're accepting this one, so we something worked from here
             # so save this file for comparison with next time we get run
-            mv $FETMP/$backend.json $FEDIR/$backend.json
+            mv $FETMP/$behost.$beport.json $FEDIR/$behost.$beport.json
         else
             # nothing worked, so clean up
-            rm $FETMP/$backend.json
+            rm $FETMP/$behost.$beport.json
         fi
     done
 
