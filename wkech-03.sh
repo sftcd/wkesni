@@ -637,6 +637,19 @@ then
                 rm -f $TMPF1
             fi
         fi
+        # fix port number everywhere if non default
+        if [[ "$beport" != "$DEFPORT" ]]
+        then
+            TMPF1=`mktemp`
+            jq '.endpoints[].port? |= "'$beport'"' $lmf >$TMPF1
+            jres=$?
+            if [[ "$jres" == 0 ]]
+            then
+                mv $TMPF1 $lmf
+            else
+                rm -f $TMPF1
+            fi
+        fi
         # add in aliases if desired
         alval=${be_alias_arr[${beor}]}
         if [[ "$alval" != "" ]]
