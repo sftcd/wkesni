@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -x
+set -x
 
 # Copyright (C) 2023 Stephen Farrell, stephen.farrell@cs.tcd.ie
 # 
@@ -32,89 +32,13 @@
 # containing ECH public values).
 
 # variables/settings, some can be overwritten from environment
+. echvars.sh
 
-# where the ECH-enabled OpenSSL is built, needed if ECH-checking is enabled
-: ${OSSL:=$HOME/code/openssl}
-export LD_LIBRARY_PATH=$OSSL
-
-# script to restart or reload configuations for front/back-end
-: ${BE_RESTARTER:=$HOME/code/defo-project/be_restart.sh}
-: ${FE_RESTARTER:=$HOME/code/defo-project/fe_restart.sh}
-
-# Top of ECH key file directories
-: ${ECHTOP:=$HOME/.ech13}
-
-# This is where most or all $DURATION-lived ECH keys live
-# When they get to 2*$DURATION old they'll be moved to $ECHOLD
-ECHDIR="$ECHTOP/echkeydir"
-# Where old stuff goes
-ECHOLD="$ECHDIR/old"
-
-# Key update frequency - we publish keys for 2 x the "main"
-# duration and add a new key each time and retire (as in don't 
-# load to server) old keys after 3 x this duration.
-# So, keys remain usable for 3 x this, and are visible to the
-# Internet for 2 x this. 
-# Old keys are just moved into $ECHOLD for now and are deleted
-# once they're 5 x this duration old.
-# We request a TTL for that the RR containing keys be half 
-# this duration.
-DURATION="3600" # 1 hour
-
-# Key filename convention is "*.ech" for key files but 
-# "*.pem.ech" for short-terms key files that'll be moved
-# aside
-
-# Long term key files, can be space-sep list if needed
-# These won't be expired out ever, and will be added to
-# the list of keys we ask be published. This is mostly
-# for testing.
-: ${LONGTERMKEYS:="$ECHDIR/*.ech"}
-files2check="$ECHDIR/*.pem.ech"
-
-# this is what's on our defo.ie test site
-DEFPORT=443
-DEFFRONTEND="cover.defo.ie"
-DEFBACKENDS="defo.ie \
-             draft-13.esni.defo.ie:8413 \
-             draft-13.esni.defo.ie:8414 \
-             draft-13.esni.defo.ie:9413 \
-             draft-13.esni.defo.ie:10413 \
-             draft-13.esni.defo.ie:11413 \
-             draft-13.esni.defo.ie:12413 \
-             draft-13.esni.defo.ie:12414"
-DRTOP="/var/www/"
-BEDOCROOTS="$DRTOP/defo.ie \
-            $DRTOP/draft-13.esni.defo.ie/8413 \
-            $DRTOP/draft-13.esni.defo.ie/8414 \
-            $DRTOP/draft-13.esni.defo.ie/9413 \
-            $DRTOP/draft-13.esni.defo.ie/10413 \
-            $DRTOP/draft-13.esni.defo.ie/11413 \
-            $DRTOP/draft-13.esni.defo.ie/12413 \
-            $DRTOP/draft-13.esni.defo.ie/12414"
-
-# Our FRONTEND and BACKEND DNS names
-# This script only works for one FRONTEND, generalise if you wish:-)
-: ${FRONTEND:="$DEFFRONTEND"}
-
-# BACKENDS should be a space separated list of names
-: ${BACKENDS:="$DEFBACKENDS"}
-
-# Back-end DocRoot where we make ECH info available via .well-known
-: ${FEDOCROOT:="/var/www/cover"}
-
-# Fixed by draft but may change as we go
-WESTR="origin-svcb"
-FEWKECHDIR="$FEDOCROOT/.well-known"
-FEWKECHFILE="$FEDOCROOT/.well-known/$WESTR"
-
-# uid for writing files to DocRoot, whoever runs this script
-# needs to be able to sudo to that uid
-: ${WWWUSER:="www-data"}
-
-# A timeout in case accessing the FRONTEND .well-known is gonna
-# fail - believe it or not: this is 10 seconds
-: ${CURLTIMEOUT:="10s"}
+#for feor in "${!fe_arr[@]}"
+#do
+    #echo "FE origin: $feor, DocRoot: ${fe_arr[${feor}]}"
+#done
+#exit 0
 
 # role strings
 FESTR="fe"
@@ -127,16 +51,6 @@ VERIFY="yes"
 
 # whether to really try publish via bind or just test to that point
 DOTEST="no"
-
-# set this if we do someting that needs a server re-start
-actiontaken="false"
-
-# We need a directory to store long-ish term values, just so we can check
-# if they've changed or not
-FEDIR="$ECHTOP/$FRONTEND"
-# a tmp directory to accumulate the inbound new files, before
-# they've been validated
-FETMP="$FEDIR/tmp"
 
 # functions
 
@@ -158,6 +72,8 @@ function hostport2host()
     esac
     echo $host
 }
+
+DEFPORT=443
 
 function hostport2port()
 {
@@ -359,11 +275,6 @@ then
         echo "mergepems not seen - exiting"
         exit 6
     fi
-    if [ ! -d $ECHTOP ]
-    then
-        echo "$ECHTOP ECH key dir missing - exiting"
-        exit 7
-    fi
     # check that our OpenSSL build supports ECH
     $OSSL/apps/openssl ech -help >/dev/null 2>&1
     eres=$?
@@ -372,74 +283,12 @@ then
         echo "OpenSSL not built with ECH - exiting"
         exit 8
     fi
-fi
-
-if [[ $ROLES == *"$BESTR"* ]]
-then
-    # check if we can sudo to www-user
-    if [[ ! -d $DOCROOT ]]
+    # check/make various directories
+    if [ ! -d $ECHTOP ]
     then
-        echo "$FRONTEND - $DOCROOT missing - exiting"
-        exit 9
+        echo "$ECHTOP ECH key dir missing - exiting"
+        exit 7
     fi
-    sudo -u $WWWUSER ls $DOCROOT
-    sres=$?
-    if [[ "$sres" != "0" ]]
-    then
-        echo "Can't sudo to $WWWUSER - exiting"
-        exit 10
-    fi
-    wns=`which jq`
-    if [[ "$wns" == "" ]]
-    then
-        echo "Can't see jq - exiting"
-        exit 11
-    fi
-fi
-
-if [[ $ROLES == $ZFSTR ]]
-then
-    if [ ! -f $OSSL/esnistuff/echcli.sh ]
-    then
-        echo "Can't see $OSSL/esnistuff/echcli.sh - exiting"
-        exit 11
-    fi
-    if [ ! -d $FEDIR ]
-    then
-        mkdir -p $FEDIR
-    fi
-    if [ ! -d $FEDIR ]
-    then
-        echo "Can't see $FEDIR - exiting"
-        exit 11
-    fi
-    if [ ! -d $FETMP ]
-    then
-        mkdir -p $FETMP
-    fi
-    if [ ! -d $FETMP ]
-    then
-        echo "Can't see $FETMP - exiting"
-        exit 11
-    fi
-    # check we can see nsupdate
-    wns=`which nsupdate`
-    if [[ "$wns" == "" ]]
-    then
-        echo "Can't see nsupdate - exiting"
-        exit 11
-    fi
-    wns=`which jq`
-    if [[ "$wns" == "" ]]
-    then
-        echo "Can't see jq - exiting"
-        exit 11
-    fi
-fi
-
-# other dirs we'll try create, if needed
-if [[ $ROLES == *"$FESTR"* ]]
-then
 	if [ ! -d $ECHDIR ]
 	then
 	    mkdir -p $ECHDIR
@@ -458,177 +307,367 @@ then
 	    echo "$ECHOLD missing - exiting"
 	    exit 13
 	fi
-    if [ ! -d $FEWKECHDIR ]
+    # check/make docroot and .well-known if needed
+    for feor in "${!fe_arr[@]}"
+    do
+        #echo "FE origin: $feor, DocRoot: ${fe_arr[${feor}]}"
+        fedr=${fe_arr[${feor}]}
+        fewkechdir=$fedr/.well-known/
+        if [ ! -d $fewkechdir ]
+        then
+            sudo -u $WWWUSER mkdir -p $fewkechdir
+        fi
+        if [ ! -d $fewkechdir ]
+        then
+            echo "$fedr - $fewkechdir missing - exiting"
+            exit 14
+        fi
+    done
+fi
+
+if [[ $ROLES == *"$BESTR"* ]]
+then
+    # check docroots and if we can sudo to www-user
+    for beor in "${!be_arr[@]}"
+    do
+        bedr=${be_arr[${beor}]}
+        if [[ ! -d $bedr ]]
+        then
+            echo "DocRoot for $beor ($bedr) missing - exiting"
+            exit 9
+        fi
+        sudo -u $WWWUSER ls $bedr
+        sres=$?
+        if [[ "$sres" != "0" ]]
+        then
+            echo "Can't sudo to $WWWUSER to read $bedr - exiting"
+            exit 10
+        fi
+        if [ ! -d $bedr/.well-known ]
+        then
+            sudo -u $WWWUSER mkdir -p $bedr/.well-known/
+        fi
+        if [ ! -f $bedr/.well-known/$WESTR ]
+        then
+            sudo -u $WWWUSER touch $bedr/.well-known/$WESTR
+        fi
+        if [ ! -f $bedr/.well-known/$WESTR ]
+        then
+            echo "Failed sudo'ing to $WWWUSER to make $bedr/.well-known/$WESTR - exiting"
+            exit 15
+        fi
+    done
+    wns=`which jq`
+    if [[ "$wns" == "" ]]
     then
-        sudo -u $WWWUSER mkdir -p $FEWKECHDIR
+        echo "Can't see jq - exiting"
+        exit 11
     fi
-    if [ ! -d $FEWKECHDIR ]
+fi
+
+if [[ $ROLES == $ZFSTR ]]
+then
+    if [ ! -f $OSSL/esnistuff/echcli.sh ]
     then
-        echo "$FRONTEND - $FEWKECHDIR missing - exiting"
-        exit 14
+        echo "Can't see $OSSL/esnistuff/echcli.sh - exiting"
+        exit 11
+    fi
+    if [ ! -d $ZFDIR ]
+    then
+        mkdir -p $ZFDIR
+    fi
+    if [ ! -d $ZFDIR ]
+    then
+        echo "Can't see $ZFDIR - exiting"
+        exit 11
+    fi
+    if [ ! -d $ZFTMP ]
+    then
+        mkdir -p $ZFTMP
+    fi
+    if [ ! -d $ZFTMP ]
+    then
+        echo "Can't see $ZFTMP - exiting"
+        exit 11
+    fi
+    # check we can see nsupdate
+    wns=`which nsupdate`
+    if [[ "$wns" == "" ]]
+    then
+        echo "Can't see nsupdate - exiting"
+        exit 11
+    fi
+    wns=`which jq`
+    if [[ "$wns" == "" ]]
+    then
+        echo "Can't see jq - exiting"
+        exit 11
     fi
 fi
 
 if [[ $ROLES == *"$FESTR"* ]]
 then
-    echo "Checking if new ECHKeys needed for $FRONTEND"
 
-    # Plan:
-
-    # - check creation date of existing ECHConfig key pair files
-    # - if all ages < DURATION then we're done and exit 
-    # - Otherwise:
-    #   - generate new instance of ECHKeys (same for backends)
-    #   - retire any keys >3*DURATION old
-    #   - delete any keys >5*DURATION old
-    #   - push updated JSON (for all keys) to DocRoot dest
-
-    newest=$durt2
-    newf=""
-    oldest=0
-    oldf=""
-
-    echo "Prime key lifetime: $DURATION seconds"
-    echo "New key generated when latest is $dur old"
-    echo "Old keys retired when older than $durt3"
-    echo "Keys published until older than $durt2"
-    echo "Keys deleted when older than $durt5"
-
-    for file in $files2check
+    for feor in "${!fe_arr[@]}"
     do
-        if [ ! -f $file ]
-        then
-            continue
-        fi
-        fage=$(fileage $file)
-        #echo "$file is $fage old"
-        if ((fage < newest)) 
-        then
-            newest=$fage
-            newf=$file
-        fi
-        if ((fage > oldest)) 
-        then
-            oldest=$fage
-            oldf=$file
-        fi
-        if ((fage > durt3)) 
-        then
-            echo "$file too old, (age==$fage >= $durt3)... moving to $ECHOLD"
-            mv $file $ECHOLD
-            actiontaken="true"
-        fi
-    done
+        echo "Checking if new ECHKeys needed for $feor"
+        actiontaken="false"
 
-    echo "Oldest moveable PEM file is $oldf (age: $oldest)"
-    echo "Newest moveable PEM file is $newf (age: $newest)"
+        feport=$(hostport2port $feor)
+        fehost=$(hostport2host $feor)
+        fedr=${fe_arr[${feor}]}
+        fewkechfile=$fedr/.well-known/$WESTR
 
-    feport=$(hostport2port $FRONTEND)
-    fehost=$(hostport2host $FRONTEND)
+        # Plan:
 
-    # delete files older than 5*DURATION
-    oldies="$ECHOLD/*"
-    for file in $oldies
-    do
-        if [ ! -f $file ]
+        # - check creation date of existing ECHConfig key pair files
+        # - if all ages < DURATION then we're done and exit 
+        # - Otherwise:
+        #   - generate new instance of ECHKeys (same for backends)
+        #   - retire any keys >3*DURATION old
+        #   - delete any keys >5*DURATION old
+        #   - push updated JSON (for all keys) to DocRoot dest
+    
+        newest=$durt2
+        newf=""
+        oldest=0
+        oldf=""
+
+        echo "Prime key lifetime: $DURATION seconds"
+        echo "New key generated when latest is $dur old"
+        echo "Old keys retired when older than $durt3"
+        echo "Keys published until older than $durt2"
+        echo "Keys deleted when older than $durt5"
+
+        if [ ! -d $ECHDIR/$fehost.$feport ]
         then
-            continue
+            mkdir -p $ECHDIR/$fehost.$feport
         fi
-        fage=$(fileage $file)
-        if ((fage >= durt5))
+        if [ ! -d $ECHDIR/$fehost.$feport ]
         then
-            rm -f $file
+            echo "Can't see $ECHDIR/$fehost.$feport - exiting"
+            exit 25
         fi
-    done
+        files2check="$ECHDIR/$fehost.$feport/*.pem.ech"
 
-    keyn="ech`date +%s`"
-
-    if ((newest >= dur))
-    then
-        echo "Time for a new key pair (newest as old or older than $dur)"
-        $OSSL/apps/openssl ech \
-            -ech_version 0xfe0d \
-            -public_name $fehost \
-            -pemout $ECHDIR/$keyn.pem.ech
-        res=$?
-        if [[ "$res" != "1" ]]
-        then
-            echo "Error generating $ECHDIR/$keyn.pem.ech"
-            exit 15
-        fi
-        actiontaken="true"
-
-        newjsonfile="false"
-        # include long-term keys
-        mergefiles="$LONGTERMKEYS"
-        for file in $ECHDIR/*.pem.ech
+        for file in $files2check
         do
-            fage=$(fileage $file)
-            if ((fage > durt2)) 
+            if [ ! -f $file ]
             then
-                # skip that one, we'll accept/decrypt based on that
-                # but no longer publish the public in the zone
                 continue
             fi
-            newjsonfile="true"
-            mergefiles=" $mergefiles $file"
+            fage=$(fileage $file)
+            #echo "$file is $fage old"
+            if ((fage < newest)) 
+            then
+                newest=$fage
+                newf=$file
+            fi
+            if ((fage > oldest)) 
+            then
+                oldest=$fage
+                oldf=$file
+            fi
+            if ((fage > durt3)) 
+            then
+                echo "$file too old, (age==$fage >= $durt3)... moving to $ECHOLD"
+                mv $file $ECHOLD
+                actiontaken="true"
+            fi
         done
-    fi
 
-    if [[ "$actiontaken" != "false" ]]
-    then
-        # put a json file at https://$FRONTEND/.well-known/$WESTR/$fehost.json
-        # containing one ECHConfigList for all services for this epoch 
-        TMPF=`mktemp /tmp/mergedech-XXXX`
-        $OSSL/esnistuff/mergepems.sh -o $TMPF $mergefiles
-        echconfiglist=`cat $TMPF | sed -n '/BEGIN ECHCONFIG/,/END ECHCONFIG/p' \
-            | head -n -1 | tail -n -1`
-        cat <<EOF >$TMPF
-[{
+        echo "Oldest moveable PEM file is $oldf (age: $oldest)"
+        echo "Newest moveable PEM file is $newf (age: $newest)"
+
+        # delete files older than 5*DURATION
+        oldies="$ECHOLD/*"
+        for file in $oldies
+        do
+            if [ ! -f $file ]
+            then
+                continue
+            fi
+            fage=$(fileage $file)
+            if ((fage >= durt5))
+            then
+                rm -f $file
+            fi
+        done
+
+        keyn="ech`date +%s`"
+
+        if ((newest >= dur))
+        then
+            echo "Time for a new key pair (newest as old or older than $dur)"
+            $OSSL/apps/openssl ech \
+                -ech_version 0xfe0d \
+                -public_name $fehost \
+                -pemout $ECHDIR/$fehost.$feport/$keyn.pem.ech
+            res=$?
+            if [[ "$res" != "1" ]]
+            then
+                echo "Error generating $ECHDIR/$fehost.$feport/$keyn.pem.ech"
+                exit 15
+            fi
+            actiontaken="true"
+
+            newjsonfile="false"
+            # include long-term keys
+            mergefiles="$LONGTERMKEYS"
+            for file in $ECHDIR/$fehost.$feport/*.pem.ech
+            do
+                fage=$(fileage $file)
+                if ((fage > durt2)) 
+                then
+                    # skip that one, we'll accept/decrypt based on that
+                    # but no longer publish the public in the zone
+                    continue
+                fi
+                newjsonfile="true"
+                mergefiles=" $mergefiles $file"
+            done
+        fi
+        # if not there or empty, make a new one
+        if [ ! -s $fewkechfile ]
+        then
+            actiontaken="true"
+            mergefiles=$ECHDIR/$fehost.$feport/*.pem.ech
+        fi
+        if [[ "$actiontaken" != "false" ]]
+        then
+            TMPF="$ECHDIR/$fehost.$feport/latest-merged"
+            $OSSL/esnistuff/mergepems.sh -o $TMPF $mergefiles
+            echconfiglist=`cat $TMPF | sed -n '/BEGIN ECHCONFIG/,/END ECHCONFIG/p' \
+                | head -n -1 | tail -n -1`
+            rm -f $TMPF
+            # TODO: add ip address hints here, if desired
+            cat <<EOF >$TMPF
+{
+ "endpoints": [ {
     "regeninterval" : $dur,
     "priority" : 1,
     "port":  $feport,
     "ech": "$echconfiglist"
-}]
+ } ]
+}
 EOF
-        chmod a+r $TMPF
-        # copy that to DocRoot
-        if [[ "$newjsonfile" == "true" ]]
-        then 
-            sudo -u $WWWUSER cp $TMPF $FEWKECHFILE
+            sudo cp $TMPF $fewkechfile
+            sudo chown $WWWUSER:$WWWUSER $fewkechfile
+            sudo chmod a+r $fewkechfile
         fi
-        rm -f $TMPF
-    fi
+    done
 fi
 
 if [[ $ROLES == *"$BESTR"* ]]
 then
-    # grab a copy of latest front end file and see if it differs
-    # from what we have
-    TMPF=`mktemp`
-    fehost=$(hostport2host $FRONTEND)
-    # if we're local to fe then grab file that way
-    if [[ $ROLES == *"$FESTR"* ]]
-    then
-        # shared mode, easy peasy copy
-        cp $FEWKECHFILE $TMPF
-    else
-        # split-mode! - read from frontend
-        timeout $CURLTIMEOUT curl -o $TMPF -s https://$FRONTEND/.well-known/$WESTR
-    fi
-    # if that's different from what we had then copy it over
-    # TODO: what to validate?
-    for bedocroot in $BEDOCROOTS
+    for beor in "${!be_arr[@]}"
     do
-        wkechfile=$bedocroot/.well-known/origin-svcb
-        if [ -f $wkechfile ]
+        actiontaken="false"
+        bedr=${be_arr[${beor}]}
+        wkechfile=$bedr/.well-known/$WESTR
+        behost=$(hostport2host $beor)
+        beport=$(hostport2port $beor)
+        if [ ! -d $ECHDIR/$behost.$beport ]
         then
-            if ! cmp -s $TMPF $wkechfile
+            mkdir -p $ECHDIR/$behost.$beport
+        fi
+        if [ ! -d $ECHDIR/$behost.$beport ]
+        then
+            echo "Can't see $ECHDIR/$behost.$beport - exiting"
+            exit 25
+        fi
+        lmf=$ECHDIR/$behost.$beport/latest-merged
+        rm -f $lmf
+        # accumulate the various front-end files
+        for feor in "${!fe_arr[@]}"
+        do
+            fehost=$(hostport2host $feor)
+            feport=$(hostport2port $feor)
+            TMPF=`mktemp`
+            if [[ $ROLES == *"$FESTR"* ]]
             then
-                sudo -u $WWWUSER cp $TMPF $wkechfile
+                # shared-mode, FE JSON file is local
+                fedr=${fe_arr[${feor}]}
+                fewkechfile=$fedr/.well-known/$WESTR
+                cp $fewkechfile $TMPF
+            else
+                # split-mode, FE JSON file is non-local
+                timeout $CURLTIMEOUT curl -o $TMPF -s https://$feor/.well-known/$WESTR
+                if [[ "$tres" == "124" ]]
+                then
+                    # timeout returns 124 if it timed out, or else the
+                    # result from curl otherwise
+                    echo "Timed out after $CURLTIMEOUT waiting for https://$feor/.well-known/$WESTR"
+                    exit 23
+                fi
             fi
-        else
-            sudo -u $WWWUSER cp $TMPF $wkechfile
+            if [ ! -f $TMPF ]
+            then
+                echo "Empty result from https://$feor/.well-known/$WESTR"
+                continue
+            fi
+            # merge into latest
+            if [ ! -f $lmf ]
+            then
+                cp $TMPF $lmf
+            else
+                TMPF1=`mktemp`
+                jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF >$TMPF1
+                jres=$?
+                if [[ "$jres" == 0 ]]
+                then
+                    mv $TMPF1 $lmf
+                else
+                    rm -f $TMPF1
+                fi
+            fi
+        done
+        # add alpn= to endpoints, if desired
+        alpnval=${be_alpn_arr[${beor}]}
+        if [[ "$alpnval" != "" ]]
+        then
+            TMPF1=`mktemp`
+            # TODO: handle exceptions properly
+            jq '.endpoints[] + { "alpn": "'$alpnval'" }' $lmf | jq -n '{ endpoints: [ inputs ] }' >$TMPF1
+            jres=$?
+            if [[ "$jres" == 0 ]]
+            then
+                mv $TMPF1 $lmf
+            else
+                rm -f $TMPF1
+            fi
+        fi
+        # add in aliases if desired
+        alval=${be_alias_arr[${beor}]}
+        if [[ "$alval" != "" ]]
+        then
+            TMPF1=`mktemp`
+            echo <<EOF >>$TMPF1
+{ "endpoints": [ {
+    "alias": $alval
+    "regenInterval": $dur
+} ] }
+EOF
+            TMPF2=`mktemp`
+            jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF1 >$TMPF2
+            jres=$?
+            if [[ "$jres" == 0 ]]
+            then
+                mv $TMPF2 $lmf
+            else
+                rm -f $TMPF2
+            fi
+            rm -f $TMPF1
+        fi
+
+        newcontent=`diff -q $wkechfile $lmf`
+        if [[ -f $lmf && "$newcontent" != "" ]]
+        then
+            # TODO: Validate content of lmf, if desired
+            # copy to DocRoot
+            sudo cp $lmf $wkechfile
+            sudo chown $WWWUSER:$WWWUSER $wkechfile
+            sudo chmod a+r $wkechfile
         fi
     done
 fi
@@ -637,24 +676,19 @@ if [[ $ROLES == $ZFSTR ]]
 then
     # bit more complicated:-)
     todos=""
-    for back in $BACKENDS
+    for beor in "${!be_arr[@]}"
     do
-        behost=$(hostport2host $back)
-        beport=$(hostport2port $back)
+        behost=$(hostport2host $beor)
+        beport=$(hostport2port $beor)
         echo "Checking for ECHConfigList values at $behost:$beport"
         # pull URL, and see if that has new stuff ...
         TMPF=`mktemp`
         path=".well-known/$WESTR"
         # URL below should really be $behost, but needs change to defo.ie test setup
-        URL="https://$back/$path"
+        URL="https://$beor/$path"
         # grab .well-known stuff
-        if [[ "$DOTEST" == "yes" ]]
-        then
-            cp $FEWKECHFILE $TMPF
-        else
-            timeout $CURLTIMEOUT curl -s $URL -o $TMPF
-            tres=$?
-        fi
+        timeout $CURLTIMEOUT curl -s $URL -o $TMPF
+        tres=$?
         if [[ "$tres" == "124" ]]
         then
             # timeout returns 124 if it timed out, or else the
@@ -664,15 +698,15 @@ then
         fi
         if [ ! -s $TMPF ]
         then
-            echo "Can't get content from $URL - skipping $behost"
+            echo "Can't get content from $URL - skipping $beor"
             rm -f $TMPF
         else
             newcontent=""
-            if [ ! -f  $FEDIR/$behost.$beport.json ]
+            if [ ! -f  $ZFDIR/$behost.$beport.json ]
             then
                 newcontent="yes"
             else
-                newcontent=`diff -q $TMPF $FEDIR/$behost.$beport.json`
+                newcontent=`diff -q $TMPF $ZFDIR/$behost.$beport.json`
             fi
             if [[ "$newcontent" != "" ]]
             then
@@ -682,9 +716,9 @@ then
                     echo "$behost bad file type"
                     rm -f $TMPF
                 else
-                    echo "New content for $behost, something to do"
-                    todos="$todos $back"
-                    mv $TMPF $FETMP/$behost.$beport.json
+                    echo "New content for $beor, something to do"
+                    todos="$todos $beor"
+                    mv $TMPF $ZFTMP/$behost.$beport.json
                 fi
             else
                 # content was same, ditch TMPF
@@ -692,9 +726,8 @@ then
             fi
         fi
     done
-    unset jarr
 
-    for backend in $todos
+    for back in $todos
     do
         # Remember if we did or didn't publish something - if we do, then
         # we'll "promote" the JSON file from the tmp dir to the longer term
@@ -706,21 +739,19 @@ then
         beport=$(hostport2port $back)
         publishedsomething="false"
         #echo "Trying ECH to $backend $beport"
-        entries=`cat $FETMP/$behost.$beport.json | jq .endpoints | jq length`
+        entries=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq length`
         #echo "entries: $entries"
         if [[ "$entries" == "" ]]
         then
-            alias=`cat $FETMP/$behost.$beport.json | jq .alias | sed -e 's/"//g'`
+            alias=`cat $ZFTMP/$behost.$beport.json | jq .alias | sed -e 's/"//g'`
             if [[ "$alias" == "" ]]
             then
                 continue
             fi
-            alhost=$(hostport2host $alias)
-            alport=$(hostport2port $alias)
             echworked="false"
             # first test entire list then each element
-            $OSSL/esnistuff/echcli.sh -H $behost -c $alhost \
-                -s $alhost -p $alport >/dev/null 2>&1
+            $OSSL/esnistuff/echcli.sh -H $behost -c $alias \
+                -s $alias -p $beport >/dev/null 2>&1
             res=$?
             #echo "Test result is $res"
             if [[ "$res" != "0" ]]
@@ -736,7 +767,7 @@ then
         for ((index=0;index!=$entries;index++))
         do
             echo "$backend Array element: $((index+1)) of $entries"
-            arrent=`cat $FETMP/$behost.$beport.json | jq .endpoints | jq .[$index]`
+            arrent=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq .[$index]`
             port=`echo $arrent | jq .port`
             #echo "port: $port"
             list=`echo $arrent | jq .ech | sed -e 's/\"//g'`
@@ -746,6 +777,7 @@ then
             listcount=${#listarr[@]}
             priority=`echo $arrent | jq .priority`
             regeninterval=`echo $arrent | jq .regeninterval`
+            alpn=`echo $arrent | jq .alpn`
             target=`echo $arrent | jq .target`
             desired_ttl=$((regeninterval/2))
             # now test for each port and ECHConfig within the ECHConfigList
@@ -756,22 +788,22 @@ then
             else
                 echworked="false"
                 # first test entire list then each element
-                $OSSL/esnistuff/echcli.sh -P $list -H $backend -c $FRONTEND \
-                    -s $FRONTEND -p $port >/dev/null 2>&1
+                $OSSL/esnistuff/echcli.sh -P $list -H $backend \
+                    -p $port -a $alpn >/dev/null 2>&1
                 res=$?
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
                 then
-                    echo "ECH list error for $backend $port"
+                    echo "ECH list error for $behost $beport"
                     echerror="true"
                 else 
-                    echo "ECH list fine for $backend $port"
+                    echo "ECH list fine for $behost $beport"
                     echworked="true"
                 fi
                 if [[ "$echworked" == "true" ]]
                 then
                     # publish
-                    nres=`doliasupdate $backend $alhost $alport`
+                    nres=`doliasupdate $behost $beport`
                     if [[ "$nres" == "0" ]]
                     then 
                         echo "Published for $backend/$port"
@@ -847,15 +879,15 @@ then
         then
             # we're accepting this one, so we something worked from here
             # so save this file for comparison with next time we get run
-            mv $FETMP/$behost.$beport.json $FEDIR/$behost.$beport.json
+            mv $ZFTMP/$behost.$beport.json $ZFDIR/$behost.$beport.json
         else
             # nothing worked, so clean up
-            rm $FETMP/$behost.$beport.json
+            rm $ZFTMP/$behost.$beport.json
         fi
     done
 
     # clean up TMP dir, it should be empty, if not the error will improve us:-)
-    rmdir $FETMP
+    rmdir $ZFTMP
 fi
 
 if [[ "$actiontaken" != "false" ]]
