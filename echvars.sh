@@ -107,37 +107,6 @@ declare -A be_alpn_arr=(
     [draft-13.esni.defo.ie:8413]="http/1.1"
 )
 
-# this is what's on our defo.ie test site
-DEFPORT=443
-DEFFRONTEND="cover.defo.ie"
-DEFBACKENDS="defo.ie \
-             draft-13.esni.defo.ie:8413 \
-             draft-13.esni.defo.ie:8414 \
-             draft-13.esni.defo.ie:9413 \
-             draft-13.esni.defo.ie:10413 \
-             draft-13.esni.defo.ie:11413 \
-             draft-13.esni.defo.ie:12413 \
-             draft-13.esni.defo.ie:12414"
-: ${BEDOCROOTS:="$DRTOP/defo.ie \
-                 $DRTOP/draft-13.esni.defo.ie/8413 \
-                 $DRTOP/draft-13.esni.defo.ie/8414 \
-                 $DRTOP/draft-13.esni.defo.ie/9413 \
-                 $DRTOP/draft-13.esni.defo.ie/10413 \
-                 $DRTOP/draft-13.esni.defo.ie/11413 \
-                 $DRTOP/draft-13.esni.defo.ie/12413 \
-                 $DRTOP/draft-13.esni.defo.ie/12414"}
-
-# Our FRONTEND and BACKEND DNS names
-# This script only works for one FRONTEND, generalise if you wish:-)
-: ${FRONTEND:="$DEFFRONTEND"}
-
-# BACKENDS should be a space separated list of names
-: ${BACKENDS:="$DEFBACKENDS"}
-
-# Front-end DocRoot where we also make ECH info available via .well-known
-: ${FEDOCROOT:="/var/www/cover"}
-: ${FEDOCROOTS:="/var/www/cover"}
-
 # Fixed by draft but may change as we go
 WESTR="origin-svcb"
 FEWKECHDIR="$FEDOCROOT/.well-known"

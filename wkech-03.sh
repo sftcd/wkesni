@@ -52,6 +52,9 @@ VERIFY="yes"
 # whether to really try publish via bind or just test to that point
 DOTEST="no"
 
+# yeah, 443 is the winner:-)
+DEFPORT=443
+
 # functions
 
 function whenisitagain()
@@ -72,8 +75,6 @@ function hostport2host()
     esac
     echo $host
 }
-
-DEFPORT=443
 
 function hostport2port()
 {
@@ -130,6 +131,7 @@ function donsupdate()
     priority=$4
     target=$5
     port=$6
+    alpn=$7 ## can be empty
     # All params are needed
     if [[ $host == "" \
           || $echval == "" \
@@ -141,16 +143,22 @@ function donsupdate()
         # non-random failure code
         echo 57
     fi
+    if [[ "$alpn" != "" ]]
+    then
+        alpnstr="alpn=$alpn"
+    else
+        alpnstr=""
+    fi
     if [[ "$port" == "443" ]]
     then
         nscmd="update delete $host HTTPS\n
-               update add $host $ttl HTTPS $priority $target ech=$echval\n
+               update add $host $ttl HTTPS $priority $target $alpnstr ech=$echval\n
                send\n
                quit"
     else
         oname="_$port._https.$host"
         nscmd="update delete $oname HTTPS\n
-               update add $oname $ttl HTTPS $priority $host ech=$echval\n
+               update add $oname $ttl HTTPS $priority $host $alpnstr ech=$echval\n
                send\n
                quit"
     fi
@@ -166,12 +174,12 @@ function doaliasupdate()
     host=$1
     port=$2
     alias=$3
-    # TODO: add regeninterval to alias as well?
-    ttl=300
+    ttl=$4
     # All params are needed
     if [[ $host == "" \
           || $alias == "" \
-          || $port == "" ]]
+          || $port == "" \
+          || $ttl == "" ]]
     then
         # non-random failure code
         echo 67
@@ -726,7 +734,8 @@ then
             if [[ "$newcontent" != "" ]]
             then
                 nctype=`file $TMPF`
-                if [[ "$nctype" != "$TMPF: JSON text data" ]]
+                # TODO: check output of file with JSON locally and use that as it varies
+                if [[ "$nctype" != "$TMPF: JSON data" ]]
                 then
                     echo "$behost bad file type"
                     rm -f $TMPF
@@ -764,8 +773,9 @@ then
         do
             echo "$backend Array element: $((index+1)) of $entries"
             arrent=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq .[$index]`
+            regeninterval=`echo $arrent | jq .regeninterval`
             aliasname=`echo $arrent | jq .alias | sed -e 's/"//g'`
-            if [[ "$aliasname" != "" ]]
+            if [[ "$aliasname" != "" && "$aliasname" != "null" ]]
             then
                 # see if that alias works
                 $OSSL/esnistuff/echcli.sh -s $aliasname -H $behost \
@@ -783,30 +793,62 @@ then
                 if [[ "$echworked" == "true" ]]
                 then
                     # publish
-                    nres=`doaliasupdate $behost $beport $aliasname`
-                    if [[ "$nres" == "0" ]]
-                    then 
-                        echo "Published for $behost/$beport via $aliasname"
-                        publishedsomething="true"
+                    if [[ "$DOTEST" == "no" ]]
+                    then
+                        nres=`doaliasupdate $behost $beport $aliasname $regeninterval`
+                        if [[ "$nres" == "0" ]]
+                        then 
+                            echo "Published for $behost/$beport via $aliasname"
+                            publishedsomething="true"
+                        else
+                            echo "Failure ($nres) publishing for $behost/$beport via $aliasname"
+                        fi
                     else
-                        echo "Failure ($nres) publishing for $behost/$beport via $aliasname"
+                        echo "Testing, so not publishing"
                     fi
                 fi
                 continue
             fi
             # non-alias case
-            port=`echo $arrent | jq .port`
-            #echo "port: $port"
             list=`echo $arrent | jq .ech | sed -e 's/\"//g'`
+            if [[ "$list" == "null" ]]
+            then
+                # skip if no ECH value (aliases handled above)
+                continue
+            fi
             splitlists=`splitlist`
             #echo "splitlists: $splitlists"
             listarr=( $splitlists )
             listcount=${#listarr[@]}
+            port=`echo $arrent | jq .port | sed -e 's/"//g'`
+            if [[ "$port" == "null" ]]
+            then
+                port=443
+            fi
+            #echo "port: $port"
             priority=`echo $arrent | jq .priority`
+            if [[ "$priority" == "null" ]]
+            then
+                priority=1
+            fi
             regeninterval=`echo $arrent | jq .regeninterval`
+            if [[ "$regeninterval" == "null" ]]
+            then
+                regeninterval=3600
+            fi
             # TODO: add alpn to publish
-            alpn=`echo $arrent | jq .alpn`
+            alpn=`echo $arrent | jq .alpn | sed -e 's/"//g'`
+            if [[ "$alpn" == "null" ]]
+            then
+                alpnstr=""
+            else
+                alpnstr="-a $alpn"
+            fi
             target=`echo $arrent | jq .target`
+            if [[ "$target" == "null" ]]
+            then
+                target=""
+            fi
             desired_ttl=$((regeninterval/2))
             # now test for each port and ECHConfig within the ECHConfigList
             echerror="false"
@@ -816,8 +858,8 @@ then
             else
                 echworked="false"
                 # first test entire list then each element
-                $OSSL/esnistuff/echcli.sh -P $list -H $backend \
-                    -p $port -a $alpn >/dev/null 2>&1
+                $OSSL/esnistuff/echcli.sh -P $list -H $behost \
+                    -p $port $alpnstr >/dev/null 2>&1
                 res=$?
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
@@ -842,7 +884,7 @@ then
                         continue
                     fi
                     $OSSL/esnistuff/echcli.sh -P $singletonlist -H $behost \
-                        -p $beport >/dev/null 2>&1
+                        -p $beport $alpnstr >/dev/null 2>&1
                     res=$?
                     if [[ "$res" != "0" ]]
                     then
@@ -875,7 +917,7 @@ then
                         fi
                     fi
                     sleep 3
-                    nres=`donsupdate $behost $list $desired_ttl $priority $target $beport`
+                    nres=`donsupdate $behost $list $desired_ttl $priority $target $beport $alpn`
                     if [[ "$nres" == "0" ]]
                     then 
                         echo "Published for $behost/$beport"
