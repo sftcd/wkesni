@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+# set -x
 
 # Copyright (C) 2023 Stephen Farrell, stephen.farrell@cs.tcd.ie
 # 
@@ -166,12 +166,11 @@ function doaliasupdate()
     host=$1
     port=$2
     alias=$3
-    alport=$4
+    # TODO: add regeninterval to alias as well?
     ttl=300
     # All params are needed
     if [[ $host == "" \
           || $alias == "" \
-          || $alport == "" \
           || $port == "" ]]
     then
         # non-random failure code
@@ -473,6 +472,7 @@ then
                 echo "$file too old, (age==$fage >= $durt3)... moving to $ECHOLD"
                 mv $file $ECHOLD
                 actiontaken="true"
+                someactiontaken="true"
             fi
         done
 
@@ -510,6 +510,7 @@ then
                 exit 15
             fi
             actiontaken="true"
+            someactiontaken="true"
 
             newjsonfile="false"
             # include long-term keys
@@ -531,6 +532,7 @@ then
         if [ ! -s $fewkechfile ]
         then
             actiontaken="true"
+            someactiontaken="true"
             mergefiles=$ECHDIR/$fehost.$feport/*.pem.ech
         fi
         if [[ "$actiontaken" != "false" ]]
@@ -562,7 +564,6 @@ if [[ $ROLES == *"$BESTR"* ]]
 then
     for beor in "${!be_arr[@]}"
     do
-        actiontaken="false"
         bedr=${be_arr[${beor}]}
         wkechfile=$bedr/.well-known/$WESTR
         behost=$(hostport2host $beor)
@@ -681,6 +682,7 @@ EOF
             sudo cp $lmf $wkechfile
             sudo chown $WWWUSER:$WWWUSER $wkechfile
             sudo chmod a+r $wkechfile
+            someactiontaken="true"
         fi
     done
 fi
@@ -706,8 +708,8 @@ then
         then
             # timeout returns 124 if it timed out, or else the
             # result from curl otherwise
-            echo "Timed out after $CURLTIMEOUT waiting for $back"
-            exit 2
+            echo "Timed out after $CURLTIMEOUT waiting for $beor"
+            continue
         fi
         if [ ! -s $TMPF ]
         then
@@ -746,7 +748,7 @@ then
         # we'll "promote" the JSON file from the tmp dir to the longer term
         # one. We do that even if some of the JSON file entries don't work
         # on the basis that it's correct to publish keys that work and if
-        # the FRONTEND fixes broken things, then we'll pick up on that and
+        # the backend fixes broken things, then we'll pick up on that and
         # publish.
         behost=$(hostport2host $back)
         beport=$(hostport2port $back)
@@ -756,31 +758,43 @@ then
         #echo "entries: $entries"
         if [[ "$entries" == "" ]]
         then
-            alias=`cat $ZFTMP/$behost.$beport.json | jq .alias | sed -e 's/"//g'`
-            if [[ "$alias" == "" ]]
-            then
-                continue
-            fi
-            echworked="false"
-            # first test entire list then each element
-            $OSSL/esnistuff/echcli.sh -H $behost -c $alias \
-                -s $alias -p $beport >/dev/null 2>&1
-            res=$?
-            #echo "Test result is $res"
-            if [[ "$res" != "0" ]]
-            then
-                echo "ECH alias error for $behost via $alias"
-                echerror="true"
-            else 
-                echo "ECH alias fine for $behost via $alias"
-                echworked="true"
-            fi
             continue
         fi
         for ((index=0;index!=$entries;index++))
         do
             echo "$backend Array element: $((index+1)) of $entries"
             arrent=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq .[$index]`
+            aliasname=`echo $arrent | jq .alias | sed -e 's/"//g'`
+            if [[ "$aliasname" != "" ]]
+            then
+                # see if that alias works
+                $OSSL/esnistuff/echcli.sh -s $aliasname -H $behost \
+                    -p $port >/dev/null 2>&1
+                res=$?
+                #echo "Test result is $res"
+                if [[ "$res" != "0" ]]
+                then
+                    echo "ECH alias error for $behost $beport $aliasname"
+                    echerror="true"
+                else 
+                    echo "ECH alias fine for $behost $beport $aliasname"
+                    echworked="true"
+                fi
+                if [[ "$echworked" == "true" ]]
+                then
+                    # publish
+                    nres=`doaliasupdate $behost $beport $aliasname`
+                    if [[ "$nres" == "0" ]]
+                    then 
+                        echo "Published for $behost/$beport via $aliasname"
+                        publishedsomething="true"
+                    else
+                        echo "Failure ($nres) publishing for $behost/$beport via $aliasname"
+                    fi
+                fi
+                continue
+            fi
+            # non-alias case
             port=`echo $arrent | jq .port`
             #echo "port: $port"
             list=`echo $arrent | jq .ech | sed -e 's/\"//g'`
@@ -790,6 +804,7 @@ then
             listcount=${#listarr[@]}
             priority=`echo $arrent | jq .priority`
             regeninterval=`echo $arrent | jq .regeninterval`
+            # TODO: add alpn to publish
             alpn=`echo $arrent | jq .alpn`
             target=`echo $arrent | jq .target`
             desired_ttl=$((regeninterval/2))
@@ -813,18 +828,6 @@ then
                     echo "ECH list fine for $behost $beport"
                     echworked="true"
                 fi
-                if [[ "$echworked" == "true" ]]
-                then
-                    # publish
-                    nres=`doliasupdate $behost $beport`
-                    if [[ "$nres" == "0" ]]
-                    then 
-                        echo "Published for $backend/$port"
-                        publishedsomething="true"
-                    else
-                        echo "Failure ($nres) in publishing for $backend/$port"
-                    fi
-                fi
             fi
             # could speed up this if full list is singleton but better 
             # to run the code for now...
@@ -838,20 +841,20 @@ then
                     then
                         continue
                     fi
-                    $OSSL/esnistuff/echcli.sh -P $singletonlist -H $backend \
-                        -c $FRONTEND -s $FRONTEND -p $port >/dev/null 2>&1
+                    $OSSL/esnistuff/echcli.sh -P $singletonlist -H $behost \
+                        -p $beport >/dev/null 2>&1
                     res=$?
                     if [[ "$res" != "0" ]]
                     then
-                            echo "ECH single error at $backend $port $singletonlist"
+                            echo "ECH single error at $behost $beport $singletonlist"
                             echerror="true"
                         else 
-                            echo "ECH single ($snum/$listcount) fine at $backend $port"
+                            echo "ECH single ($snum/$listcount) fine at $behost $beport"
                             echworked="true"
                         fi
-                        snum=$((snum+1))
-                    done
-                fi
+                    snum=$((snum+1))
+                done
+            fi
             if [ "$echerror" == "false" ] && [ "$echworked" == "true" ]
             then
                 # success... all ok so bank that one...
@@ -868,24 +871,24 @@ then
                         then
                             target="."
                         else
-                            target=$backend
+                            target=$behost
                         fi
                     fi
                     sleep 3
-                    nres=`donsupdate $backend $list $desired_ttl $priority $target $port`
+                    nres=`donsupdate $behost $list $desired_ttl $priority $target $beport`
                     if [[ "$nres" == "0" ]]
                     then 
-                        echo "Published for $backend/$port"
+                        echo "Published for $behost/$beport"
                         publishedsomething="true"
                     else
-                        echo "Failure ($nres) in publishing for $backend/$port"
+                        echo "Failure ($nres) in publishing for $behost/$beport"
                     fi
                 else
-                    echo "Just testing so won't add $backend/$port"
+                    echo "Just testing so won't add $behost/$beport"
                     publishedsomething="true"
                 fi
             else
-                echo "Won't try publish $backend/$port"
+                echo "Won't try publish $behost/$beport"
             fi
         done
         if [[ "$publishedsomething" == "true" ]]
@@ -903,7 +906,7 @@ then
     rmdir $ZFTMP
 fi
 
-if [[ "$actiontaken" != "false" ]]
+if [[ "$someactiontaken" != "false" ]]
 then
     # restart services that support key rotation
     if [[ $ROLES == *"$FESTR"* ]]

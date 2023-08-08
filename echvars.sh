@@ -38,8 +38,8 @@
 export LD_LIBRARY_PATH=$OSSL
 
 # script to restart or reload configuations for front/back-end
-: ${BE_RESTARTER:=$HOME/code/defo-project/be_restart.sh}
-: ${FE_RESTARTER:=$HOME/code/defo-project/fe_restart.sh}
+: ${BE_RESTARTER:=/home/sftcd/bin/be_restart.sh}
+: ${FE_RESTARTER:=/home/strcd/bin/fe_restart.sh}
 
 # Top of ECH key file directories
 : ${ECHTOP:=$HOME/ech}
