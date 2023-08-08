@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: January 27, 2024                            Akamai Technologies
+Expires: February 10, 2024                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                           July 26, 2023
+                                                          August 9, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on January 27, 2024.
+   This Internet-Draft will expire on February 10, 2024.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires January 27, 2024                [Page 1]
+Farrell, et al.         Expires February 10, 2024               [Page 1]
 
-Internet-Draft           Well-Known URI for ECH                July 2023
+Internet-Draft           Well-Known URI for ECH              August 2023
 
 
    to this document.  Code Components extracted from this document must
@@ -68,15 +68,15 @@ Table of Contents
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
    3.  Example use of the well-known URI for ECH . . . . . . . . . .   3
-   4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   3
+   4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   4
    5.  The JSON structure for origin service binding info  . . . . .   4
-   6.  Zone factory behaviour  . . . . . . . . . . . . . . . . . . .   5
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   6
-   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   6
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   6
+   6.  Zone factory behaviour  . . . . . . . . . . . . . . . . . . .   6
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   7
+   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   7
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   7
    10. Normative References  . . . . . . . . . . . . . . . . . . . .   7
-   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   8
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   8
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   9
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   9
 
 1.  Introduction
 
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires January 27, 2024                [Page 2]
+Farrell, et al.         Expires February 10, 2024               [Page 2]
 
-Internet-Draft           Well-Known URI for ECH                July 2023
+Internet-Draft           Well-Known URI for ECH              August 2023
 
 
    We propose use of a well-known URI [RFC8615] on the web server that
@@ -120,6 +120,10 @@ Internet-Draft           Well-Known URI for ECH                July 2023
    publishes those at the well-known URI, ZF can poll that URI.  When ZF
    sees new values, it can check if those work, and if they do, then
    update the zone file and re-publish the zone.
+
+   If ECH is being operated in "split-mode" then the web server
+   (backend) can similarly poll the frontend for our well-known URI and
+   then create it's own value to publish for the ZF to read.
 
    [[The source for this draft is in https://github.com/sftcd/wkesni/
    Issues and PRs are welcome there too.]]
@@ -132,13 +136,24 @@ Internet-Draft           Well-Known URI for ECH                July 2023
    14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
+   We define the following terms:
+
+   o  Zone factory (ZF) is an entity that has write-accsss to the DNS
+   o  Front-end (FE) is the web server that has an ECH private value.
+      This processes the outer ClientHello and attempts ECH decryption.
+   o  Back-end (BE) is the web server that will process the inner
+      ClientHello.  This may (and often will) be the same web server as
+      the Front-end (in ECH shared-mode).
+   o  regenInterval - the number of seconds after which the value
+      retrieved after acessing a well-known URI may be changed.
+
 3.  Example use of the well-known URI for ECH
 
    An example deployment could be as follows:
 
-   1.  Web server generates new ECHConfigList values every
-       "regeninterval" seconds via some regular, automated process (e.g.
-       a cronjob)
+   1.  Shared-mode ECH web server generates new ECHConfigList values
+       every "regeninterval" seconds via some regular, automated process
+       (e.g. a cronjob)
    2.  ECHConfigList values are "current" for an hour, and remain usable
        for 3 hours from the time of generation
    3.  The cronjob updates the ECHConfigList values in a JSON resource
@@ -146,6 +161,15 @@ Internet-Draft           Well-Known URI for ECH                July 2023
        Figure 1.
    4.  On the zone factory, another regularaly executed job uses an HTTP
        client to retrieve this JSON resource.  It also attempts to
+
+
+
+
+Farrell, et al.         Expires February 10, 2024               [Page 3]
+
+Internet-Draft           Well-Known URI for ECH              August 2023
+
+
        connect to the origin using these ECH values and confirms that
        they are working.
    5.  The zone factory observes that the JSON resource has a
@@ -158,22 +182,18 @@ Internet-Draft           Well-Known URI for ECH                July 2023
 
 4.  The origin-svcb well-known URI
 
-   If a web server ($ORIGIN) wants to convey information to the Zone
+   If a back-end ($BACKEND) wants to convey information to the Zone
    Factory, it publishes the JSON content defined in Section 5 at:
-   https://$ORIGIN/.well-known/origin-svcb
-
-
-
-
-Farrell, et al.         Expires January 27, 2024                [Page 3]
-
-Internet-Draft           Well-Known URI for ECH                July 2023
-
+   https://$BACKEND/.well-known/origin-svcb
 
    The well-known URI defined here MUST be an https URL and therefore
-   the zone factory verifies the correct $ORIGIN is being accessed.  If
-   no new ECH value resulting "works" then the zone factory MUST NOT
+   the zone factory verifies the correct $BACKEND is being accessed.  If
+   no new ECH value resulting "works," then the zone factory SHOULD NOT
    modify the zone.
+
+   Note that a consequence of the URL above is that back-ends that wish
+   to use different ECH settings are very likely to have to use
+   different "DocRoot" settings.
 
 5.  The JSON structure for origin service binding info
 
@@ -195,19 +215,37 @@ Internet-Draft           Well-Known URI for ECH                July 2023
 
                Figure 1: Sample JSON for ECH without aliases
 
-           {
-               "alias": "cdn.example.net"
+
+
+
+
+
+
+Farrell, et al.         Expires February 10, 2024               [Page 4]
+
+Internet-Draft           Well-Known URI for ECH              August 2023
+
+
+        {
+           "endpoints": [{
+               "alias": "cdn1.example.net",
                "regeninterval": 108000
-           }
+           }, {
+               "alias": "cdn2.example.com",
+               "regeninterval": 108000
+           }]
+         }
 
                     Figure 2: Sample JSON with aliasing
 
-   The JSON file at the well-known URI MUST contain an object with
-   either an "endpoints" key or an "alias" key.  If the "endpoints" key
-   is present, its value is an array whose elements represent HTTPS
-   records in ServiceMode.  Each element MAY contain one or more keys
-   from the JSON HTTP Origin Info registry (see IANA Considerations).
-   The initial registry entries are:
+   The JSON file at the well-known URI MUST contain an object with an
+   "endpoints" key that contains an array of objects that each map to a
+   desired HTTPS/SVCB resource record that the back-end would like to
+   see published.  The "endpoints" array its value is an array whose
+   elements each represent HTTPS records in ServiceMode or AliasMode as
+   described below.  Each element MAY contain one or more keys from the
+   JSON HTTP Origin Info registry (see IANA Considerations).  The
+   initial registry entries are:
 
    o  regeninterval: the number of seconds between key generation
       actions at the origin, i.e. a replacement ECHConfigList may be
@@ -216,24 +254,40 @@ Internet-Draft           Well-Known URI for ECH                July 2023
       SvcPriority.  If omitted, the zone factory SHOULD infer
       numerically increasing SvcPriority from the order of the endpoints
       array.
-
-
-
-
-
-Farrell, et al.         Expires January 27, 2024                [Page 4]
-
-Internet-Draft           Well-Known URI for ECH                July 2023
-
-
    o  target: The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
       value is ".".
-   o  port: The value is a non-negative integer, corresponding to the
-      value of the "port" SvcParamKey.
+   o  alias: The value MUST be a DNS name that could be used as the
+      TargetName of an HTTPS resource record.  This indicates that the
+      backend is hosted on the same endpoints as this target, and is
+      equivalent to an HTTPS AliasMode record.  A zone factory might
+      implement this directive by publishing an AliasMode record,
+      publishing a CNAME record, copying HTTPS records from the target
+      zone, or fetching https://$FRONTEND/.well-known/origin-svcb" (if
+      it exists).  In this case, the regeninterval indicates that the
+      back-end does not plan to change the content at the URL for at
+      least that number of seconds.  If an alias entry is present then
+      any ech and port entries (if present) MUST be ignored.
    o  ech: The value is a string containing an ECHConfigList encoded in
       Base64 [RFC4648], corresponding to the value of the "ech"
       SvcParamKey.
+   o  port: The value is a non-negative integer, corresponding to the
+      value of the "port" SvcParamKey.
+
+
+
+
+Farrell, et al.         Expires February 10, 2024               [Page 5]
+
+Internet-Draft           Well-Known URI for ECH              August 2023
+
+
+   o  alpn: The value is a string corresponding to the value of the
+      "alpn" SvcParamKey.
+   o  ipv4hints: The value is a string corresponding to the value of the
+      "ipv4hints" SvcParamKey.
+   o  ipv6hints: The value is a string corresponding to the value of the
+      "ipv6hints" SvcParamKey.
 
    An empty endpoint object corresponds to an HTTPS record with inferred
    SvcPriority, TargetName=".", and no ECH support.  An empty record of
@@ -242,17 +296,6 @@ Internet-Draft           Well-Known URI for ECH                July 2023
 
    [[TODO: What does the zone factory do if it encounters an
    unrecognized field?]]
-
-   If the object contains an "alias" key, its value MUST be a DNS name
-   that could be used as the TargetName of an HTTPS resource record.
-   This indicates that $ORIGIN is hosted on the same endpoints as this
-   target, and is equivalent to an HTTPS AliasMode record.  A zone
-   factory might implement this directive by publishing an AliasMode
-   record, publishing a CNAME record, copying HTTPS records from the
-   target zone, or fetching https://$TARGET/.well-known/origin-svcb" (if
-   it exists).  In this case, the regeninterval indicates that the
-   $ORIGIN does not plan to change the content at the URL for at least
-   that number of seconds.
 
    This arrangement provides the following important properties:
 
@@ -273,19 +316,9 @@ Internet-Draft           Well-Known URI for ECH                July 2023
    The zone factory SHOULD check that the presented endpoints work and
    provide access to $ORIGIN before publication.  A bespoke TLS client
    may be needed for this check, that does not require the ECHConfigList
-   value to have already been published in the DNS.  [[I guess that
-
-
-
-Farrell, et al.         Expires January 27, 2024                [Page 5]
-
-Internet-Draft           Well-Known URI for ECH                July 2023
-
-
-   calls for the zone factory to know of a "safe" URL on $ORIGIN to try,
-   or maybe it could use HTTP HEAD?  Figuring that out is TBD.  The ZF
-   could also try a GREASEd ECH and see if the retry-configs it gets
-   back is one of the ECHConfig values in the ECHConfigList.]]
+   value to have already been published in the DNS.  In order to make
+   such checks the zonefactory SHOULD attempt to access the well-known
+   URI defined here.
 
    A careful zone factory could explode the ECHConfigList value
    presented into "singleton" values with one public key in each and
@@ -297,6 +330,14 @@ Internet-Draft           Well-Known URI for ECH                July 2023
    The zone factory SHOULD set a DNS TTL short enough so that any cached
    DNS resource records are likely to have expired before the JSON
    object's content is likely to have changed.  The zone factory MUST
+
+
+
+Farrell, et al.         Expires February 10, 2024               [Page 6]
+
+Internet-Draft           Well-Known URI for ECH              August 2023
+
+
    attempt to refresh the JSON object and regenerate the zone before
    this time.  This aims to ensure that ECHConfigs are not used longer
    than intended by the origin.
@@ -327,16 +368,7 @@ Internet-Draft           Well-Known URI for ECH                July 2023
 9.  IANA Considerations
 
    [[TBD: IANA registration of a .well-known.  Also TBD - how to handle
-   I18N for $FRONT and $BACKEND within such a URL.]]
-
-
-
-
-
-Farrell, et al.         Expires January 27, 2024                [Page 6]
-
-Internet-Draft           Well-Known URI for ECH                July 2023
-
+   I18N for $FRONTEND and $BACKEND within such a URL.]]
 
    If approved, this specification requests the creation of an IANA
    registry named "JSON HTTP Origin Info" with a Standards Action
@@ -353,6 +385,15 @@ Internet-Draft           Well-Known URI for ECH                July 2023
               <https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-
               svcb-https-12>.
 
+
+
+
+
+Farrell, et al.         Expires February 10, 2024               [Page 7]
+
+Internet-Draft           Well-Known URI for ECH              August 2023
+
+
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
               Encrypted Client Hello", draft-ietf-tls-esni-16 (work in
@@ -364,11 +405,6 @@ Internet-Draft           Well-Known URI for ECH                July 2023
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
-
-   [RFC3986]  Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
-              Resource Identifier (URI): Generic Syntax", STD 66,
-              RFC 3986, DOI 10.17487/RFC3986, January 2005,
-              <https://www.rfc-editor.org/info/rfc3986>.
 
    [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
               Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
@@ -389,9 +425,29 @@ Internet-Draft           Well-Known URI for ECH                July 2023
 
 
 
-Farrell, et al.         Expires January 27, 2024                [Page 7]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Farrell, et al.         Expires February 10, 2024               [Page 8]
 
-Internet-Draft           Well-Known URI for ECH                July 2023
+Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 Appendix A.  Change Log
@@ -408,8 +464,8 @@ Appendix A.  Change Log
 
    Version 03 reflects some local implementation experience with -02
 
-   Version 04 matches a bash script implementation and results of
-   IETF-117 discussion (or it will after that discussion:-).
+   Version 04 matches a proof-of-concept bash script implementation and
+   results of IETF-117 discussion.
 
 Authors' Addresses
 
@@ -445,4 +501,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires January 27, 2024                [Page 8]
+Farrell, et al.         Expires February 10, 2024               [Page 9]

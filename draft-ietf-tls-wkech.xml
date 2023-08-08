@@ -120,6 +120,12 @@
             they do, then update the zone file and re-publish the zone.
         </t>
 
+        <t>
+            If ECH is being operated in "split-mode" then the web server (backend) can 
+            similarly poll the frontend for our well-known URI and then create it's own
+            value to publish for the ZF to read.
+        </t>
+
         <t>[[The source for this draft is in https://github.com/sftcd/wkesni/ 
             Issues and PRs are welcome there too.]]
         </t>
@@ -132,6 +138,21 @@
         "OPTIONAL" in this document are to be interpreted as described in BCP
         14 <xref target="RFC2119"/> <xref target="RFC8174"/> when, and only
         when, they appear in all capitals, as shown here.</t>
+
+    <t>We define the following terms:
+    <list style="symbols">
+        <t>Zone factory (ZF) is an entity that has write-accsss to the DNS</t>
+        <t>Front-end (FE) is the web server that has an ECH private value. This
+           processes the outer ClientHello and attempts ECH decryption.</t>
+       <t>Back-end (BE) is the web server that will process the inner ClientHello.
+           This may (and often will) be the same web server as the Front-end (in
+           ECH shared-mode).</t>
+       <t>regenInterval - the number of seconds after which the value retrieved
+           after acessing a well-known URI may be changed.</t>
+
+    </list>
+    </t>
+
       </section>
 
     <section title="Example use of the well-known URI for ECH">
@@ -139,7 +160,7 @@
         <t>An example deployment could be as follows:
 
            <list style="numbers">
-               <t> Web server generates new ECHConfigList values every "regeninterval" 
+               <t> Shared-mode ECH web server generates new ECHConfigList values every "regeninterval" 
                seconds via some regular, automated process (e.g. a cronjob)</t>
                 <t> ECHConfigList values are "current" for an hour, and remain usable
                     for 3 hours from the time of generation</t>
@@ -165,16 +186,20 @@
     <section title="The origin-svcb well-known URI">
 
          <t>
-            If a web server ($ORIGIN) wants to convey information to the Zone
+            If a back-end ($BACKEND) wants to convey information to the Zone
             Factory, it publishes the JSON content
             defined in <xref target="jsonstr"/> at:
-            https://$ORIGIN/.well-known/origin-svcb
+            https://$BACKEND/.well-known/origin-svcb
         </t>
 
         <t>The well-known URI defined here MUST be an https URL and therefore the
-            zone factory verifies the correct $ORIGIN is being accessed. If
-            no new ECH value resulting "works" then the
-            zone factory MUST NOT modify the zone. </t> 
+            zone factory verifies the correct $BACKEND is being accessed. If
+            no new ECH value resulting "works," then the
+            zone factory SHOULD NOT modify the zone. </t> 
+
+        <t>Note that a consequence of the URL above is that back-ends that
+            wish to use different ECH settings are very likely to have to 
+            use different "DocRoot" settings.</t>
 
     </section>
 
@@ -203,18 +228,27 @@
 
 <figure anchor="sample-json-alias" title="Sample JSON with aliasing" >
     <artwork><![CDATA[
-        {
-            "alias": "cdn.example.net"
+     {
+        "endpoints": [{
+            "alias": "cdn1.example.net",
             "regeninterval": 108000
-        }
+        }, {
+            "alias": "cdn2.example.com",
+            "regeninterval": 108000
+        }]
+      }
     ]]></artwork>
 </figure>
 
     <t>
         The JSON file at the well-known URI MUST contain an object
-        with either an "endpoints" key or an "alias" key.  If the
-        "endpoints" key is present, its value is an array whose elements
-        represent HTTPS records in ServiceMode. Each element MAY contain
+        with an "endpoints" key that contains an array of objects
+        that each map to a desired HTTPS/SVCB resource record that
+        the back-end would like to see published. 
+
+        The "endpoints" array its value is an array whose elements
+        each represent HTTPS records in ServiceMode or AliasMode as
+        described below. Each element MAY contain
         one or more keys from the JSON HTTP Origin Info registry (see
         IANA Considerations).  The initial registry entries are:
         <list style="symbols">
@@ -235,13 +269,41 @@
                 The default value is ".".
             </t>
             <t>
-                port: The value is a non-negative integer, corresponding to
-                the value of the "port" SvcParamKey.
-            </t>
+                alias: The value MUST be a DNS name
+        that could be used as the TargetName of an HTTPS resource record.
+        This indicates that the backend
+        is hosted on the same endpoints as this target, and is equivalent to
+        an HTTPS AliasMode record. 
+        A zone factory might implement this directive
+        by publishing an AliasMode record, publishing a CNAME record, copying
+        HTTPS records from the target zone, or fetching
+        https://$FRONTEND/.well-known/origin-svcb" (if it exists).
+        In this case, the regeninterval indicates that the back-end does
+        not plan to change the content at the URL for at least that number of
+        seconds.
+                If an alias entry is present then any ech and port entries
+                (if present) MUST be ignored.
+        </t>
             <t>
                 ech: The value is a string containing an ECHConfigList encoded
                 in Base64 <xref target="RFC4648"/>, corresponding to the value
                 of the "ech" SvcParamKey.
+            </t>
+            <t>
+                port: The value is a non-negative integer, corresponding to
+                the value of the "port" SvcParamKey.
+            </t>
+            <t>
+                alpn: The value is a string corresponding to
+                the value of the "alpn" SvcParamKey.
+            </t>
+            <t>
+                ipv4hints: The value is a string corresponding to
+                the value of the "ipv4hints" SvcParamKey.
+            </t>
+            <t>
+                ipv6hints: The value is a string corresponding to
+                the value of the "ipv6hints" SvcParamKey.
             </t>
         </list>
         An empty endpoint object corresponds to an HTTPS record with inferred
@@ -253,20 +315,6 @@
     <t>
         [[TODO: What does the zone factory do if it encounters an unrecognized
         field?]]
-    </t>
-
-    <t>
-        If the object contains an "alias" key, its value MUST be a DNS name
-        that could be used as the TargetName of an HTTPS resource record.
-        This indicates that $ORIGIN
-        is hosted on the same endpoints as this target, and is equivalent to
-        an HTTPS AliasMode record.  A zone factory might implement this directive
-        by publishing an AliasMode record, publishing a CNAME record, copying
-        HTTPS records from the target zone, or fetching
-        https://$TARGET/.well-known/origin-svcb" (if it exists).
-        In this case, the regeninterval indicates that the $ORIGIN does
-        not plan to change the content at the URL for at least that number of
-        seconds.
     </t>
 
     <t>
@@ -303,11 +351,8 @@
         A bespoke TLS client may be needed for this check,
         that does not require the ECHConfigList value to have 
         already been published in the DNS.
-        [[I guess that calls for the zone factory to know
-        of a "safe" URL on $ORIGIN to try, or maybe it could
-        use HTTP HEAD? Figuring that out is TBD. The ZF could also
-        try a GREASEd ECH and see if the retry-configs it gets back
-        is one of the ECHConfig values in the ECHConfigList.]]
+        In order to make such checks the zonefactory SHOULD
+        attempt to access the well-known URI defined here.
     </t>
 
     <t>A careful zone factory could explode the ECHConfigList value
@@ -363,7 +408,7 @@
 
     <section title="IANA Considerations">
         <t>[[TBD: IANA registration of a .well-known. Also TBD - how to handle I18N for
-            $FRONT and $BACKEND within such a URL.]]</t>
+            $FRONTEND and $BACKEND within such a URL.]]</t>
 
         <t>If approved, this specification requests the creation of an IANA
             registry named "JSON HTTP Origin Info" with a Standards Action
@@ -380,7 +425,6 @@
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
-      <?rfc include='reference.RFC.3986'?>
       <?rfc include='reference.RFC.4648'?>
       &I-D.ietf-tls-esni;
       &I-D.ietf-dnsop-svcb-https;
@@ -412,9 +456,9 @@
       </t>
 
       <t>
-          Version 04 matches a bash script implementation and results of IETF-117
-          discussion (or it will after that discussion:-).
-      </t>
+        Version 04 matches a proof-of-concept bash script implementation and
+        results of IETF-117 discussion.
+    </t>
 
     </section>
   </back>
