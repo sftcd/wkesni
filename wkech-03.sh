@@ -251,6 +251,8 @@ dur=$DURATION
 durt2=$((DURATION*2))
 durt3=$((DURATION*3))
 durt5=$((DURATION*5))
+                
+someactiontaken="false"
 
 # sanity checks
 
@@ -343,7 +345,7 @@ then
             echo "DocRoot for $beor ($bedr) missing - exiting"
             exit 9
         fi
-        sudo -u $WWWUSER ls $bedr
+        sudo -u $WWWUSER ls $bedr >/dev/null
         sres=$?
         if [[ "$sres" != "0" ]]
         then
