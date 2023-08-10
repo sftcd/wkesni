@@ -266,7 +266,8 @@
             <t>
                 target: The value is a string containing a fully qualified
                 domain name, corresponding to the HTTPS record's TargetName.
-                The default value is ".".
+                The default value is ".".  All labels in the name MUST contain
+                only octets from the ABNF set ALPHA / DIGIT / "-" / "_".
             </t>
             <t>
                 alias: The value MUST be a DNS name
@@ -294,16 +295,20 @@
                 the value of the "port" SvcParamKey.
             </t>
             <t>
-                alpn: The value is a string corresponding to
-                the value of the "alpn" SvcParamKey.
+                alpn: The value is an array of strings corresponding to
+                the values of the "alpn" SvcParamKey.  A JSON string is a
+                sequence of Unicode codepoints, while an ALPN value is a sequence
+                of octets, so each ALPN value octet is stored as a single Unicode
+                codepoint.  For all ALPNs registered to date, this corresponds to
+                ordinary usage of JSON strings.
             </t>
             <t>
-                ipv4hints: The value is a string corresponding to
-                the value of the "ipv4hints" SvcParamKey.
+                ipv4hint: The value is an array of strings corresponding to
+                the values of the "ipv4hint" SvcParamKey.
             </t>
             <t>
-                ipv6hints: The value is a string corresponding to
-                the value of the "ipv6hints" SvcParamKey.
+                ipv6hint: The value is an array of strings corresponding to
+                the values of the "ipv6hint" SvcParamKey.
             </t>
         </list>
         An empty endpoint object corresponds to an HTTPS record with inferred
