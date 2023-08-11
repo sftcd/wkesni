@@ -299,8 +299,8 @@
                 the values of the "alpn" SvcParamKey.  A JSON string is a
                 sequence of Unicode codepoints, while an ALPN value is a sequence
                 of octets, so each ALPN value octet is stored as a single Unicode
-                codepoint.  For all ALPNs registered to date, this corresponds to
-                ordinary usage of JSON strings.
+                codepoint <xref target="ISOMORPHIC-DECODE"/>.  For all ALPNs
+                registered to date, this corresponds to ordinary usage of JSON strings.
             </t>
             <t>
                 ipv4hint: The value is an array of strings corresponding to
@@ -436,10 +436,18 @@
 
     </references>
 
-    <!--
     <references title="Informative References">
+      <reference anchor="ISOMORPHIC-DECODE"
+                   target="https://infra.spec.whatwg.org/#isomorphic-decode">
+          <front>
+            <title>WHATWG definition of Isomorphic Decode</title>
+            <author fullname="WHATWG">
+              <organization />
+            </author>
+            <date />
+          </front>
+        </reference>
     </references>
-    -->
 
     <section title="Change Log ">
       <t>[[RFC editor: please remove this before publication.]]</t>

@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: February 10, 2024                           Akamai Technologies
+Expires: February 12, 2024                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                          August 9, 2023
+                                                         August 11, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on February 10, 2024.
+   This Internet-Draft will expire on February 12, 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires February 10, 2024               [Page 1]
+Farrell, et al.         Expires February 12, 2024               [Page 1]
 
 Internet-Draft           Well-Known URI for ECH              August 2023
 
@@ -74,7 +74,9 @@ Table of Contents
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   7
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   7
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   7
-   10. Normative References  . . . . . . . . . . . . . . . . . . . .   7
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   7
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .   7
+     10.2.  Informative References . . . . . . . . . . . . . . . . .   8
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   9
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   9
 
@@ -107,9 +109,7 @@ Table of Contents
 
 
 
-
-
-Farrell, et al.         Expires February 10, 2024               [Page 2]
+Farrell, et al.         Expires February 12, 2024               [Page 2]
 
 Internet-Draft           Well-Known URI for ECH              August 2023
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 10, 2024               [Page 3]
+Farrell, et al.         Expires February 12, 2024               [Page 3]
 
 Internet-Draft           Well-Known URI for ECH              August 2023
 
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 10, 2024               [Page 4]
+Farrell, et al.         Expires February 12, 2024               [Page 4]
 
 Internet-Draft           Well-Known URI for ECH              August 2023
 
@@ -256,7 +256,8 @@ Internet-Draft           Well-Known URI for ECH              August 2023
       array.
    o  target: The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
-      value is ".".
+      value is ".".  All labels in the name MUST contain only octets
+      from the ABNF set ALPHA / DIGIT / "-" / "_".
    o  alias: The value MUST be a DNS name that could be used as the
       TargetName of an HTTPS resource record.  This indicates that the
       backend is hosted on the same endpoints as this target, and is
@@ -276,18 +277,21 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-
-Farrell, et al.         Expires February 10, 2024               [Page 5]
+Farrell, et al.         Expires February 12, 2024               [Page 5]
 
 Internet-Draft           Well-Known URI for ECH              August 2023
 
 
-   o  alpn: The value is a string corresponding to the value of the
-      "alpn" SvcParamKey.
-   o  ipv4hints: The value is a string corresponding to the value of the
-      "ipv4hints" SvcParamKey.
-   o  ipv6hints: The value is a string corresponding to the value of the
-      "ipv6hints" SvcParamKey.
+   o  alpn: The value is an array of strings corresponding to the values
+      of the "alpn" SvcParamKey.  A JSON string is a sequence of Unicode
+      codepoints, while an ALPN value is a sequence of octets, so each
+      ALPN value octet is stored as a single Unicode codepoint
+      [ISOMORPHIC-DECODE].  For all ALPNs registered to date, this
+      corresponds to ordinary usage of JSON strings.
+   o  ipv4hint: The value is an array of strings corresponding to the
+      values of the "ipv4hint" SvcParamKey.
+   o  ipv6hint: The value is an array of strings corresponding to the
+      values of the "ipv6hint" SvcParamKey.
 
    An empty endpoint object corresponds to an HTTPS record with inferred
    SvcPriority, TargetName=".", and no ECH support.  An empty record of
@@ -327,17 +331,16 @@ Internet-Draft           Well-Known URI for ECH              August 2023
    The zone factory SHOULD publish all the endpoints that are presented
    in the JSON file that pass the check above.
 
-   The zone factory SHOULD set a DNS TTL short enough so that any cached
-   DNS resource records are likely to have expired before the JSON
-   object's content is likely to have changed.  The zone factory MUST
 
 
-
-Farrell, et al.         Expires February 10, 2024               [Page 6]
+Farrell, et al.         Expires February 12, 2024               [Page 6]
 
 Internet-Draft           Well-Known URI for ECH              August 2023
 
 
+   The zone factory SHOULD set a DNS TTL short enough so that any cached
+   DNS resource records are likely to have expired before the JSON
+   object's content is likely to have changed.  The zone factory MUST
    attempt to refresh the JSON object and regenerate the zone before
    this time.  This aims to ensure that ECHConfigs are not used longer
    than intended by the origin.
@@ -375,7 +378,21 @@ Internet-Draft           Well-Known URI for ECH              August 2023
    registration policy, containing a field named "Name" whose value is a
    UTF-8 string.
 
-10.  Normative References
+10.  References
+
+10.1.  Normative References
+
+
+
+
+
+
+
+
+Farrell, et al.         Expires February 12, 2024               [Page 7]
+
+Internet-Draft           Well-Known URI for ECH              August 2023
+
 
    [I-D.ietf-dnsop-svcb-https]
               Schwartz, B., Bishop, M., and E. Nygren, "Service binding
@@ -384,15 +401,6 @@ Internet-Draft           Well-Known URI for ECH              August 2023
               progress), March 2023,
               <https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-
               svcb-https-12>.
-
-
-
-
-
-Farrell, et al.         Expires February 10, 2024               [Page 7]
-
-Internet-Draft           Well-Known URI for ECH              August 2023
-
 
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
@@ -422,6 +430,11 @@ Internet-Draft           Well-Known URI for ECH              August 2023
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
 
+10.2.  Informative References
+
+   [ISOMORPHIC-DECODE]
+              WHATWG, "WHATWG definition of Isomorphic Decode",
+              <https://infra.spec.whatwg.org/#isomorphic-decode>.
 
 
 
@@ -432,20 +445,7 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.         Expires February 10, 2024               [Page 8]
+Farrell, et al.         Expires February 12, 2024               [Page 8]
 
 Internet-Draft           Well-Known URI for ECH              August 2023
 
@@ -501,4 +501,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires February 10, 2024               [Page 9]
+Farrell, et al.         Expires February 12, 2024               [Page 9]
