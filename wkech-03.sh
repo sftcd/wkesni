@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -x
+set -x
 
 # Copyright (C) 2023 Stephen Farrell, stephen.farrell@cs.tcd.ie
 # 
@@ -142,6 +142,10 @@ function donsupdate()
     then
         # non-random failure code
         echo 57
+    fi
+    if [[ "$alpn" == "null" ]]
+    then
+        alpn=""
     fi
     if [[ "$alpn" != "" ]]
     then
