@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+# set -x
 
 # Copyright (C) 2023 Stephen Farrell, stephen.farrell@cs.tcd.ie
 # 
@@ -33,12 +33,6 @@ set -x
 
 # variables/settings, some can be overwritten from environment
 . echvars.sh
-
-#for feor in "${!fe_arr[@]}"
-#do
-    #echo "FE origin: $feor, DocRoot: ${fe_arr[${feor}]}"
-#done
-#exit 0
 
 # role strings
 FESTR="fe"
@@ -441,7 +435,7 @@ then
         #   - delete any keys >5*DURATION old
         #   - push updated JSON (for all keys) to DocRoot dest
     
-        newest=$durt2
+        newest=$durt5
         newf=""
         oldest=0
         oldf=""
@@ -449,7 +443,7 @@ then
         echo "Prime key lifetime: $DURATION seconds"
         echo "New key generated when latest is $dur old"
         echo "Old keys retired when older than $durt3"
-        echo "Keys published until older than $durt2"
+        echo "Keys published until older than $dur"
         echo "Keys deleted when older than $durt5"
 
         if [ ! -d $ECHDIR/$fehost.$feport ]
@@ -490,8 +484,8 @@ then
             fi
         done
 
-        echo "Oldest moveable PEM file is $oldf (age: $oldest)"
-        echo "Newest moveable PEM file is $newf (age: $newest)"
+        echo "Oldest PEM file is $oldf (age: $oldest)"
+        echo "Newest PEM file is $newf (age: $newest)"
 
         # delete files older than 5*DURATION
         oldies="$ECHOLD/*"
@@ -523,24 +517,29 @@ then
                 echo "Error generating $ECHDIR/$fehost.$feport/$keyn.pem.ech"
                 exit 15
             fi
+            # just set this one for publishing 
+            newf=$ECHDIR/$fehost.$feport/$keyn.pem.ech
+            newjsonfile="true"
+            mergefiles="$newf"
             actiontaken="true"
             someactiontaken="true"
 
-            newjsonfile="false"
+            # newjsonfile="false"
             # include long-term keys
-            mergefiles="$LONGTERMKEYS"
-            for file in $ECHDIR/$fehost.$feport/*.pem.ech
-            do
-                fage=$(fileage $file)
-                if ((fage > durt2)) 
-                then
-                    # skip that one, we'll accept/decrypt based on that
-                    # but no longer publish the public in the zone
-                    continue
-                fi
-                newjsonfile="true"
-                mergefiles=" $mergefiles $file"
-            done
+            # mergefiles="$LONGTERMKEYS"
+            # for file in $ECHDIR/$fehost.$feport/*.pem.ech
+            # do
+                # fage=$(fileage $file)
+                # # change to only publish latest!!
+                # if ((fage > dur))
+                # then
+                    # # skip that one, we'll accept/decrypt based on that
+                    # # but no longer publish the public in the zone
+                    # continue
+                # fi
+                # newjsonfile="true"
+                # mergefiles=" $mergefiles $file"
+            # done
         fi
         # if not there or empty, make a new one
         if [ ! -s $fewkechfile ]
@@ -552,6 +551,7 @@ then
         if [[ "$actiontaken" != "false" ]]
         then
             TMPF="$ECHDIR/$fehost.$feport/latest-merged"
+            echo "Merging these files for publication: $mergefiles"
             $OSSL/esnistuff/mergepems.sh -o $TMPF $mergefiles
             echconfiglist=`cat $TMPF | sed -n '/BEGIN ECHCONFIG/,/END ECHCONFIG/p' \
                 | head -n -1 | tail -n -1`
@@ -842,7 +842,6 @@ then
             then
                 regeninterval=3600
             fi
-            # TODO: add alpn to publish
             alpn=`echo $arrent | jq .alpn | sed -e 's/"//g'`
             if [[ "$alpn" == "null" ]]
             then
@@ -974,5 +973,8 @@ then
         fi
     fi
 fi
+THEN=$(whenisitagain)
+echo "Finished $0 at $THEN (started at $NOW)"
+echo "=========================================="
 
 exit 0
