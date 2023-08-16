@@ -530,6 +530,7 @@ then
             actiontaken="true"
             someactiontaken="true"
             if [[ "$JUSTONE" == "yes" ]]
+            then
                 # just set the most recent one for publishing 
                 newf=$ECHDIR/$fehost.$feport/$keyn.pem.ech
                 newjsonfile="true"
