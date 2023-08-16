@@ -252,6 +252,7 @@ done
 # Various multiples/fractions of DURATION
 duro2=$((DURATION/2))
 dur=$DURATION
+durt2=$((DURATION*2))
 durt3=$((DURATION*3 + 60)) # allow a bit of leeway
 durt5=$((DURATION*5))
                 
@@ -452,7 +453,7 @@ then
         then
             echo "Only latest key (age <$dur) made available"
         else
-            echo "Keys published while younger than $durt3"
+            echo "Keys published while younger than $durt2"
         fi
         echo "Keys deleted when older than $durt5"
 
@@ -542,8 +543,7 @@ then
                 for file in $ECHDIR/$fehost.$feport/*.pem.ech
                 do
                     fage=$(fileage $file)
-                    # change to only publish latest!!
-                    if ((fage > dur))
+                    if ((fage > durt2))
                     then
                         # skip that one, we'll accept/decrypt based on that
                         # but no longer publish the public in the zone
@@ -781,7 +781,7 @@ then
         behost=$(hostport2host $back)
         beport=$(hostport2port $back)
         publishedsomething="false"
-        #echo "Trying ECH to $backend $beport"
+        #echo "Trying ECH to $behost:$beport"
         entries=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq length`
         #echo "entries: $entries"
         if [[ "$entries" == "" ]]
@@ -790,7 +790,7 @@ then
         fi
         for ((index=0;index!=$entries;index++))
         do
-            echo "$backend Array element: $((index+1)) of $entries"
+            echo "$behost:$beport Array element: $((index+1)) of $entries"
             arrent=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq .[$index]`
             regeninterval=`echo $arrent | jq .regeninterval`
             aliasname=`echo $arrent | jq .alias | sed -e 's/"//g'`
@@ -920,11 +920,11 @@ then
                 # success... all ok so bank that one...
                 if [[ "$DOTEST" == "no" ]]
                 then
-                    #echo "Will try publish for $backend/$port"
                     if [[ "$port" == "" ]]
                     then
                         port=443
                     fi
+                    #echo "Will try publish for $behost:$port"
                     if [[ "$target" == "" ]]
                     then
                         if [[ "$port" == "443" ]]
