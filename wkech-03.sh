@@ -46,6 +46,10 @@ VERIFY="yes"
 # whether to really try publish via bind or just test to that point
 DOTEST="no"
 
+# whether to only make one public key available for publication 
+# from front-end .well-known
+JUSTONE="no"
+
 # yeah, 443 is the winner:-)
 DEFPORT=443
 
@@ -207,6 +211,7 @@ function usage()
     echo "  -r roles can be \"$FESTR\" or \"$FESTR,$BESTR\" or \"$ZFSTR\" " \
          "(default is \"$ROLES\")"
     echo "  -t means to test $ZFSTR role up to, but not including, publication"
+    echo "  -1 means to only make 1 public key available from front-end at the .well-known"
 
 	echo ""
 	echo "The following should work:"
@@ -219,7 +224,7 @@ NOW=$(whenisitagain)
 echo "Running $0 at $NOW"
 
 # options may be followed by one colon to indicate they have a required argument
-if ! options=$(/usr/bin/getopt -s bash -o d:hnr:t -l duration,help,no-verify,roles:,test -- "$@")
+if ! options=$(/usr/bin/getopt -s bash -o d:hnr:t1 -l duration,help,no-verify,roles,one:,test -- "$@")
 then
     # something went wrong, getopt will put out an error message for us
     exit 2
@@ -234,6 +239,7 @@ do
         -n|--no-verify) VERIFY="no";;
         -r|--roles) ROLES=$2; shift;;
         -t|--test) DOTEST="yes";;
+        -1|--one) JUSTONE="yes";;
         (--) shift; break;;
         (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 3;;
         (*)  break;;
@@ -246,8 +252,7 @@ done
 # Various multiples/fractions of DURATION
 duro2=$((DURATION/2))
 dur=$DURATION
-durt2=$((DURATION*2))
-durt3=$((DURATION*3))
+durt3=$((DURATION*3 + 60)) # allow a bit of leeway
 durt5=$((DURATION*5))
                 
 someactiontaken="false"
@@ -443,7 +448,12 @@ then
         echo "Prime key lifetime: $DURATION seconds"
         echo "New key generated when latest is $dur old"
         echo "Old keys retired when older than $durt3"
-        echo "Keys published until older than $dur"
+        if [[ "$JUSTONE" == "yes" ]]
+        then
+            echo "Only latest key (age <$dur) made available"
+        else
+            echo "Keys published while younger than $durt3"
+        fi
         echo "Keys deleted when older than $durt5"
 
         if [ ! -d $ECHDIR/$fehost.$feport ]
@@ -517,29 +527,31 @@ then
                 echo "Error generating $ECHDIR/$fehost.$feport/$keyn.pem.ech"
                 exit 15
             fi
-            # just set this one for publishing 
-            newf=$ECHDIR/$fehost.$feport/$keyn.pem.ech
-            newjsonfile="true"
-            mergefiles="$newf"
             actiontaken="true"
             someactiontaken="true"
-
-            # newjsonfile="false"
-            # include long-term keys
-            # mergefiles="$LONGTERMKEYS"
-            # for file in $ECHDIR/$fehost.$feport/*.pem.ech
-            # do
-                # fage=$(fileage $file)
-                # # change to only publish latest!!
-                # if ((fage > dur))
-                # then
-                    # # skip that one, we'll accept/decrypt based on that
-                    # # but no longer publish the public in the zone
-                    # continue
-                # fi
-                # newjsonfile="true"
-                # mergefiles=" $mergefiles $file"
-            # done
+            if [[ "$JUSTONE" == "yes" ]]
+                # just set the most recent one for publishing 
+                newf=$ECHDIR/$fehost.$feport/$keyn.pem.ech
+                newjsonfile="true"
+                mergefiles="$newf"
+            else
+                newjsonfile="false"
+                include long-term keys
+                mergefiles="$LONGTERMKEYS"
+                for file in $ECHDIR/$fehost.$feport/*.pem.ech
+                do
+                    fage=$(fileage $file)
+                    # change to only publish latest!!
+                    if ((fage > dur))
+                    then
+                        # skip that one, we'll accept/decrypt based on that
+                        # but no longer publish the public in the zone
+                        continue
+                    fi
+                    newjsonfile="true"
+                    mergefiles=" $mergefiles $file"
+                done
+            fi
         fi
         # if not there or empty, make a new one
         if [ ! -s $fewkechfile ]
