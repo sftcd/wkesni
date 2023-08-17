@@ -3,17 +3,17 @@
 # set -x
 
 # Copyright (C) 2023 Stephen Farrell, stephen.farrell@cs.tcd.ie
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,7 +46,7 @@ VERIFY="yes"
 # whether to really try publish via bind or just test to that point
 DOTEST="no"
 
-# whether to only make one public key available for publication 
+# whether to only make one public key available for publication
 # from front-end .well-known
 JUSTONE="no"
 
@@ -62,7 +62,7 @@ function whenisitagain()
 
 function fileage()
 {
-    echo $(($(date +%s) - $(date +%s -r "$1"))) 
+    echo $(($(date +%s) - $(date +%s -r "$1")))
 }
 
 function hostport2host()
@@ -255,7 +255,9 @@ dur=$DURATION
 durt2=$((DURATION*2))
 durt3=$((DURATION*3 + 60)) # allow a bit of leeway
 durt5=$((DURATION*5))
-                
+
+
+# set this if we did something that needs e.g. a server restart
 someactiontaken="false"
 
 # sanity checks
@@ -434,13 +436,13 @@ then
         # Plan:
 
         # - check creation date of existing ECHConfig key pair files
-        # - if all ages < DURATION then we're done and exit 
+        # - if all ages < DURATION then we're done and exit
         # - Otherwise:
         #   - generate new instance of ECHKeys (same for backends)
         #   - retire any keys >3*DURATION old
         #   - delete any keys >5*DURATION old
         #   - push updated JSON (for all keys) to DocRoot dest
-    
+
         newest=$durt5
         newf=""
         oldest=0
@@ -476,17 +478,17 @@ then
             fi
             fage=$(fileage $file)
             #echo "$file is $fage old"
-            if ((fage < newest)) 
+            if ((fage < newest))
             then
                 newest=$fage
                 newf=$file
             fi
-            if ((fage > oldest)) 
+            if ((fage > oldest))
             then
                 oldest=$fage
                 oldf=$file
             fi
-            if ((fage > durt3)) 
+            if ((fage > durt3))
             then
                 echo "$file too old, (age==$fage >= $durt3)... moving to $ECHOLD"
                 mv $file $ECHOLD
@@ -530,36 +532,27 @@ then
             fi
             actiontaken="true"
             someactiontaken="true"
-            if [[ "$JUSTONE" == "yes" ]]
-            then
-                # just set the most recent one for publishing 
-                newf=$ECHDIR/$fehost.$feport/$keyn.pem.ech
-                newjsonfile="true"
-                mergefiles="$newf"
-            else
-                newjsonfile="false"
-                include long-term keys
-                mergefiles="$LONGTERMKEYS"
-                for file in $ECHDIR/$fehost.$feport/*.pem.ech
-                do
-                    fage=$(fileage $file)
-                    if ((fage > durt2))
-                    then
-                        # skip that one, we'll accept/decrypt based on that
-                        # but no longer publish the public in the zone
-                        continue
-                    fi
-                    newjsonfile="true"
-                    mergefiles=" $mergefiles $file"
-                done
-            fi
+            newf=$ECHDIR/$fehost.$feport/$keyn.pem.ech
         fi
-        # if not there or empty, make a new one
-        if [ ! -s $fewkechfile ]
+
+        if [[ "$JUSTONE" == "yes" ]]
         then
-            actiontaken="true"
-            someactiontaken="true"
-            mergefiles=$ECHDIR/$fehost.$feport/*.pem.ech
+            # just set the most recent one for publishing
+            mergefiles="$newf"
+        else
+            # include long-term keys, if any
+            mergefiles="$LONGTERMKEYS"
+            for file in $ECHDIR/$fehost.$feport/*.pem.ech
+            do
+                fage=$(fileage $file)
+                if ((fage > durt2))
+                then
+                    # skip that one, we'll accept/decrypt based on that
+                    # but no longer publish the public in the zone
+                    continue
+                fi
+                mergefiles=" $mergefiles $file"
+            done
         fi
         if [[ "$actiontaken" != "false" ]]
         then
@@ -752,11 +745,11 @@ then
             fi
             if [[ "$newcontent" != "" ]]
             then
-                nctype=`file $TMPF`
-                # TODO: check output of file with JSON locally and use that as it varies
-                if [[ "$nctype" != "$TMPF: JSON data" ]]
+                nctype=`file --mime-type $TMPF`
+                # check we got JSON
+                if [[ "$nctype" != "$TMPF: application/json" ]]
                 then
-                    echo "$behost bad file type"
+                    echo "$behost:$beport bad file type ($nctype)"
                     rm -f $TMPF
                 else
                     echo "New content for $beor, something to do"
@@ -805,7 +798,7 @@ then
                 then
                     echo "ECH alias error for $behost $beport $aliasname"
                     echerror="true"
-                else 
+                else
                     echo "ECH alias fine for $behost $beport $aliasname"
                     echworked="true"
                 fi
@@ -816,7 +809,7 @@ then
                     then
                         nres=`doaliasupdate $behost $beport $aliasname $regeninterval`
                         if [[ "$nres" == "0" ]]
-                        then 
+                        then
                             echo "Published for $behost/$beport via $aliasname"
                             publishedsomething="true"
                         else
@@ -884,12 +877,12 @@ then
                 then
                     echo "ECH list error for $behost $beport"
                     echerror="true"
-                else 
+                else
                     echo "ECH list fine for $behost $beport"
                     echworked="true"
                 fi
             fi
-            # could speed up this if full list is singleton but better 
+            # could speed up this if full list is singleton but better
             # to run the code for now...
             if [[ "$echworked" == "true" ]]
             then
@@ -908,7 +901,7 @@ then
                     then
                             echo "ECH single error at $behost $beport $singletonlist"
                             echerror="true"
-                        else 
+                        else
                             echo "ECH single ($snum/$listcount) fine at $behost $beport"
                             echworked="true"
                         fi
@@ -937,7 +930,7 @@ then
                     sleep 3
                     nres=`donsupdate $behost $list $desired_ttl $priority $target $beport $alpn`
                     if [[ "$nres" == "0" ]]
-                    then 
+                    then
                         echo "Published for $behost/$beport"
                         publishedsomething="true"
                     else

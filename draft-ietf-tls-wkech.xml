@@ -404,6 +404,8 @@
 
     <section title="Acknowledgements">
         <t>Thanks to Niall O'Reilly for a quick review of -00.</t>
+        <t>Stephen Farrell's work on this specification was supported in part by
+            the Open Technology Fund.</t>
     </section>
 
     <section title="IANA Considerations">
