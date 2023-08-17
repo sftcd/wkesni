@@ -517,7 +517,7 @@ then
 
         keyn="ech`date +%s`"
 
-        if ((newest >= dur))
+        if ((newest >= (dur-1)))
         then
             echo "Time for a new key pair (newest as old or older than $dur)"
             $OSSL/apps/openssl ech \
