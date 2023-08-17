@@ -100,20 +100,18 @@
             universal deployment, but rather for cases where the web server
             doesn't have write access to the relevant zone file (or
             equivalent). That zone file will eventually include an HTTPS or SVCB
-            RR <xref target="I-D.ietf-dnsop-svcb-https"/> containing an ECHConfigList.
+            RR <xref target="I-D.ietf-dnsop-svcb-https"/> containing the ECHConfigList.
             This mechanism is extensible to deliver other kinds of information about
-            the origin, but in this specification it only provides the functionality
-            necessary to configure ECH.
+            the origin, that can be of use in these circumstances, but is mainly
+            intended to provide the functionality necessary for ongoing management 
+            of ECH keys.
         </t>
 
         <t>
             We use the term "zone factory" for the entity that does have write
             access to the zone file. We assume the zone factory (ZF) can also
             make HTTPS requests to the web server with the ECH keys.
-        </t>
-
-        <t>
-            We propose use of a well-known URI <xref target="RFC8615"/> on the web server that
+            We define a well-known URI <xref target="RFC8615"/> on the web server that
             allows ZF to poll for changes to ECHConfigList values. For example, if a web server
             generates new ECHConfigList values hourly and publishes those at the well-known URI,
             ZF can poll that URI.  When ZF sees new values, it can check if those work, and if
@@ -121,9 +119,9 @@
         </t>
 
         <t>
-            If ECH is being operated in "split-mode" then the web server (backend) can
-            similarly poll the frontend for our well-known URI and then create it's own
-            value to publish for the ZF to read.
+            If ECH is being operated in "split-mode" then the web server (back-end) can
+            similarly poll the ECH front-end at the well-known URI and then create it's own
+            value to publish for ZF to read.
         </t>
 
         <t>[[The source for this draft is in https://github.com/sftcd/wkesni/
@@ -139,17 +137,22 @@
         14 <xref target="RFC2119"/> <xref target="RFC8174"/> when, and only
         when, they appear in all capitals, as shown here.</t>
 
-    <t>We define the following terms:
+    <t>We define or re-use the following terms:
     <list style="symbols">
-        <t>Zone factory (ZF) is an entity that has write-accsss to the DNS</t>
-        <t>Front-end (FE) is the web server that has an ECH private value. This
-           processes the outer ClientHello and attempts ECH decryption.</t>
-       <t>Back-end (BE) is the web server that will process the inner ClientHello.
-           This may (and often will) be the same web server as the Front-end (in
-           ECH shared-mode).</t>
-       <t>regenInterval - the number of seconds after which the value retrieved
+        <t>Zone factory (ZF): an entity that has write-accsss to the DNS</t>
+        <t>Front-end (FE): the web server that has an ECH private value. This
+            processes the outer ClientHello and attempts ECH decryption.
+            The name of FE will typically be the public_name value used in an
+            ECHconfig.</t>
+       <t>Back-end (BE): the web server that will process the inner ClientHello.
+       Note that even if FE and BE are on the same web server, they almost
+       certainly have different DNS names.</t>
+       <t>Shared-mode: this is where FE and BE are the same web server.</t>
+       <t>Split-mode: this refers to the case where FE only does ECH decryption 
+          but the TLS session is between the client and BE, which will typically
+          be on a different host to FE</t>
+       <t>regenInterval: the number of seconds after which the value retrieved
            after acessing a well-known URI may be changed.</t>
-
     </list>
     </t>
 
@@ -165,17 +168,17 @@
                 <t> ECHConfigList values are "current" for an hour, and remain usable
                     for 3 hours from the time of generation</t>
                 <t> The cronjob updates the ECHConfigList values in a JSON resource at
-                    at https://$ORIGIN/.well-known/origin-svcb, as shown in
+                    at https://BE/.well-known/origin-svcb, as shown in
                     <xref target="sample-json"/>.</t>
-                <t> On the zone factory, another regularaly executed job uses
+                <t> On ZF, another regularaly executed job uses
                     an HTTP client to retrieve this JSON resource.
-                    It also attempts to connect to the origin using these ECH values and confirms
+                    It also attempts to connect to BE using these ECH values and confirms
                     that they are working.</t>
-                <t> The zone factory observes that the JSON resource
+                <t> ZF observes that the JSON resource
                     has a regeninterval of 3600 seconds, and chooses a DNS
-                    TTL of 1800.  It updates the zone file for $ORIGIN and re-publishes
+                    TTL of 1800.  It updates the zone file for BE and re-publishes
                     the zone containing only the new ECHConfigList values.</t>
-                <t> When regeninterval seconds have passed, the zone factory attempts to refresh
+                <t> When regeninterval seconds have passed, ZF attempts to refresh
                     its cached copy of the JSON resource.  If the resource has changed,
                     it repeats this process.</t>
             </list>
@@ -186,14 +189,14 @@
     <section title="The origin-svcb well-known URI">
 
          <t>
-            If a back-end ($BACKEND) wants to convey information to the Zone
+            If BE wants to convey information to the Zone
             Factory, it publishes the JSON content
             defined in <xref target="jsonstr"/> at:
-            https://$BACKEND/.well-known/origin-svcb
+            https://BE/.well-known/origin-svcb
         </t>
 
-        <t>The well-known URI defined here MUST be an https URL and therefore the
-            zone factory verifies the correct $BACKEND is being accessed. If
+        <t>The well-known URI defined here MUST be an https URL and therefore ZF
+            verifies the correct BE is being accessed. If
             no new ECH value resulting "works," then the
             zone factory SHOULD NOT modify the zone. </t>
 
@@ -271,18 +274,18 @@
             <t>
                 alias: The value MUST be a DNS name
         that could be used as the TargetName of an HTTPS resource record.
-        This indicates that the backend
+        This indicates that the back-end
         is hosted on the same endpoints as this target, and is equivalent to
         an HTTPS AliasMode record.
-        A zone factory might implement this directive
+        ZF might implement this directive
         by publishing an AliasMode record, publishing a CNAME record, copying
         HTTPS records from the target zone, or fetching
-        https://$FRONTEND/.well-known/origin-svcb" (if it exists).
-        In this case, the regeninterval indicates that the back-end does
+        https://FE/.well-known/origin-svcb" (if it exists).
+        In this case, the regenInterval indicates that BE does
         not plan to change the content at the URL for at least that number of
         seconds.
                 If an alias entry is present then any ech and port entries
-                (if present) MUST be ignored.
+                (if also present) MUST be ignored.
         </t>
             <t>
                 ech: The value is a string containing an ECHConfigList encoded
@@ -346,29 +349,29 @@
 
 <section title="Zone factory behaviour">
 
-    <t>The zone factory SHOULD check that the presented endpoints
-        work and provide access to $ORIGIN before publication.
+    <t>ZF SHOULD check that the presented endpoints
+        work and provide access to BE before publication.
         A bespoke TLS client may be needed for this check,
         that does not require the ECHConfigList value to have
         already been published in the DNS.
-        In order to make such checks the zonefactory SHOULD
+        In order to make such checks, ZF SHOULD
         attempt to access the well-known URI defined here.
     </t>
 
-    <t>A careful zone factory could explode the ECHConfigList value
-       presented into "singleton" values with one public key in each
-       and test each for each endpoint.</t>
+    <t>A careful ZF implementation could explode the ECHConfigList value
+       presented into "singleton" values with one public key in each,
+       and then test each of those separately.</t>
 
-    <t>The zone factory SHOULD publish all the endpoints
+    <t>ZF SHOULD publish all the endpoints
         that are presented in the JSON file that pass
-        the check above.</t>
+        the checks above.</t>
 
-    <t>The zone factory SHOULD set a DNS TTL short enough so that any
+    <t>ZF SHOULD set a DNS TTL short enough so that any
         cached DNS resource records are likely to have expired before the JSON
-        object's content is likely to have changed.  The zone factory
+        object's content is likely to have changed.  ZF
         MUST attempt to refresh the JSON object and regenerate the zone
-        before this time.  This aims to ensure that ECHConfigs
-        are not used longer than intended by the origin.
+        before this time.  This aims to ensure that ECHConfig values
+        are not used longer than intended by BE.
     </t>
 
 </section>
@@ -379,7 +382,7 @@
             keys were read from here and published in the DNS, then clients
             using ECH would do the wrong thing, likely resulting in
             denial of service, or a privacy leak, or worse, when TLS clients attempt to use ECH with
-            a backend web site. So: Don't do that:-)</t>
+            a back-end web site. So: Don't do that:-)</t>
 
         <t>
             Although this configuration resource MAY be publicly
