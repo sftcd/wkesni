@@ -149,7 +149,7 @@ Internet-Draft           Well-Known URI for ECH              August 2023
    o  Split-mode: this refers to the case where FE only does ECH
       decryption but the TLS session is between the client and BE, which
       will typically be on a different host to FE
-   o  regenInterval: the number of seconds after which the value
+   o  regeninterval: the number of seconds after which the value
       retrieved after acessing a well-known URI may be changed.
 
 3.  Example use of the well-known URI for ECH
@@ -264,7 +264,7 @@ Internet-Draft           Well-Known URI for ECH              August 2023
       directive by publishing an AliasMode record, publishing a CNAME
       record, copying HTTPS records from the target zone, or fetching
       https://FE/.well-known/origin-svcb" (if it exists).  In this case,
-      the regenInterval indicates that BE does not plan to change the
+      the regeninterval indicates that BE does not plan to change the
       content at the URL for at least that number of seconds.  If an
       alias entry is present then any ech and port entries (if also
       present) MUST be ignored.

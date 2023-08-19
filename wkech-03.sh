@@ -554,22 +554,38 @@ then
                 mergefiles=" $mergefiles $file"
             done
         fi
+
+        TMPF="$ECHDIR/$fehost.$feport/latest-merged"
+        if [ ! -f $TMPF ]
+        then
+            actiontaken="true"
+            someactiontaken="true"
+        fi
         if [[ "$actiontaken" != "false" ]]
         then
-            TMPF="$ECHDIR/$fehost.$feport/latest-merged"
             echo "Merging these files for publication: $mergefiles"
             $OSSL/esnistuff/mergepems.sh -o $TMPF $mergefiles
             echconfiglist=`cat $TMPF | sed -n '/BEGIN ECHCONFIG/,/END ECHCONFIG/p' \
                 | head -n -1 | tail -n -1`
             rm -f $TMPF
-            # TODO: add ip address hints here, if desired
+            ipstr=""
+            cfgips=${fe_ipv4s[${feor}]}
+            if [[ "$cfgips" != "" ]]
+            then
+                ipstr=",\"ipv4hint\": \"$cfgips\""
+            fi
+            cfgips=${fe_ipv6s[${feor}]}
+            if [[ "$cfgips" != "" ]]
+            then
+                ipstr="$ipstr,\"ipv6hint\": \"$cfgips\""
+            fi
             cat <<EOF >$TMPF
 {
  "endpoints": [ {
     "regeninterval" : $dur,
     "priority" : 1,
     "port":  $feport,
-    "ech": "$echconfiglist"
+    "ech": "$echconfiglist"$ipstr
  } ]
 }
 EOF

@@ -81,6 +81,17 @@ declare -A fe_arr=(
     [foo.ie:443]="$DRTOP/foo.ie/www/"
 )
 
+# ipv4 and ipv6 hints per FE
+
+declare -A fe_ipv4s=(
+    [cover.defo.ie]="213.108.108.101"
+)
+
+declare -A fe_ipv6s=(
+    [cover.defo.ie]="2a00:c6c0:0:116:5::10"
+)
+
+
 # key is BE Origin (host:port), value is DocRoot for that
 declare -A be_arr=(
     [defo.ie]="$DRTOP/defo.ie"
