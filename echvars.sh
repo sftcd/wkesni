@@ -105,10 +105,11 @@ declare -A be_arr=(
     [draft-13.esni.defo.ie:12414]="$DRTOP/draft-13.esni.defo.ie/12414"
 )
 
-# key is BE Origin (host:port), value is alias DNS name, or empty string
+# key is BE Origin (host:port), value is space-sep list of DNS names,
+# or empty string (if we want a signal that ECH is not in use)
 # only backends that use aliases need have entries here
 declare -A be_alias_arr=(
-    [aliased.defo.ie]="cdn.example.net"
+    [alias.esni.defo.ie]="cover.defo.ie cdn.example.net"
 )
 
 # key is BE Origin (host:port), value is alias DNS name, or empty string
@@ -126,6 +127,7 @@ FEWKECHFILE="$FEDOCROOT/.well-known/$WESTR"
 # uid for writing files to DocRoot, whoever runs this script
 # needs to be able to sudo to that uid
 : ${WWWUSER:="www-data"}
+: ${WWWGRP:="www-data"}
 
 # A timeout in case accessing the FRONTEND .well-known is gonna
 # fail - believe it or not: this is 10 seconds

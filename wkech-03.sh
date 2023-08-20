@@ -321,13 +321,14 @@ then
         fewkechdir=$fedr/.well-known/
         if [ ! -d $fewkechdir ]
         then
-            sudo -u $WWWUSER mkdir -p $fewkechdir
+            sudo mkdir -p $fewkechdir
         fi
         if [ ! -d $fewkechdir ]
         then
             echo "$fedr - $fewkechdir missing - exiting"
             exit 14
         fi
+        sudo chown -R $WWWUSER:$WWWGRP $fewkechdir
     done
 fi
 
@@ -581,7 +582,7 @@ then
 }
 EOF
             sudo cp $TMPF $fewkechfile
-            sudo chown $WWWUSER:$WWWUSER $fewkechfile
+            sudo chown $WWWUSER:$WWWGRP $fewkechfile
             sudo chmod a+r $fewkechfile
         fi
     done
@@ -606,108 +607,128 @@ then
         fi
         lmf=$ECHDIR/$behost.$beport/latest-merged
         rm -f $lmf
-        # accumulate the various front-end files
-        for feor in "${!fe_arr[@]}"
-        do
-            fehost=$(hostport2host $feor)
-            feport=$(hostport2port $feor)
-            TMPF=`mktemp`
-            if [[ $ROLES == *"$FESTR"* ]]
+        # is there an alias entry for this BE?
+        if [[ -n ${be_alias_arr[${beor}]} ]]
+        then
+            alvals=${be_alias_arr[${beor}]}
+            if [[ "$alvals" == "" ]]
             then
-                # shared-mode, FE JSON file is local
-                fedr=${fe_arr[${feor}]}
-                fewkechfile=$fedr/.well-known/$WESTR
-                cp $fewkechfile $TMPF
+                # that's a signal that BE doesn't do ECH so signal we want to publish
+                # an "empty" .well-known TODO: do that!
+                echo "TODO: handle empty alias"
             else
-                # split-mode, FE JSON file is non-local
-                timeout $CURLTIMEOUT curl -o $TMPF -s https://$feor/.well-known/$WESTR
-                if [[ "$tres" == "124" ]]
+                # add in aliases if desired - these overwrite any of the above
+                alvals=${be_alias_arr[${beor}]}
+                if [[ "$alvals" != "" ]]
                 then
-                    # timeout returns 124 if it timed out, or else the
-                    # result from curl otherwise
-                    echo "Timed out after $CURLTIMEOUT waiting for https://$feor/.well-known/$WESTR"
-                    exit 23
-                fi
-            fi
-            if [ ! -f $TMPF ]
-            then
-                echo "Empty result from https://$feor/.well-known/$WESTR"
-                continue
-            fi
-            # merge into latest
-            if [ ! -f $lmf ]
-            then
-                cp $TMPF $lmf
-            else
-                TMPF1=`mktemp`
-                jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF >$TMPF1
-                jres=$?
-                if [[ "$jres" == 0 ]]
-                then
-                    mv $TMPF1 $lmf
-                else
-                    rm -f $TMPF1
-                fi
-            fi
-        done
-        # add alpn= to endpoints, if desired
-        alpnval=${be_alpn_arr[${beor}]}
-        if [[ "$alpnval" != "" ]]
-        then
-            TMPF1=`mktemp`
-            # TODO: handle exceptions properly
-            jq '.endpoints[] + { "alpn": "'$alpnval'" }' $lmf | jq -n '{ endpoints: [ inputs ] }' >$TMPF1
-            jres=$?
-            if [[ "$jres" == 0 ]]
-            then
-                mv $TMPF1 $lmf
-            else
-                rm -f $TMPF1
-            fi
-        fi
-        # fix port number everywhere if non default
-        if [[ "$beport" != "$DEFPORT" ]]
-        then
-            TMPF1=`mktemp`
-            jq '.endpoints[].port? |= "'$beport'"' $lmf >$TMPF1
-            jres=$?
-            if [[ "$jres" == 0 ]]
-            then
-                mv $TMPF1 $lmf
-            else
-                rm -f $TMPF1
-            fi
-        fi
-        # add in aliases if desired
-        alval=${be_alias_arr[${beor}]}
-        if [[ "$alval" != "" ]]
-        then
-            TMPF1=`mktemp`
-            echo <<EOF >>$TMPF1
+                    for alval in $alvals
+                    do
+                        TMPF1=`mktemp`
+                        cat <<EOF >$TMPF1
 { "endpoints": [ {
-    "alias": $alval
+    "alias": "$alval",
     "regeninterval": $dur
 } ] }
 EOF
-            TMPF2=`mktemp`
-            jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF1 >$TMPF2
-            jres=$?
-            if [[ "$jres" == 0 ]]
-            then
-                mv $TMPF2 $lmf
-            else
-                rm -f $TMPF2
+                        if [ ! -f $lmf ] 
+                        then
+                            cp $TMPF1 $lmf
+                        else
+                            TMPF2=`mktemp`
+                            jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF1 >$TMPF2
+                            jres=$?
+                            if [[ "$jres" == 0 ]]
+                            then
+                                mv $TMPF2 $lmf
+                            else
+                                rm -f $TMPF2
+                            fi
+                        fi
+                        rm -f $TMPF1
+                    done
+                fi
             fi
-            rm -f $TMPF1
+        else
+            # non-alias case
+	        # accumulate the various front-end files
+	        for feor in "${!fe_arr[@]}"
+	        do
+	            fehost=$(hostport2host $feor)
+	            feport=$(hostport2port $feor)
+	            TMPF=`mktemp`
+	            if [[ $ROLES == *"$FESTR"* ]]
+	            then
+	                # shared-mode, FE JSON file is local
+	                fedr=${fe_arr[${feor}]}
+	                fewkechfile=$fedr/.well-known/$WESTR
+	                cp $fewkechfile $TMPF
+	            else
+	                # split-mode, FE JSON file is non-local
+	                timeout $CURLTIMEOUT curl -o $TMPF -s https://$feor/.well-known/$WESTR
+	                if [[ "$tres" == "124" ]]
+	                then
+	                    # timeout returns 124 if it timed out, or else the
+	                    # result from curl otherwise
+	                    echo "Timed out after $CURLTIMEOUT waiting for https://$feor/.well-known/$WESTR"
+	                    exit 23
+	                fi
+	            fi
+	            if [ ! -f $TMPF ]
+	            then
+	                echo "Empty result from https://$feor/.well-known/$WESTR"
+	                continue
+	            fi
+	            # merge into latest
+	            if [ ! -f $lmf ]
+	            then
+	                cp $TMPF $lmf
+	            else
+	                TMPF1=`mktemp`
+	                jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF >$TMPF1
+	                jres=$?
+	                if [[ "$jres" == 0 ]]
+	                then
+	                    mv $TMPF1 $lmf
+	                else
+	                    rm -f $TMPF1
+	                fi
+	            fi
+	        done
+	        # add alpn= to endpoints, if desired
+	        alpnval=${be_alpn_arr[${beor}]}
+	        if [[ "$alpnval" != "" ]]
+	        then
+	            TMPF1=`mktemp`
+	            jq '.endpoints[] + { "alpn": "'$alpnval'" }' $lmf | jq -n '{ endpoints: [ inputs ] }' >$TMPF1
+	            jres=$?
+	            if [[ "$jres" == 0 ]]
+	            then
+	                mv $TMPF1 $lmf
+	            else
+	                rm -f $TMPF1
+	            fi
+	        fi
+	        # fix port number everywhere if non default
+	        if [[ "$beport" != "$DEFPORT" ]]
+	        then
+	            TMPF1=`mktemp`
+	            jq '.endpoints[].port? |= "'$beport'"' $lmf >$TMPF1
+	            jres=$?
+	            if [[ "$jres" == 0 ]]
+	            then
+	                mv $TMPF1 $lmf
+	            else
+	                rm -f $TMPF1
+	            fi
+	        fi
         fi
 
         newcontent=`diff -q $wkechfile $lmf`
         if [[ -f $lmf && "$newcontent" != "" ]]
         then
-            # TODO: Validate content of lmf, if desired
             # copy to DocRoot
             sudo cp $lmf $wkechfile
-            sudo chown $WWWUSER:$WWWUSER $wkechfile
+            sudo chown $WWWUSER:$WWWGRP $wkechfile
             sudo chmod a+r $wkechfile
             someactiontaken="true"
         fi
