@@ -722,7 +722,6 @@ EOF
 	            fi
 	        fi
         fi
-
         newcontent=`diff -q $wkechfile $lmf`
         if [[ -f $lmf && "$newcontent" != "" ]]
         then
@@ -819,7 +818,7 @@ then
             then
                 # see if that alias works
                 $OSSL/esnistuff/echcli.sh -s $aliasname -H $behost \
-                    -p $port >/dev/null 2>&1
+                    -p $beport >/dev/null 2>&1
                 res=$?
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
