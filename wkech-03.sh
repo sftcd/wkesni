@@ -129,7 +129,8 @@ function donsupdate()
     priority=$4
     target=$5
     port=$6
-    alpn=$7 ## can be empty
+    # extraparams can be empty, if not, it has things like alpn, ip hints
+    extraparams="$7 $8 $9" 
     # All params are needed
     if [[ $host == "" \
           || $echval == "" \
@@ -141,26 +142,16 @@ function donsupdate()
         # non-random failure code
         echo 57
     fi
-    if [[ "$alpn" == "null" ]]
-    then
-        alpn=""
-    fi
-    if [[ "$alpn" != "" ]]
-    then
-        alpnstr="alpn=$alpn"
-    else
-        alpnstr=""
-    fi
     if [[ "$port" == "443" ]]
     then
         nscmd="update delete $host HTTPS\n
-               update add $host $ttl HTTPS $priority $target $alpnstr ech=$echval\n
+               update add $host $ttl HTTPS $priority $target $extraparams ech=$echval\n
                send\n
                quit"
     else
         oname="_$port._https.$host"
         nscmd="update delete $oname HTTPS\n
-               update add $oname $ttl HTTPS $priority $host $alpnstr ech=$echval\n
+               update add $oname $ttl HTTPS $priority $host $extraparams ech=$echval\n
                send\n
                quit"
     fi
@@ -695,7 +686,7 @@ then
             echo <<EOF >>$TMPF1
 { "endpoints": [ {
     "alias": $alval
-    "regenInterval": $dur
+    "regeninterval": $dur
 } ] }
 EOF
             TMPF2=`mktemp`
@@ -867,9 +858,25 @@ then
             alpn=`echo $arrent | jq .alpn | sed -e 's/"//g'`
             if [[ "$alpn" == "null" ]]
             then
-                alpnstr=""
+                alpn_cla="" # command line arg
+                alpn_str="" # value for HTTPS RR
             else
-                alpnstr="-a $alpn"
+                alpn_cla="-a $alpn"
+                alpn_str="alpn=$alpn"
+            fi
+            ipv4hints=`echo $arrent | jq .ipv4hint | sed -e 's/"//g'`
+            if [[ "$ipv4hints" == "null" ]]
+            then
+                ipv4hints_str=""
+            else
+                ipv4hints_str="ipv4hint=$ipv4hints"
+            fi
+            ipv6hints=`echo $arrent | jq .ipv6hint | sed -e 's/"//g'`
+            if [[ "$ipv6hints" == "null" ]]
+            then
+                ipv6hints_str=""
+            else
+                ipv6hints_str="ipv6hint=$ipv6hints"
             fi
             target=`echo $arrent | jq .target`
             if [[ "$target" == "null" ]]
@@ -886,7 +893,7 @@ then
                 echworked="false"
                 # first test entire list then each element
                 $OSSL/esnistuff/echcli.sh -P $list -H $behost \
-                    -p $port $alpnstr >/dev/null 2>&1
+                    -p $port $alpn_cla >/dev/null 2>&1
                 res=$?
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
@@ -911,7 +918,7 @@ then
                         continue
                     fi
                     $OSSL/esnistuff/echcli.sh -P $singletonlist -H $behost \
-                        -p $beport $alpnstr >/dev/null 2>&1
+                        -p $beport $alpn_cla >/dev/null 2>&1
                     res=$?
                     if [[ "$res" != "0" ]]
                     then
@@ -943,8 +950,14 @@ then
                             target=$behost
                         fi
                     fi
+                    if [[ "$alpn_str" != "" || "$ipv4hints_str" != "" || "$ipv6hints_str" != "" ]]
+                    then
+                        extraparams="$alpn_str $ipv4hints_str $ipv6hints_str"
+                    else
+                        extraparams=""
+                    fi
                     sleep 3
-                    nres=`donsupdate $behost $list $desired_ttl $priority $target $beport $alpn`
+                    nres=`donsupdate $behost $list $desired_ttl $priority $target $beport $extraparams`
                     if [[ "$nres" == "0" ]]
                     then
                         echo "Published for $behost/$beport"
