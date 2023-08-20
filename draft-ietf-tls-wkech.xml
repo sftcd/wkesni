@@ -151,7 +151,7 @@
        <t>Split-mode: this refers to the case where FE only does ECH decryption 
           but the TLS session is between the client and BE, which will typically
           be on a different host to FE</t>
-       <t>regenInterval: the number of seconds after which the value retrieved
+       <t>regeninterval: the number of seconds after which the value retrieved
            after acessing a well-known URI may be changed.</t>
     </list>
     </t>
@@ -281,7 +281,7 @@
         by publishing an AliasMode record, publishing a CNAME record, copying
         HTTPS records from the target zone, or fetching
         https://FE/.well-known/origin-svcb" (if it exists).
-        In this case, the regenInterval indicates that BE does
+        In this case, the regeninterval indicates that BE does
         not plan to change the content at the URL for at least that number of
         seconds.
                 If an alias entry is present then any ech and port entries
@@ -299,14 +299,17 @@
             <t>
                 alpn: The value is a string corresponding to
                 the value of the "alpn" SvcParamKey.
+                Typically this is likely to be set per back-end.
             </t>
             <t>
                 ipv4hints: The value is a string corresponding to
                 the value of the "ipv4hints" SvcParamKey.
+                Typically this is likely to be set per front-end.
             </t>
             <t>
                 ipv6hints: The value is a string corresponding to
                 the value of the "ipv6hints" SvcParamKey.
+                Typically this is likely to be set per front-end.
             </t>
         </list>
         An empty endpoint object corresponds to an HTTPS record with inferred
