@@ -6,7 +6,7 @@
 <!ENTITY rfc8446 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8446.xml">
 <!ENTITY rfc8615 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8615.xml">
 <!ENTITY I-D.ietf-tls-esni SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni">
-<!ENTITY I-D.ietf-dnsop-svcb-https SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-dnsop-svcb-https">
+<!ENTITY I-D.ietf-tls-svcb-ech SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech">
 
 ]>
 <?rfc toc="yes"?>
@@ -100,7 +100,7 @@
             universal deployment, but rather for cases where the web server
             doesn't have write access to the relevant zone file (or
             equivalent). That zone file will eventually include an HTTPS or SVCB
-            RR <xref target="I-D.ietf-dnsop-svcb-https"/> containing the ECHConfigList.
+            RR <xref target="I-D.ietf-tls-svcb-ech"/> containing the ECHConfigList.
             This mechanism is extensible to deliver other kinds of information about
             the origin, that can be of use in these circumstances, but is mainly
             intended to provide the functionality necessary for ongoing management 
@@ -435,7 +435,7 @@
       <?rfc include='reference.RFC.8615'?>
       <?rfc include='reference.RFC.4648'?>
       &I-D.ietf-tls-esni;
-      &I-D.ietf-dnsop-svcb-https;
+      &I-D.ietf-tls-svcb-ech;
 
     </references>
 

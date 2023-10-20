@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: February 21, 2024                           Akamai Technologies
+Expires: April 22, 2024                              Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                         August 20, 2023
+                                                        October 20, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on February 21, 2024.
+   This Internet-Draft will expire on April 22, 2024.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 1]
+Farrell, et al.          Expires April 22, 2024                 [Page 1]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
 
    to this document.  Code Components extracted from this document must
@@ -96,11 +96,11 @@ Table of Contents
    universal deployment, but rather for cases where the web server
    doesn't have write access to the relevant zone file (or equivalent).
    That zone file will eventually include an HTTPS or SVCB RR
-   [I-D.ietf-dnsop-svcb-https] containing the ECHConfigList.  This
-   mechanism is extensible to deliver other kinds of information about
-   the origin, that can be of use in these circumstances, but is mainly
-   intended to provide the functionality necessary for ongoing
-   management of ECH keys.
+   [I-D.ietf-tls-svcb-ech] containing the ECHConfigList.  This mechanism
+   is extensible to deliver other kinds of information about the origin,
+   that can be of use in these circumstances, but is mainly intended to
+   provide the functionality necessary for ongoing management of ECH
+   keys.
 
    We use the term "zone factory" for the entity that does have write
    access to the zone file.  We assume the zone factory (ZF) can also
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 2]
+Farrell, et al.          Expires April 22, 2024                 [Page 2]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
 
    changes to ECHConfigList values.  For example, if a web server
@@ -165,9 +165,9 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 3]
+Farrell, et al.          Expires April 22, 2024                 [Page 3]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
 
    3.  The cronjob updates the ECHConfigList values in a JSON resource
@@ -221,9 +221,9 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 4]
+Farrell, et al.          Expires April 22, 2024                 [Page 4]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
 
         {
@@ -277,9 +277,9 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 5]
+Farrell, et al.          Expires April 22, 2024                 [Page 5]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
 
    o  alpn: The value is a string corresponding to the value of the
@@ -333,9 +333,9 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 6]
+Farrell, et al.          Expires April 22, 2024                 [Page 6]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
 
    ZF SHOULD set a DNS TTL short enough so that any cached DNS resource
@@ -389,25 +389,24 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 7]
+Farrell, et al.          Expires April 22, 2024                 [Page 7]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
-
-   [I-D.ietf-dnsop-svcb-https]
-              Schwartz, B., Bishop, M., and E. Nygren, "Service binding
-              and parameter specification via the DNS (DNS SVCB and
-              HTTPS RRs)", draft-ietf-dnsop-svcb-https-12 (work in
-              progress), March 2023,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-
-              svcb-https-12>.
 
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
-              Encrypted Client Hello", draft-ietf-tls-esni-16 (work in
-              progress), April 2023,
+              Encrypted Client Hello", draft-ietf-tls-esni-17 (work in
+              progress), October 2023,
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              esni-16>.
+              esni-17>.
+
+   [I-D.ietf-tls-svcb-ech]
+              Schwartz, B., Bishop, M., and E. Nygren, "Bootstrapping
+              TLS Encrypted ClientHello with DNS Service Bindings",
+              draft-ietf-tls-svcb-ech-00 (work in progress), September
+              2023, <https://datatracker.ietf.org/doc/html/draft-ietf-
+              tls-svcb-ech-00>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -445,9 +444,10 @@ Internet-Draft           Well-Known URI for ECH              August 2023
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 8]
+
+Farrell, et al.          Expires April 22, 2024                 [Page 8]
 
-Internet-Draft           Well-Known URI for ECH              August 2023
+Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 Appendix A.  Change Log
@@ -501,4 +501,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires February 21, 2024               [Page 9]
+Farrell, et al.          Expires April 22, 2024                 [Page 9]
