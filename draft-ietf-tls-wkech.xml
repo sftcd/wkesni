@@ -112,16 +112,16 @@
             access to the zone file. We assume the zone factory (ZF) can also
             make HTTPS requests to the web server with the ECH keys.
             We define a well-known URI <xref target="RFC8615"/> on the web server that
-            allows ZF to poll for changes to ECHConfigList values. For example, if a web server
+            allows the ZF to poll for changes to ECHConfigList values. For example, if a web server
             generates new ECHConfigList values hourly and publishes those at the well-known URI,
-            ZF can poll that URI.  When ZF sees new values, it can check if those work, and if
+            the ZF can poll that URI.  When the ZF sees new values, it can check if those work, and if
             they do, then update the zone file and re-publish the zone.
         </t>
 
         <t>
             If ECH is being operated in "split-mode" then the web server (back-end) can
             similarly poll the ECH front-end at the well-known URI and then create it's own
-            value to publish for ZF to read.
+            value to publish for the ZF to read.
         </t>
 
         <t>[[The source for this draft is in https://github.com/sftcd/wkesni/
@@ -170,15 +170,15 @@
                 <t> The cronjob updates the ECHConfigList values in a JSON resource at
                     at https://BE/.well-known/origin-svcb, as shown in
                     <xref target="sample-json"/>.</t>
-                <t> On ZF, another regularaly executed job uses
+                <t> On the ZF, another regularaly executed job uses
                     an HTTP client to retrieve this JSON resource.
                     It also attempts to connect to BE using these ECH values and confirms
                     that they are working.</t>
-                <t> ZF observes that the JSON resource
+                <t> The ZF observes that the JSON resource
                     has a regeninterval of 3600 seconds, and chooses a DNS
                     TTL of 1800.  It updates the zone file for BE and re-publishes
                     the zone containing only the new ECHConfigList values.</t>
-                <t> When regeninterval seconds have passed, ZF attempts to refresh
+                <t> When regeninterval seconds have passed, the ZF attempts to refresh
                     its cached copy of the JSON resource.  If the resource has changed,
                     it repeats this process.</t>
             </list>
@@ -195,7 +195,7 @@
             https://BE/.well-known/origin-svcb
         </t>
 
-        <t>The well-known URI defined here MUST be an https URL and therefore ZF
+        <t>The well-known URI defined here MUST be an https URL and therefore the ZF
             verifies the correct BE is being accessed. If
             no new ECH value resulting "works," then the
             zone factory SHOULD NOT modify the zone. </t>
@@ -277,7 +277,7 @@
         This indicates that the back-end
         is hosted on the same endpoints as this target, and is equivalent to
         an HTTPS AliasMode record.
-        ZF might implement this directive
+        The ZF might implement this directive
         by publishing an AliasMode record, publishing a CNAME record, copying
         HTTPS records from the target zone, or fetching
         https://FE/.well-known/origin-svcb" (if it exists).
@@ -357,7 +357,7 @@
         A bespoke TLS client may be needed for this check,
         that does not require the ECHConfigList value to have
         already been published in the DNS.
-        In order to make such checks, ZF SHOULD
+        In order to make such checks, the ZF SHOULD
         attempt to access the well-known URI defined here.
     </t>
 
@@ -371,7 +371,7 @@
 
     <t>ZF SHOULD set a DNS TTL short enough so that any
         cached DNS resource records are likely to have expired before the JSON
-        object's content is likely to have changed.  ZF
+        object's content is likely to have changed. The ZF
         MUST attempt to refresh the JSON object and regenerate the zone
         before this time.  This aims to ensure that ECHConfig values
         are not used longer than intended by BE.
@@ -466,7 +466,7 @@
       <t>
         Version 04 matches a proof-of-concept bash script implementation and
         results of IETF-117 discussion.
-    </t>
+      </t>
 
     </section>
   </back>

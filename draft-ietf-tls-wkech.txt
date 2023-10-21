@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: April 22, 2024                              Akamai Technologies
+Expires: April 23, 2024                              Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                        October 20, 2023
+                                                        October 21, 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on April 22, 2024.
+   This Internet-Draft will expire on April 23, 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 1]
+Farrell, et al.          Expires April 23, 2024                 [Page 1]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
@@ -105,24 +105,24 @@ Table of Contents
    We use the term "zone factory" for the entity that does have write
    access to the zone file.  We assume the zone factory (ZF) can also
    make HTTPS requests to the web server with the ECH keys.  We define a
-   well-known URI [RFC8615] on the web server that allows ZF to poll for
+   well-known URI [RFC8615] on the web server that allows the ZF to poll
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 2]
+Farrell, et al.          Expires April 23, 2024                 [Page 2]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
 
-   changes to ECHConfigList values.  For example, if a web server
+   for changes to ECHConfigList values.  For example, if a web server
    generates new ECHConfigList values hourly and publishes those at the
-   well-known URI, ZF can poll that URI.  When ZF sees new values, it
-   can check if those work, and if they do, then update the zone file
-   and re-publish the zone.
+   well-known URI, the ZF can poll that URI.  When the ZF sees new
+   values, it can check if those work, and if they do, then update the
+   zone file and re-publish the zone.
 
    If ECH is being operated in "split-mode" then the web server (back-
    end) can similarly poll the ECH front-end at the well-known URI and
-   then create it's own value to publish for ZF to read.
+   then create it's own value to publish for the ZF to read.
 
    [[The source for this draft is in https://github.com/sftcd/wkesni/
    Issues and PRs are welcome there too.]]
@@ -165,23 +165,23 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 3]
+Farrell, et al.          Expires April 23, 2024                 [Page 3]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
 
    3.  The cronjob updates the ECHConfigList values in a JSON resource
        at at https://BE/.well-known/origin-svcb, as shown in Figure 1.
-   4.  On ZF, another regularaly executed job uses an HTTP client to
+   4.  On the ZF, another regularaly executed job uses an HTTP client to
        retrieve this JSON resource.  It also attempts to connect to BE
        using these ECH values and confirms that they are working.
-   5.  ZF observes that the JSON resource has a regeninterval of 3600
-       seconds, and chooses a DNS TTL of 1800.  It updates the zone file
-       for BE and re-publishes the zone containing only the new
+   5.  The ZF observes that the JSON resource has a regeninterval of
+       3600 seconds, and chooses a DNS TTL of 1800.  It updates the zone
+       file for BE and re-publishes the zone containing only the new
        ECHConfigList values.
-   6.  When regeninterval seconds have passed, ZF attempts to refresh
-       its cached copy of the JSON resource.  If the resource has
-       changed, it repeats this process.
+   6.  When regeninterval seconds have passed, the ZF attempts to
+       refresh its cached copy of the JSON resource.  If the resource
+       has changed, it repeats this process.
 
 4.  The origin-svcb well-known URI
 
@@ -189,9 +189,10 @@ Internet-Draft           Well-Known URI for ECH             October 2023
    the JSON content defined in Section 5 at: https://BE/.well-known/
    origin-svcb
 
-   The well-known URI defined here MUST be an https URL and therefore ZF
-   verifies the correct BE is being accessed.  If no new ECH value
-   resulting "works," then the zone factory SHOULD NOT modify the zone.
+   The well-known URI defined here MUST be an https URL and therefore
+   the ZF verifies the correct BE is being accessed.  If no new ECH
+   value resulting "works," then the zone factory SHOULD NOT modify the
+   zone.
 
    Note that a consequence of the URL above is that back-ends that wish
    to use different ECH settings are very likely to have to use
@@ -220,8 +221,7 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-
-Farrell, et al.          Expires April 22, 2024                 [Page 4]
+Farrell, et al.          Expires April 23, 2024                 [Page 4]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
@@ -260,14 +260,14 @@ Internet-Draft           Well-Known URI for ECH             October 2023
    o  alias: The value MUST be a DNS name that could be used as the
       TargetName of an HTTPS resource record.  This indicates that the
       back-end is hosted on the same endpoints as this target, and is
-      equivalent to an HTTPS AliasMode record.  ZF might implement this
-      directive by publishing an AliasMode record, publishing a CNAME
-      record, copying HTTPS records from the target zone, or fetching
-      https://FE/.well-known/origin-svcb" (if it exists).  In this case,
-      the regeninterval indicates that BE does not plan to change the
-      content at the URL for at least that number of seconds.  If an
-      alias entry is present then any ech and port entries (if also
-      present) MUST be ignored.
+      equivalent to an HTTPS AliasMode record.  The ZF might implement
+      this directive by publishing an AliasMode record, publishing a
+      CNAME record, copying HTTPS records from the target zone, or
+      fetching https://FE/.well-known/origin-svcb" (if it exists).  In
+      this case, the regeninterval indicates that BE does not plan to
+      change the content at the URL for at least that number of seconds.
+      If an alias entry is present then any ech and port entries (if
+      also present) MUST be ignored.
    o  ech: The value is a string containing an ECHConfigList encoded in
       Base64 [RFC4648], corresponding to the value of the "ech"
       SvcParamKey.
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 5]
+Farrell, et al.          Expires April 23, 2024                 [Page 5]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
@@ -319,8 +319,8 @@ Internet-Draft           Well-Known URI for ECH             October 2023
    ZF SHOULD check that the presented endpoints work and provide access
    to BE before publication.  A bespoke TLS client may be needed for
    this check, that does not require the ECHConfigList value to have
-   already been published in the DNS.  In order to make such checks, ZF
-   SHOULD attempt to access the well-known URI defined here.
+   already been published in the DNS.  In order to make such checks, the
+   ZF SHOULD attempt to access the well-known URI defined here.
 
    A careful ZF implementation could explode the ECHConfigList value
    presented into "singleton" values with one public key in each, and
@@ -333,14 +333,14 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 6]
+Farrell, et al.          Expires April 23, 2024                 [Page 6]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
 
    ZF SHOULD set a DNS TTL short enough so that any cached DNS resource
    records are likely to have expired before the JSON object's content
-   is likely to have changed.  ZF MUST attempt to refresh the JSON
+   is likely to have changed.  The ZF MUST attempt to refresh the JSON
    object and regenerate the zone before this time.  This aims to ensure
    that ECHConfig values are not used longer than intended by BE.
 
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 7]
+Farrell, et al.          Expires April 23, 2024                 [Page 7]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
@@ -445,7 +445,7 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 8]
+Farrell, et al.          Expires April 23, 2024                 [Page 8]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
@@ -501,4 +501,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.          Expires April 22, 2024                 [Page 9]
+Farrell, et al.          Expires April 23, 2024                 [Page 9]
