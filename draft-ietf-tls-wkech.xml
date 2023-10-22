@@ -17,7 +17,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-04" ipr="trust200902" >
+<rfc category="exp" docName="draft-ietf-tls-wkech-05" ipr="trust200902" >
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
@@ -466,6 +466,10 @@
       <t>
         Version 04 matches a proof-of-concept bash script implementation and
         results of IETF-117 discussion.
+      </t>
+
+      <t>
+        This is proto -05, no changes yet.
       </t>
 
     </section>

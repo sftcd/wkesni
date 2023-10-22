@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: April 24, 2024                              Akamai Technologies
+Expires: 24 April 2024                               Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                        October 22, 2023
+                                                         22 October 2023
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on April 24, 2024.
+   This Internet-Draft will expire on 24 April 2024.
 
 Copyright Notice
 
@@ -46,22 +46,21 @@ Copyright Notice
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
-   Provisions Relating to IETF Documents
-   (https://trustee.ietf.org/license-info) in effect on the date of
-   publication of this document.  Please review these documents
-   carefully, as they describe your rights and restrictions with respect
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
 
 
 
-Farrell, et al.          Expires April 24, 2024                 [Page 1]
+Farrell, et al.           Expires 24 April 2024                 [Page 1]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
 
-   to this document.  Code Components extracted from this document must
-   include Simplified BSD License text as described in Section 4.e of
-   the Trust Legal Provisions and are provided without warranty as
-   described in the Simplified BSD License.
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
 
 Table of Contents
 
@@ -75,7 +74,7 @@ Table of Contents
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   7
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   7
    10. Normative References  . . . . . . . . . . . . . . . . . . . .   7
-   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   9
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .   8
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   9
 
 1.  Introduction
@@ -106,15 +105,15 @@ Table of Contents
    access to the zone file.  We assume the zone factory (ZF) can also
    make HTTPS requests to the web server with the ECH keys.  We define a
    well-known URI [RFC8615] on the web server that allows the ZF to poll
+   for changes to ECHConfigList values.  For example, if a web server
 
 
 
-Farrell, et al.          Expires April 24, 2024                 [Page 2]
+Farrell, et al.           Expires 24 April 2024                 [Page 2]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
 
-   for changes to ECHConfigList values.  For example, if a web server
    generates new ECHConfigList values hourly and publishes those at the
    well-known URI, the ZF can poll that URI.  When the ZF sees new
    values, it can check if those work, and if they do, then update the
@@ -137,19 +136,19 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
    We define or re-use the following terms:
 
-   o  Zone factory (ZF): an entity that has write-accsss to the DNS
-   o  Front-end (FE): the web server that has an ECH private value.
+   *  Zone factory (ZF): an entity that has write-accsss to the DNS
+   *  Front-end (FE): the web server that has an ECH private value.
       This processes the outer ClientHello and attempts ECH decryption.
       The name of FE will typically be the public_name value used in an
       ECHconfig.
-   o  Back-end (BE): the web server that will process the inner
+   *  Back-end (BE): the web server that will process the inner
       ClientHello.  Note that even if FE and BE are on the same web
       server, they almost certainly have different DNS names.
-   o  Shared-mode: this is where FE and BE are the same web server.
-   o  Split-mode: this refers to the case where FE only does ECH
+   *  Shared-mode: this is where FE and BE are the same web server.
+   *  Split-mode: this refers to the case where FE only does ECH
       decryption but the TLS session is between the client and BE, which
       will typically be on a different host to FE
-   o  regeninterval: the number of seconds after which the value
+   *  regeninterval: the number of seconds after which the value
       retrieved after acessing a well-known URI may be changed.
 
 3.  Example use of the well-known URI for ECH
@@ -161,17 +160,16 @@ Internet-Draft           Well-Known URI for ECH             October 2023
        (e.g. a cronjob)
    2.  ECHConfigList values are "current" for an hour, and remain usable
        for 3 hours from the time of generation
+   3.  The cronjob updates the ECHConfigList values in a JSON resource
+       at at https://BE/.well-known/origin-svcb, as shown in Figure 1.
 
 
 
-
-Farrell, et al.          Expires April 24, 2024                 [Page 3]
+Farrell, et al.           Expires 24 April 2024                 [Page 3]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
 
-   3.  The cronjob updates the ECHConfigList values in a JSON resource
-       at at https://BE/.well-known/origin-svcb, as shown in Figure 1.
    4.  On the ZF, another regularaly executed job uses an HTTP client to
        retrieve this JSON resource.  It also attempts to connect to BE
        using these ECH values and confirms that they are working.
@@ -221,7 +219,9 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-Farrell, et al.          Expires April 24, 2024                 [Page 4]
+
+
+Farrell, et al.           Expires 24 April 2024                 [Page 4]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
@@ -247,17 +247,17 @@ Internet-Draft           Well-Known URI for ECH             October 2023
    JSON HTTP Origin Info registry (see IANA Considerations).  The
    initial registry entries are:
 
-   o  regeninterval: the number of seconds between key generation
+   *  regeninterval: the number of seconds between key generation
       actions at the origin, i.e. a replacement ECHConfigList may be
       generated this often.
-   o  priority: The value is a positive integer corresponding to the
+   *  priority: The value is a positive integer corresponding to the
       SvcPriority.  If omitted, the zone factory SHOULD infer
       numerically increasing SvcPriority from the order of the endpoints
       array.
-   o  target: The value is a string containing a fully qualified domain
+   *  target: The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
       value is ".".
-   o  alias: The value MUST be a DNS name that could be used as the
+   *  alias: The value MUST be a DNS name that could be used as the
       TargetName of an HTTPS resource record.  This indicates that the
       back-end is hosted on the same endpoints as this target, and is
       equivalent to an HTTPS AliasMode record.  The ZF might implement
@@ -268,27 +268,27 @@ Internet-Draft           Well-Known URI for ECH             October 2023
       change the content at the URL for at least that number of seconds.
       If an alias entry is present then any ech and port entries (if
       also present) MUST be ignored.
-   o  ech: The value is a string containing an ECHConfigList encoded in
+   *  ech: The value is a string containing an ECHConfigList encoded in
       Base64 [RFC4648], corresponding to the value of the "ech"
       SvcParamKey.
-   o  port: The value is a non-negative integer, corresponding to the
+   *  port: The value is a non-negative integer, corresponding to the
       value of the "port" SvcParamKey.
 
 
 
 
-Farrell, et al.          Expires April 24, 2024                 [Page 5]
+Farrell, et al.           Expires 24 April 2024                 [Page 5]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
 
-   o  alpn: The value is a string corresponding to the value of the
+   *  alpn: The value is a string corresponding to the value of the
       "alpn" SvcParamKey.  Typically this is likely to be set per back-
       end.
-   o  ipv4hints: The value is a string corresponding to the value of the
+   *  ipv4hints: The value is a string corresponding to the value of the
       "ipv4hints" SvcParamKey.  Typically this is likely to be set per
       front-end.
-   o  ipv6hints: The value is a string corresponding to the value of the
+   *  ipv6hints: The value is a string corresponding to the value of the
       "ipv6hints" SvcParamKey.  Typically this is likely to be set per
       front-end.
 
@@ -302,14 +302,14 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
    This arrangement provides the following important properties:
 
-   o  Origins can indicate that different ECHConfigs are used on
+   *  Origins can indicate that different ECHConfigs are used on
       different ports.
-   o  Origins can indicate that multiple CDNs are in use, each with its
+   *  Origins can indicate that multiple CDNs are in use, each with its
       own ECHConfig.
-   o  Origins that simply alias to a single target can indicate this
+   *  Origins that simply alias to a single target can indicate this
       without copying the ECHConfig and other parameters, which can
       interfere with key rotation and other maintenance.
-   o  "port" and "target" are generally sufficient to uniquely identify
+   *  "port" and "target" are generally sufficient to uniquely identify
       a ServiceMode record, so zone factories can use the endpoint list
       to add ECH to pre-existing ServiceMode records that may have other
       SvcParams.
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 
 
-Farrell, et al.          Expires April 24, 2024                 [Page 6]
+Farrell, et al.           Expires 24 April 2024                 [Page 6]
 
 Internet-Draft           Well-Known URI for ECH             October 2023
 
@@ -357,9 +357,9 @@ Internet-Draft           Well-Known URI for ECH             October 2023
    of HTTPS records queries through their preferred DNS server for the
    following reasons:
 
-   o  The bootstrap connection would not be able to use ECH, so it would
+   *  The bootstrap connection would not be able to use ECH, so it would
       reveal all the information that ECH seeks to protect.
-   o  The origin could serve the user with a uniquely identifying
+   *  The origin could serve the user with a uniquely identifying
       configuration, potentially resulting in an unexpected tracking
       vector.
 
@@ -382,40 +382,17 @@ Internet-Draft           Well-Known URI for ECH             October 2023
 
 10.  Normative References
 
-
-
-
-
-
-
-
-Farrell, et al.          Expires April 24, 2024                 [Page 7]
-
-Internet-Draft           Well-Known URI for ECH             October 2023
-
-
-   [I-D.ietf-tls-esni]
-              Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
-              Encrypted Client Hello", draft-ietf-tls-esni-17 (work in
-              progress), October 2023,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              esni-17>.
-
-   [I-D.ietf-tls-svcb-ech]
-              Schwartz, B., Bishop, M., and E. Nygren, "Bootstrapping
-              TLS Encrypted ClientHello with DNS Service Bindings",
-              draft-ietf-tls-svcb-ech-00 (work in progress), September
-              2023, <https://datatracker.ietf.org/doc/html/draft-ietf-
-              tls-svcb-ech-00>.
-
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
 
-   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
-              Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
-              <https://www.rfc-editor.org/info/rfc4648>.
+
+
+Farrell, et al.           Expires 24 April 2024                 [Page 7]
+
+Internet-Draft           Well-Known URI for ECH             October 2023
+
 
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
@@ -429,26 +406,23 @@ Internet-Draft           Well-Known URI for ECH             October 2023
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
 
+   [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
+              Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
+              <https://www.rfc-editor.org/info/rfc4648>.
 
+   [I-D.ietf-tls-esni]
+              Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
+              Encrypted Client Hello", Work in Progress, Internet-Draft,
+              draft-ietf-tls-esni-17, 9 October 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
+              esni-17>.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.          Expires April 24, 2024                 [Page 8]
-
-Internet-Draft           Well-Known URI for ECH             October 2023
-
+   [I-D.ietf-tls-svcb-ech]
+              Schwartz, B. M., Bishop, M., and E. Nygren, "Bootstrapping
+              TLS Encrypted ClientHello with DNS Service Bindings", Work
+              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-00,
+              26 September 2023, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-tls-svcb-ech-00>.
 
 Appendix A.  Change Log
 
@@ -467,28 +441,34 @@ Appendix A.  Change Log
    Version 04 matches a proof-of-concept bash script implementation and
    results of IETF-117 discussion.
 
+
+
+
+
+Farrell, et al.           Expires 24 April 2024                 [Page 8]
+
+Internet-Draft           Well-Known URI for ECH             October 2023
+
+
 Authors' Addresses
 
    Stephen Farrell
    Trinity College Dublin
-   Dublin  2
+   Dublin
+   2
    Ireland
-
    Phone: +353-1-896-2354
-   EMail: stephen.farrell@cs.tcd.ie
+   Email: stephen.farrell@cs.tcd.ie
 
 
    Rich Salz
    Akamai Technologies
-
-   EMail: rsalz@akamai.com
+   Email: rsalz@akamai.com
 
 
    Benjamin Schwartz
    Meta Platforms, Inc.
-
-   EMail: ietf@bemasc.net
-
+   Email: ietf@bemasc.net
 
 
 
@@ -501,4 +481,24 @@ Authors' Addresses
 
 
 
-Farrell, et al.          Expires April 24, 2024                 [Page 9]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Farrell, et al.           Expires 24 April 2024                 [Page 9]
