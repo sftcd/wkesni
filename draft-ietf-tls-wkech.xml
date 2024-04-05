@@ -144,7 +144,7 @@
         <t>Client-Facing Server: the web server that has an ECH private value. This
             processes the outer ClientHello and attempts ECH decryption.
             The name of client-facing server will typically be the public_name value used in an
-            ECHConfig. This is also know as the client-facing server.</t>
+            ECHConfig.</t>
        <t>Backend: the web server that will process the inner ClientHello.
             Note that even if client-facing server and backend are on the same web server, they almost
             certainly have different DNS names.</t>
