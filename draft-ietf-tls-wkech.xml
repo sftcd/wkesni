@@ -177,7 +177,7 @@ Client <----------->|                    |
          .well-known    V            V      ECHConfig
                     +--------------------+
                     |                    |
-                    |   zf.example.com   |
+                    |   zf.example.net   |
                     |                    |
                     +--------------------+
                               |
