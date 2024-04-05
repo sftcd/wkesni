@@ -185,7 +185,7 @@ Client <----------->|                    |
                               V
                     +--------------------+
                     |                    |
-                    |    ns.example.com  |
+                    |    ns.example.net  |
                     |                    |
                     +--------------------+
 ]]></artwork></figure>
