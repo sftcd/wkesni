@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="US-ASCII"?>
-<!-- this is version 5 of this xml2rfc template -->
-<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
-<!ENTITY rfc2119 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
-<!ENTITY rfc8174 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8174.xml">
-<!ENTITY rfc8446 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8446.xml">
-<!ENTITY rfc8615 SYSTEM "https://xml.resource.org/public/rfc/bibxml/reference.RFC.8615.xml">
+
+<!DOCTYPE rfc  [
+  <!ENTITY nbsp    "&#160;">
+  <!ENTITY zwsp   "&#8203;">
+  <!ENTITY nbhy   "&#8209;">
+  <!ENTITY wj     "&#8288;">
 <!ENTITY I-D.ietf-tls-esni SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni">
 <!ENTITY I-D.ietf-tls-svcb-ech SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech">
 
 ]>
+
 <?rfc toc="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc compact="yes"?>
@@ -57,7 +58,7 @@
       </address>
     </author>
 
-    <date year="2023"/>
+    <date year="2024"/>
 
     <area>Security Area</area>
 
@@ -119,7 +120,7 @@
         </t>
 
         <t>
-            If ECH is being operated in "split-mode" then the web server (back-end) can
+            If ECH is being operated in split-mode then the web server (back-end) can
             similarly poll the ECH front-end at the well-known URI and then create it's own
             value to publish for the ZF to read.
         </t>
@@ -140,17 +141,17 @@
     <t>We define or re-use the following terms:
     <list style="symbols">
         <t>Zone factory (ZF): an entity that has write-accsss to the DNS</t>
-        <t>Front-end (FE): the web server that has an ECH private value. This
+        <t>Client-Facing Server: the web server that has an ECH private value. This
             processes the outer ClientHello and attempts ECH decryption.
-            The name of FE will typically be the public_name value used in an
-            ECHconfig.</t>
-       <t>Back-end (BE): the web server that will process the inner ClientHello.
-       Note that even if FE and BE are on the same web server, they almost
-       certainly have different DNS names.</t>
-       <t>Shared-mode: this is where FE and BE are the same web server.</t>
-       <t>Split-mode: this refers to the case where FE only does ECH decryption 
-          but the TLS session is between the client and BE, which will typically
-          be on a different host to FE</t>
+            The name of client-facing server will typically be the public_name value used in an
+            ECHConfig. This is also know as the client-facing server.</t>
+       <t>Backend: the web server that will process the inner ClientHello.
+            Note that even if client-facing server and backend are on the same web server, they almost
+            certainly have different DNS names.</t>
+       <t>Shared-mode: this is where client-facing and backend servers are the same web server.</t>
+       <t>Split-mode: this refers to the case where the client-facing server only does ECH decryption 
+          but the TLS session is between the client and backend, which will typically
+          be on a different host to client-facing server</t>
        <t>regeninterval: the number of seconds after which the value retrieved
            after acessing a well-known URI may be changed.</t>
     </list>
@@ -160,24 +161,56 @@
 
     <section title="Example use of the well-known URI for ECH">
 
-        <t>An example deployment could be as follows:
+        <t>An example deployment could be as follows:</t>
 
-           <list style="numbers">
-               <t> Shared-mode ECH web server generates new ECHConfigList values every "regeninterval"
-               seconds via some regular, automated process (e.g. a cronjob)</t>
+<figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="shared-mode"><artwork><![CDATA[
+                    +--------------------+
+                    |                    |
+                    |   2001:DB8::1111   |
+Client <----------->|                    |
+                    |   cfs.example.com  |
+                    | backend.example.com|
+                    +--------------------+
+                     Client-Facing Server 
+                        |            |
+     (1) ZF reads       |            |  (2) ZF checks
+         .well-known    V            V      ECHConfig
+                    +--------------------+
+                    |                    |
+                    |   zf.example.com   |
+                    |                    |
+                    +--------------------+
+                              |
+                              | (3) ZF publishes new HTTPS RR
+                              V
+                    +--------------------+
+                    |                    |
+                    |    ns.example.com  |
+                    |                    |
+                    +--------------------+
+]]></artwork></figure>
+
+        <t>
+
+           <list style="symbols">
+                <t> Shared-mode ECH web server generates new ECHConfigList values every "regeninterval"
+                    seconds via some regular, automated process (e.g. a cronjob)</t>
                 <t> ECHConfigList values are "current" for an hour, and remain usable
                     for 3 hours from the time of generation</t>
                 <t> The cronjob updates the ECHConfigList values in a JSON resource at
-                    at https://BE/.well-known/origin-svcb, as shown in
+                    at https://backend.example.com/.well-known/origin-svcb, as shown in
                     <xref target="sample-json"/>.</t>
                 <t> On the ZF, another regularly executed job uses
-                    an HTTP client to retrieve this JSON resource.
-                    It also attempts to connect to BE using these ECH values and confirms
-                    that they are working.</t>
+                    an HTTP client to retrieve this JSON resource from backend.example.com; 
+                    this is step 1 shown in <xref target="shared-mode"/></t>
+                <t> ZF next attempts to connect to backend.example.com using these ECH values and confirms
+                    that they are working.
+                    this is step 2 shown in <xref target="shared-mode"/></t>
                 <t> The ZF observes that the JSON resource
                     has a regeninterval of 3600 seconds, and chooses a DNS
-                    TTL of 1800.  It updates the zone file for BE and re-publishes
-                    the zone containing only the new ECHConfigList values.</t>
+                    TTL of 1800.  It updates the zone file for backend.example.com and re-publishes
+                    the zone containing only the new ECHConfigList values.
+                    this is step 3 shown in <xref target="shared-mode"/></t>
                 <t> When regeninterval seconds have passed, the ZF attempts to refresh
                     its cached copy of the JSON resource.  If the resource has changed,
                     it repeats this process.</t>
@@ -189,20 +222,17 @@
     <section title="The origin-svcb well-known URI">
 
          <t>
-            If BE wants to convey information to the Zone
+            If the backend wants to convey information to the Zone
             Factory, it publishes the JSON content
             defined in <xref target="jsonstr"/> at:
-            https://BE/.well-known/origin-svcb
+            https://backend.example.com/.well-known/origin-svcb
         </t>
 
         <t>The well-known URI defined here MUST be an https URL and therefore the ZF
-            verifies the correct BE is being accessed. If
-            no new ECH value resulting "works," then the
-            zone factory SHOULD NOT modify the zone. </t>
+        can verify the correct backend is being accessed.</t>
 
-        <t>Note that a consequence of the URL above is that back-ends that
-            wish to use different ECH settings are very likely to have to
-            use different "DocRoot" settings.</t>
+    <t>If no new ECHConfig value verifies (as per <xref target="zfbehave"/>), then the
+            zone factory MUST NOT modify the zone. </t>
 
     </section>
 
@@ -247,9 +277,9 @@
         The JSON file at the well-known URI MUST contain an object
         with an "endpoints" key that contains an array of objects
         that each map to a desired HTTPS/SVCB resource record that
-        the back-end would like to see published.
+        the backend would like to see published.
 
-        The "endpoints" array its value is an array whose elements
+        The endpoints is an array whose elements
         each represent HTTPS records in ServiceMode or AliasMode as
         described below. Each element MAY contain
         one or more keys from the JSON HTTP Origin Info registry (see
@@ -280,8 +310,8 @@
         The ZF might implement this directive
         by publishing an AliasMode record, publishing a CNAME record, copying
         HTTPS records from the target zone, or fetching
-        https://FE/.well-known/origin-svcb" (if it exists).
-        In this case, the regeninterval indicates that BE does
+        https://cfs.example.com/.well-known/origin-svcb" (if it exists).
+        In this case, the regeninterval indicates that backend does
         not plan to change the content at the URL for at least that number of
         seconds.
                 If an alias entry is present then any ech and port entries
@@ -350,18 +380,24 @@
 
 </section>
 
-<section title="Zone factory behaviour">
+<section anchor="zfbehave" title="Zone factory behaviour">
 
-    <t>ZF SHOULD check that the presented endpoints
-        work and provide access to BE before publication.
-        A bespoke TLS client may be needed for this check,
-        that does not require the ECHConfigList value to have
-        already been published in the DNS.
+    <t>ZF SHOULD check that ECH with the presented endpoints
+        succeeds with the backend before publication.
         In order to make such checks, the ZF SHOULD
-        attempt to access the well-known URI defined here.
+        attempt to access the well-known URI defined here 
+        while attempting ECH.
     </t>
 
-    <t>A careful ZF implementation could explode the ECHConfigList value
+    <t>
+        A bespoke TLS client is likely needed for this check,
+        that does not require the ECHConfigList value to have
+        already been published in the DNS. The TLS client also
+        needs to allow checking for the success or failure of ECH.
+    </t>
+
+    <t>If more than one ECHConfig is present in an ECHConfigList, 
+       then the ZF SHOULD explode the ECHConfigList value
        presented into "singleton" values with one public key in each,
        and then test each of those separately.</t>
 
@@ -374,18 +410,20 @@
         object's content is likely to have changed. The ZF
         MUST attempt to refresh the JSON object and regenerate the zone
         before this time.  This aims to ensure that ECHConfig values
-        are not used longer than intended by BE.
+        are not used longer than intended by backend.
     </t>
 
 </section>
 
 
     <section title="Security Considerations">
-        <t>This document defines another way to publish ECHConfigList values. If the wrong
+        <t>
+            This document defines another way to publish ECHConfigList values. If the wrong
             keys were read from here and published in the DNS, then clients
             using ECH would do the wrong thing, likely resulting in
             denial of service, or a privacy leak, or worse, when TLS clients attempt to use ECH with
-            a back-end web site. So: Don't do that:-)</t>
+            a back-end web site. So: Don't do that:-)
+        </t>
 
         <t>
             Although this configuration resource MAY be publicly
@@ -406,10 +444,17 @@
             </list>
         </t>
 
+        <t>
+            The .well-known URI chosen here means that services running
+            on different ports of the same backend are trusting the
+            service running on the default port (443) for that backend
+            to provide correct endpoint information.
+        </t>
+
     </section>
 
     <section title="Acknowledgements">
-        <t>Thanks to Niall O'Reilly for a quick review of -00.</t>
+        <t>Thanks to Niall O'Reilly and Martin Thomson for reviews.</t>
         <t>Stephen Farrell's work on this specification was supported in part by
             the Open Technology Fund.</t>
     </section>
@@ -469,7 +514,7 @@
       </t>
 
       <t>
-        This is proto -05, no changes yet.
+        Version 05 responds to an early artart review.
       </t>
 
     </section>
