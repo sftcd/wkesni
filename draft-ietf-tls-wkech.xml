@@ -120,9 +120,10 @@
         </t>
 
         <t>
-            If ECH is being operated in split-mode then the web server (back-end) can
+            If ECH is being operated in split-mode then the web server (backend) can
             similarly poll the ECH front-end at the well-known URI and then create it's own
-            value to publish for the ZF to read.
+            value to publish for the ZF to read. (ECH split-mode is defined in
+            <xref target="I-D.ietf-tls-esni"/>.)
         </t>
 
         <t>[[The source for this draft is in https://github.com/sftcd/wkesni/
@@ -140,7 +141,7 @@
 
     <t>We define or re-use the following terms:
     <list style="symbols">
-        <t>Zone factory (ZF): an entity that has write-accsss to the DNS</t>
+        <t>Zone factory (ZF): an entity that has write-access to the DNS</t>
         <t>Client-Facing Server: the web server that has an ECH private value. This
             processes the outer ClientHello and attempts ECH decryption.
             The name of client-facing server will typically be the public_name value used in an
@@ -159,9 +160,12 @@
 
       </section>
 
-    <section title="Example use of the well-known URI for ECH">
+    <section title="Example uses of the well-known URI for ECH">
 
-        <t>An example deployment could be as follows:</t>
+        <t>Some example deployments are described here.</t>
+
+        <section title="Shared-mode deplpoyment.">
+
 
 <figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="shared-mode"><artwork><![CDATA[
                     +--------------------+
@@ -217,6 +221,45 @@ Client <----------->|                    |
             </list>
         </t>
 
+        </section>
+
+        <section title="Split-mode, multi-CDN deplpoyment.">
+
+<figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="split-mode"><artwork><![CDATA[
+           +--------------------+                  +--------------------+
+           |                    |                  |                    |
+           |   2001:DB8::1111   |                  |   2001:DB8::FFFF   |
+Client <-->|                    |                  |                    |
+           |  cdn1.example.net  |                  |  cdn1.example.net  |
+           | backend.example.com|                  | backend.example.com|
+           +--------------------+                  +--------------------+
+            Client-Facing Server 
+                        |            |
+     (1) ZF reads       |            |  (2) ZF checks
+         .well-known    V            V      ECHConfig
+                    +--------------------+
+                    |                    |
+                    |   zf.example.net   |
+                    |                    |
+                    +--------------------+
+                              |
+                              | (3) ZF publishes new HTTPS RR
+                              V
+                    +--------------------+
+                    |                    |
+                    |    ns.example.net  |
+                    |                    |
+                    +--------------------+
+]]></artwork></figure>
+
+            <t>
+                <list style="symbols">
+                    <t>The above will change, it's a place-holder for now.</t>
+                </list>
+
+            </t>
+
+        </section>
     </section>
 
     <section title="The origin-svcb well-known URI">
@@ -304,7 +347,7 @@ Client <----------->|                    |
             <t>
                 alias: The value MUST be a DNS name
         that could be used as the TargetName of an HTTPS resource record.
-        This indicates that the back-end
+        This indicates that the backend
         is hosted on the same endpoints as this target, and is equivalent to
         an HTTPS AliasMode record.
         The ZF might implement this directive
@@ -329,7 +372,7 @@ Client <----------->|                    |
             <t>
                 alpn: The value is a string corresponding to
                 the value of the "alpn" SvcParamKey.
-                Typically this is likely to be set per back-end.
+                Typically this is likely to be set per backend.
             </t>
             <t>
                 ipv4hints: The value is a string corresponding to
@@ -405,7 +448,7 @@ Client <----------->|                    |
         that are presented in the JSON file that pass
         the checks above.</t>
 
-    <t>ZF SHOULD set a DNS TTL short enough so that any
+    <t>ZF SHOULD set a DNS TTL less than regeninterval, i.e. short enough so that any
         cached DNS resource records are likely to have expired before the JSON
         object's content is likely to have changed. The ZF
         MUST attempt to refresh the JSON object and regenerate the zone
@@ -422,7 +465,7 @@ Client <----------->|                    |
             keys were read from here and published in the DNS, then clients
             using ECH would do the wrong thing, likely resulting in
             denial of service, or a privacy leak, or worse, when TLS clients attempt to use ECH with
-            a back-end web site. So: Don't do that:-)
+            a backend web site. So: Don't do that:-)
         </t>
 
         <t>
@@ -451,10 +494,18 @@ Client <----------->|                    |
             to provide correct endpoint information.
         </t>
 
+        <t>
+            As described, in mutlti-CDN and simlar scenarios, a ZF might
+            only test ECH success against one of the CDNs unless the ZF
+            can make use of the ipv4hints and/or ipv6hint values, or the
+            ZF has out of band information about the different addresses
+            at which backend.example.com can be accessed.
+        </t>
+
     </section>
 
     <section title="Acknowledgements">
-        <t>Thanks to Niall O'Reilly and Martin Thomson for reviews.</t>
+        <t>Thanks to Niall O'Reilly, Martin Thomson and David Black for reviews.</t>
         <t>Stephen Farrell's work on this specification was supported in part by
             the Open Technology Fund.</t>
     </section>
