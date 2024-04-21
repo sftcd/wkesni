@@ -67,7 +67,7 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
-   3.  Example uses of the well-known URI for ECH  . . . . . . . . .   3
+   3.  Example uses of the well-known URI for ECH  . . . . . . . . .   4
      3.1.  Shared-mode deplpoyment.  . . . . . . . . . . . . . . . .   4
      3.2.  Split-mode, multi-CDN deplpoyment.  . . . . . . . . . . .   5
    4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   5
@@ -76,7 +76,9 @@ Table of Contents
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   8
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   9
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
-   10. Normative References  . . . . . . . . . . . . . . . . . . . .   9
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .   9
+     10.2.  Informative References . . . . . . . . . . . . . . . . .  10
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  11
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
 
@@ -104,8 +106,6 @@ Table of Contents
    provide the functionality necessary for ongoing management of ECH
    keys.
 
-   We use the term "zone factory" for the entity that does have write
-   access to the zone file.  We assume the zone factory (ZF) can also
 
 
 
@@ -114,6 +114,8 @@ Farrell, et al.         Expires October 23, 2024                [Page 2]
 Internet-Draft           Well-Known URI for ECH               April 2024
 
 
+   We use the term "zone factory" for the entity that does have write
+   access to the zone file.  We assume the zone factory (ZF) can also
    make HTTPS requests to the web server with the ECH keys.  We define a
    well-known URI [RFC8615] on the web server that allows the ZF to poll
    for changes to ECHConfigList values.  For example, if a web server
@@ -157,9 +159,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    o  regeninterval: the number of seconds after which the value
       retrieved after acessing a well-known URI may be changed.
 
-3.  Example uses of the well-known URI for ECH
 
-   Some example deployments are described here.
 
 
 
@@ -169,6 +169,10 @@ Farrell, et al.         Expires October 23, 2024                [Page 3]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
+
+3.  Example uses of the well-known URI for ECH
+
+   Some example deployments are described here.
 
 3.1.  Shared-mode deplpoyment.
 
@@ -213,10 +217,6 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    o  ZF next attempts to connect to backend.example.com using these ECH
       values and confirms that they are working.  this is step 2 shown
       in Figure 1
-   o  The ZF observes that the JSON resource has a regeninterval of 3600
-      seconds, and chooses a DNS TTL of 1800.  It updates the zone file
-      for backend.example.com and re-publishes the zone containing only
-      the new ECHConfigList values.  this is step 3 shown in Figure 1
 
 
 
@@ -226,6 +226,10 @@ Farrell, et al.         Expires October 23, 2024                [Page 4]
 Internet-Draft           Well-Known URI for ECH               April 2024
 
 
+   o  The ZF observes that the JSON resource has a regeninterval of 3600
+      seconds, and chooses a DNS TTL of 1800.  It updates the zone file
+      for backend.example.com and re-publishes the zone containing only
+      the new ECHConfigList values.  this is step 3 shown in Figure 1
    o  When regeninterval seconds have passed, the ZF attempts to refresh
       its cached copy of the JSON resource.  If the resource has
       changed, it repeats this process.
@@ -270,10 +274,6 @@ Client <-->|                    |                  |                    |
    The well-known URI defined here MUST be an https URL and therefore
    the ZF can verify the correct backend is being accessed.
 
-   If no new ECHConfig value verifies (as per Section 6), then the zone
-   factory MUST NOT modify the zone.
-
-
 
 
 
@@ -281,6 +281,9 @@ Farrell, et al.         Expires October 23, 2024                [Page 5]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
+
+   If no new ECHConfig value verifies (as per Section 6), then the zone
+   factory MUST NOT modify the zone.
 
 5.  The JSON structure for origin service binding info
 
@@ -326,10 +329,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    o  regeninterval: the number of seconds between key generation
       actions at the origin, i.e. a replacement ECHConfigList may be
       generated this often.
-   o  priority: The value is a positive integer corresponding to the
-      SvcPriority.  If omitted, the zone factory SHOULD infer
-      numerically increasing SvcPriority from the order of the endpoints
-      array.
+
 
 
 
@@ -338,6 +338,10 @@ Farrell, et al.         Expires October 23, 2024                [Page 6]
 Internet-Draft           Well-Known URI for ECH               April 2024
 
 
+   o  priority: The value is a positive integer corresponding to the
+      SvcPriority.  If omitted, the zone factory SHOULD infer
+      numerically increasing SvcPriority from the order of the endpoints
+      array.
    o  target: The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
       value is ".".  All labels in the name MUST contain only octets
@@ -358,15 +362,16 @@ Internet-Draft           Well-Known URI for ECH               April 2024
       SvcParamKey.
    o  port: The value is a non-negative integer, corresponding to the
       value of the "port" SvcParamKey.
-   o  alpn: The value is a string corresponding to the value of the
-      "alpn" SvcParamKey.  Typically this is likely to be set per
-      backend.
-   o  ipv4hints: The value is a string corresponding to the value of the
-      "ipv4hints" SvcParamKey.  Typically this is likely to be set per
-      front-end.
-   o  ipv6hints: The value is a string corresponding to the value of the
-      "ipv6hints" SvcParamKey.  Typically this is likely to be set per
-      front-end.
+   o  alpn: The value is an array of strings corresponding to the values
+      of the "alpn" SvcParamKey.  A JSON string is a sequence of Unicode
+      codepoints, while an ALPN value is a sequence of octets, so each
+      ALPN value octet is stored as a single Unicode codepoint
+      [ISOMORPHIC-DECODE].  For all ALPNs registered to date, this
+      corresponds to ordinary usage of JSON strings.
+   o  ipv4hint: The value is an array of strings corresponding to the
+      values of the "ipv4hint" SvcParamKey.
+   o  ipv6hint: The value is an array of strings corresponding to the
+      values of the "ipv6hint" SvcParamKey.
 
    An empty endpoint object corresponds to an HTTPS record with inferred
    SvcPriority, TargetName=".", and no ECH support.  An empty record of
@@ -380,13 +385,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
    o  Origins can indicate that different ECHConfigs are used on
       different ports.
-   o  Origins can indicate that multiple CDNs are in use, each with its
-      own ECHConfig.
-   o  Origins that simply alias to a single target can indicate this
-      without copying the ECHConfig and other parameters, which can
-      interfere with key rotation and other maintenance.
-   o  "port" and "target" are generally sufficient to uniquely identify
-      a ServiceMode record, so zone factories can use the endpoint list
+
 
 
 
@@ -395,6 +394,13 @@ Farrell, et al.         Expires October 23, 2024                [Page 7]
 Internet-Draft           Well-Known URI for ECH               April 2024
 
 
+   o  Origins can indicate that multiple CDNs are in use, each with its
+      own ECHConfig.
+   o  Origins that simply alias to a single target can indicate this
+      without copying the ECHConfig and other parameters, which can
+      interfere with key rotation and other maintenance.
+   o  "port" and "target" are generally sufficient to uniquely identify
+      a ServiceMode record, so zone factories can use the endpoint list
       to add ECH to pre-existing ServiceMode records that may have other
       SvcParams.
 
@@ -435,6 +441,15 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
    Although this configuration resource MAY be publicly accessible,
    general HTTP clients SHOULD NOT attempt to use this resource in lieu
+
+
+
+
+Farrell, et al.         Expires October 23, 2024                [Page 8]
+
+Internet-Draft           Well-Known URI for ECH               April 2024
+
+
    of HTTPS records queries through their preferred DNS server for the
    following reasons:
 
@@ -443,13 +458,6 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    o  The origin could serve the user with a uniquely identifying
       configuration, potentially resulting in an unexpected tracking
       vector.
-
-
-
-Farrell, et al.         Expires October 23, 2024                [Page 8]
-
-Internet-Draft           Well-Known URI for ECH               April 2024
-
 
    The .well-known URI chosen here means that services running on
    different ports of the same backend are trusting the service running
@@ -483,32 +491,20 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 10.1.  Normative References
 
-
-
-
-
-
-
-
-Farrell, et al.         Expires February 12, 2024               [Page 7]
-
-Internet-Draft           Well-Known URI for ECH              August 2023
-
-
-   [I-D.ietf-dnsop-svcb-https]
-              Schwartz, B., Bishop, M., and E. Nygren, "Service binding
-              and parameter specification via the DNS (DNS SVCB and
-              HTTPS RRs)", draft-ietf-dnsop-svcb-https-12 (work in
-              progress), March 2023,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-
-              svcb-https-12>.
-
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
               Encrypted Client Hello", draft-ietf-tls-esni-18 (work in
               progress), March 2024,
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
               esni-18>.
+
+
+
+
+Farrell, et al.         Expires October 23, 2024                [Page 9]
+
+Internet-Draft           Well-Known URI for ECH               April 2024
+
 
    [I-D.ietf-tls-svcb-ech]
               Schwartz, B., Bishop, M., and E. Nygren, "Bootstrapping
@@ -521,13 +517,6 @@ Internet-Draft           Well-Known URI for ECH              August 2023
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
-
-
-
-Farrell, et al.         Expires October 23, 2024                [Page 9]
-
-Internet-Draft           Well-Known URI for ECH               April 2024
-
 
    [RFC4648]  Josefsson, S., "The Base16, Base32, and Base64 Data
               Encodings", RFC 4648, DOI 10.17487/RFC4648, October 2006,
@@ -550,23 +539,6 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    [ISOMORPHIC-DECODE]
               WHATWG, "WHATWG definition of Isomorphic Decode",
               <https://infra.spec.whatwg.org/#isomorphic-decode>.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
