@@ -342,7 +342,8 @@ Client <-->|                    |                  |                    |
             <t>
                 target: The value is a string containing a fully qualified
                 domain name, corresponding to the HTTPS record's TargetName.
-                The default value is ".".
+                The default value is ".".  All labels in the name MUST contain
+                only octets from the ABNF set ALPHA / DIGIT / "-" / "_".
             </t>
             <t>
                 alias: The value MUST be a DNS name
@@ -370,19 +371,20 @@ Client <-->|                    |                  |                    |
                 the value of the "port" SvcParamKey.
             </t>
             <t>
-                alpn: The value is a string corresponding to
-                the value of the "alpn" SvcParamKey.
-                Typically this is likely to be set per backend.
+                alpn: The value is an array of strings corresponding to
+                the values of the "alpn" SvcParamKey.  A JSON string is a
+                sequence of Unicode codepoints, while an ALPN value is a sequence
+                of octets, so each ALPN value octet is stored as a single Unicode
+                codepoint <xref target="ISOMORPHIC-DECODE"/>.  For all ALPNs
+                registered to date, this corresponds to ordinary usage of JSON strings.
             </t>
             <t>
-                ipv4hints: The value is a string corresponding to
-                the value of the "ipv4hints" SvcParamKey.
-                Typically this is likely to be set per front-end.
+                ipv4hint: The value is an array of strings corresponding to
+                the values of the "ipv4hint" SvcParamKey.
             </t>
             <t>
-                ipv6hints: The value is a string corresponding to
-                the value of the "ipv6hints" SvcParamKey.
-                Typically this is likely to be set per front-end.
+                ipv6hint: The value is an array of strings corresponding to
+                the values of the "ipv6hint" SvcParamKey.
             </t>
         </list>
         An empty endpoint object corresponds to an HTTPS record with inferred
@@ -535,10 +537,18 @@ Client <-->|                    |                  |                    |
 
     </references>
 
-    <!--
     <references title="Informative References">
+      <reference anchor="ISOMORPHIC-DECODE"
+                   target="https://infra.spec.whatwg.org/#isomorphic-decode">
+          <front>
+            <title>WHATWG definition of Isomorphic Decode</title>
+            <author fullname="WHATWG">
+              <organization />
+            </author>
+            <date />
+          </front>
+        </reference>
     </references>
-    -->
 
     <section title="Change Log ">
       <t>[[RFC editor: please remove this before publication.]]</t>

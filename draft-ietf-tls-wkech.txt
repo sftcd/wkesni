@@ -340,7 +340,8 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
    o  target: The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
-      value is ".".
+      value is ".".  All labels in the name MUST contain only octets
+      from the ABNF set ALPHA / DIGIT / "-" / "_".
    o  alias: The value MUST be a DNS name that could be used as the
       TargetName of an HTTPS resource record.  This indicates that the
       backend is hosted on the same endpoints as this target, and is
@@ -478,7 +479,29 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    registration policy, containing a field named "Name" whose value is a
    UTF-8 string.
 
-10.  Normative References
+10.  References
+
+10.1.  Normative References
+
+
+
+
+
+
+
+
+Farrell, et al.         Expires February 12, 2024               [Page 7]
+
+Internet-Draft           Well-Known URI for ECH              August 2023
+
+
+   [I-D.ietf-dnsop-svcb-https]
+              Schwartz, B., Bishop, M., and E. Nygren, "Service binding
+              and parameter specification via the DNS (DNS SVCB and
+              HTTPS RRs)", draft-ietf-dnsop-svcb-https-12 (work in
+              progress), March 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-dnsop-
+              svcb-https-12>.
 
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
@@ -522,6 +545,11 @@ Internet-Draft           Well-Known URI for ECH               April 2024
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
 
+10.2.  Informative References
+
+   [ISOMORPHIC-DECODE]
+              WHATWG, "WHATWG definition of Isomorphic Decode",
+              <https://infra.spec.whatwg.org/#isomorphic-decode>.
 
 
 
