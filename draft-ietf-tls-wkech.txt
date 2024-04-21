@@ -236,30 +236,30 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 3.2.  Split-mode, multi-CDN deplpoyment.
 
-           +--------------------+                  +--------------------+
-           |                    |                  |                    |
-           |   2001:DB8::1111   |                  |   2001:DB8::FFFF   |
-Client <-->|                    |                  |                    |
-           |  cdn1.example.net  |                  |  cdn1.example.net  |
-           | backend.example.com|                  | backend.example.com|
-           +--------------------+                  +--------------------+
-            Client-Facing Server
-                        |            |
-     (1) ZF reads       |            |  (2) ZF checks
-         .well-known    V            V      ECHConfig
-                    +--------------------+
-                    |                    |
-                    |   zf.example.net   |
-                    |                    |
-                    +--------------------+
-                              |
-                              | (3) ZF publishes new HTTPS RR
-                              V
-                    +--------------------+
-                    |                    |
-                    |    ns.example.net  |
-                    |                    |
-                    +--------------------+
+              +--------------------+ +--------------------+
+              |                    | |                    |
+              |   2001:DB8::1111   | |   2001:DB8::FFFF   |
+   Client <-->|                    | |                    |
+              |  cfs.cdn1.example  | |  cfs.cdn2.example  |
+              | backend.example.com| | backend.example.com|
+              +--------------------+ +--------------------+
+                         Client-Facing Server
+                           |            |
+        (1) ZF reads       |            |  (2) ZF checks
+            .well-known    V            V      ECHConfig
+                       +--------------------+
+                       |                    |
+                       |   zf.example.net   |
+                       |                    |
+                       +--------------------+
+                                 |
+                                 | (3) ZF publishes new HTTPS RR
+                                 V
+                       +--------------------+
+                       |                    |
+                       |    ns.example.net  |
+                       |                    |
+                       +--------------------+
 
          Figure 2: Shared-Mode Topology with Zone Factory and DNS
 
