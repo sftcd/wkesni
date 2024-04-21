@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: October 18, 2024                            Akamai Technologies
+Expires: October 23, 2024                            Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                          April 16, 2024
+                                                          April 21, 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on October 18, 2024.
+   This Internet-Draft will expire on October 23, 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 1]
+Farrell, et al.         Expires October 23, 2024                [Page 1]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 2]
+Farrell, et al.         Expires October 23, 2024                [Page 2]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 3]
+Farrell, et al.         Expires October 23, 2024                [Page 3]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 4]
+Farrell, et al.         Expires October 23, 2024                [Page 4]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -277,7 +277,7 @@ Client <-->|                    |                  |                    |
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 5]
+Farrell, et al.         Expires October 23, 2024                [Page 5]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 6]
+Farrell, et al.         Expires October 23, 2024                [Page 6]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 7]
+Farrell, et al.         Expires October 23, 2024                [Page 7]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -445,7 +445,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 8]
+Farrell, et al.         Expires October 23, 2024                [Page 8]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -501,7 +501,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 18, 2024                [Page 9]
+Farrell, et al.         Expires October 23, 2024                [Page 9]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -557,7 +557,7 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 18, 2024               [Page 10]
+Farrell, et al.         Expires October 23, 2024               [Page 10]
 
 Internet-Draft           Well-Known URI for ECH               April 2024
 
@@ -613,4 +613,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires October 18, 2024               [Page 11]
+Farrell, et al.         Expires October 23, 2024               [Page 11]
