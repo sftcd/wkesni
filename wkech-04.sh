@@ -31,8 +31,24 @@
 # back-end (e.g. web server) or zone factory (the thing that publishes DNS RRs
 # containing ECH public values).
 
+# This iteration isn't yet tested in any deployment, whereas wkech-03.sh is.
+# The alpn TODO: is the main thing to fix before testing/deployment
+
+# This makes use of our ECH-enabled OpenSSL and curl forks. A
+# good place to start to get those working is:
+#   https://github.com/sftcd/curl/blob/ECH-experimental/docs/ECH.md 
+
+# Paths that  can be overidden
+: ${OSSL:=$HOME/code/openssl}
+: ${CTOP:=$HOME/code/curl}
+
 # variables/settings, some can be overwritten from environment
 . echvars.sh
+
+# more paths, possibly partly overidden
+export LD_LIBRARY_PATH=$OSSL
+CURLBIN=$CTOP/src/curl
+CURLCMD="$CTOP/src/curl --doh-url https://one.one.one.one/dns-query"
 
 # role strings
 FESTR="fe"
@@ -52,6 +68,9 @@ JUSTONE="no"
 
 # yeah, 443 is the winner:-)
 DEFPORT=443
+
+# switch between use of curl or echcli.sh
+USE_CURL="yes"
 
 # functions
 
@@ -215,7 +234,7 @@ NOW=$(whenisitagain)
 echo "Running $0 at $NOW"
 
 # options may be followed by one colon to indicate they have a required argument
-if ! options=$(/usr/bin/getopt -s bash -o d:hnr:t1 -l duration,help,no-verify,roles,one:,test -- "$@")
+if ! options=$(/usr/bin/getopt -s bash -o 1cd:ehnr:t -l one,curl,duration:,echcli,help,no-verify,roles:,test -- "$@")
 then
     # something went wrong, getopt will put out an error message for us
     exit 2
@@ -225,12 +244,14 @@ eval set -- "$options"
 while [ $# -gt 0 ]
 do
     case "$1" in
-        -h|--help) usage;;
+        -1|--one) JUSTONE="yes";;
+        -c|--curl) USE_CURL="yes";;
         -d|--duration) DURATION=$2; shift;;
+        -e|--echcli) USE_CURL="no";;
+        -h|--help) usage;;
         -n|--no-verify) VERIFY="no";;
         -r|--roles) ROLES=$2; shift;;
         -t|--test) DOTEST="yes";;
-        -1|--one) JUSTONE="yes";;
         (--) shift; break;;
         (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 3;;
         (*)  break;;
@@ -270,6 +291,7 @@ esac
 # checks for front-end role
 if [[ $ROLES == *"$FESTR"* ]]
 then
+
     # check that the that OpenSSL build is built
     if [ ! -f $OSSL/apps/openssl ]
     then
@@ -289,6 +311,7 @@ then
         echo "OpenSSL not built with ECH - exiting"
         exit 8
     fi
+
     # check/make various directories
     if [ ! -d $ECHTOP ]
     then
@@ -374,7 +397,14 @@ fi
 
 if [[ $ROLES == $ZFSTR ]]
 then
-    if [ ! -f $OSSL/esnistuff/echcli.sh ]
+    # check that our CURL version supports ECH
+    curlgotech=`$CURLBIN -h tls | grep "Encrypted Client Hello"`
+    if [[ "$USE_CURL" == "yes" && "$curlgotech" == "" ]]
+    then
+        echo "$CURLBIN not built with ECH - exiting"
+        exit 8
+    fi
+    if [ "$USE_CURL" == "no" && ! -f $OSSL/esnistuff/echcli.sh ]
     then
         echo "Can't see $OSSL/esnistuff/echcli.sh - exiting"
         exit 11
@@ -749,7 +779,13 @@ then
         # URL below should really be $behost, but needs change to defo.ie test setup
         URL="https://$beor/$path"
         # grab .well-known stuff
-        timeout $CURLTIMEOUT curl -s $URL -o $TMPF
+        if [[ "$USE_CURL" == "yes" ]]
+        then
+            timeout $CURLTIMEOUT $CURLCMD -s $URL -o $TMPF
+        else
+            # use system curl
+            timeout $CURLTIMEOUT curl -s $URL -o $TMPF
+        fi
         tres=$?
         if [[ "$tres" == "124" ]]
         then
@@ -817,8 +853,13 @@ then
             if [[ "$aliasname" != "" && "$aliasname" != "null" ]]
             then
                 # see if that alias works
-                $OSSL/esnistuff/echcli.sh -s $aliasname -H $behost \
-                    -p $beport >/dev/null 2>&1
+                if [[ "$USE_CURL" == "no" ]]
+                then
+                    $OSSL/esnistuff/echcli.sh -s $aliasname -H $behost \
+                        -p $beport >/dev/null 2>&1
+                else
+                    $CURLCMD --ech hard "https://$behost:$beport/"
+                fi
                 res=$?
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
@@ -912,8 +953,14 @@ then
             else
                 echworked="false"
                 # first test entire list then each element
-                $OSSL/esnistuff/echcli.sh -P $list -H $behost \
-                    -p $port $alpn_cla >/dev/null 2>&1
+                if [[ "$USE_CURL" == "no" ]]
+                then
+                    $OSSL/esnistuff/echcli.sh -P $list -H $behost \
+                        -p $port $alpn_cla >/dev/null 2>&1
+                else
+                    # TODO: find a way to pass alpn params
+                    $CURLCMD --ech hard --ech ecl:$list "https://$behost:$port/"
+                fi
                 res=$?
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
@@ -937,8 +984,14 @@ then
                     then
                         continue
                     fi
-                    $OSSL/esnistuff/echcli.sh -P $singletonlist -H $behost \
-                        -p $beport $alpn_cla >/dev/null 2>&1
+                    if [[ "$USE_CURL" == "no" ]]
+                    then
+                        $OSSL/esnistuff/echcli.sh -P $singletonlist -H $behost \
+                            -p $beport $alpn_cla >/dev/null 2>&1
+                    else
+                        # TODO: find a way to pass alpn params
+                        $CURLCMD --ech hard --ech ecl:$singletonlist "https://$behost:$port/"
+                    fi
                     res=$?
                     if [[ "$res" != "0" ]]
                     then
