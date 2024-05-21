@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: October 23, 2024                            Akamai Technologies
+Expires: November 22, 2024                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                          April 21, 2024
+                                                            May 21, 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on October 23, 2024.
+   This Internet-Draft will expire on November 22, 2024.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires October 23, 2024                [Page 1]
+Farrell, et al.         Expires November 22, 2024               [Page 1]
 
-Internet-Draft           Well-Known URI for ECH               April 2024
+Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
    to this document.  Code Components extracted from this document must
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires October 23, 2024                [Page 2]
+Farrell, et al.         Expires November 22, 2024               [Page 2]
 
-Internet-Draft           Well-Known URI for ECH               April 2024
+Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
    We use the term "zone factory" for the entity that does have write
@@ -165,9 +165,9 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 23, 2024                [Page 3]
+Farrell, et al.         Expires November 22, 2024               [Page 3]
 
-Internet-Draft           Well-Known URI for ECH               April 2024
+Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 3.  Example uses of the well-known URI for ECH
@@ -221,9 +221,9 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 23, 2024                [Page 4]
+Farrell, et al.         Expires November 22, 2024               [Page 4]
 
-Internet-Draft           Well-Known URI for ECH               April 2024
+Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
    o  The ZF observes that the JSON resource has a regeninterval of 3600
@@ -277,9 +277,9 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-Farrell, et al.         Expires October 23, 2024                [Page 5]
+Farrell, et al.         Expires November 22, 2024               [Page 5]
 
-Internet-Draft           Well-Known URI for ECH               April 2024
+Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
    If no new ECHConfig value verifies (as per Section 6), then the zone
@@ -294,12 +294,16 @@ Internet-Draft           Well-Known URI for ECH               April 2024
                "regeninterval": 3600,
                "priority": 1,
                "target": "cdn.example.",
-               "ech": "AD7+DQA65wAgAC..AA=="
+               "params": {
+                   "ech": "AD7+DQA65wAgAC..AA=="
+               }
            }, {
                "regeninterval": 3600,
                "priority": 1,
-               "port": 8413,
-               "ech": "AD7+DQA65wAgAC..AA=="
+               "params": {
+                   "port": 8413,
+                   "ech": "AD7+DQA65wAgAC..AA=="
+               }
            }]
        }
 
@@ -326,18 +330,17 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    registry (see IANA Considerations).  The initial registry entries
    are:
 
+
+
+
+Farrell, et al.         Expires November 22, 2024               [Page 6]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
    o  regeninterval: the number of seconds between key generation
       actions at the origin, i.e. a replacement ECHConfigList may be
       generated this often.
-
-
-
-
-Farrell, et al.         Expires October 23, 2024                [Page 6]
-
-Internet-Draft           Well-Known URI for ECH               April 2024
-
-
    o  priority: The value is a positive integer corresponding to the
       SvcPriority.  If omitted, the zone factory SHOULD infer
       numerically increasing SvcPriority from the order of the endpoints
@@ -357,21 +360,21 @@ Internet-Draft           Well-Known URI for ECH               April 2024
       does not plan to change the content at the URL for at least that
       number of seconds.  If an alias entry is present then any ech and
       port entries (if also present) MUST be ignored.
-   o  ech: The value is a string containing an ECHConfigList encoded in
-      Base64 [RFC4648], corresponding to the value of the "ech"
-      SvcParamKey.
-   o  port: The value is a non-negative integer, corresponding to the
-      value of the "port" SvcParamKey.
-   o  alpn: The value is an array of strings corresponding to the values
-      of the "alpn" SvcParamKey.  A JSON string is a sequence of Unicode
-      codepoints, while an ALPN value is a sequence of octets, so each
-      ALPN value octet is stored as a single Unicode codepoint
-      [ISOMORPHIC-DECODE].  For all ALPNs registered to date, this
-      corresponds to ordinary usage of JSON strings.
-   o  ipv4hint: The value is an array of strings corresponding to the
-      values of the "ipv4hint" SvcParamKey.
-   o  ipv6hint: The value is an array of strings corresponding to the
-      values of the "ipv6hint" SvcParamKey.
+   o  params: A JSON Dictionary representing the SVCB SvcParams.  Each
+      key in the dictionary is a string containing a registered
+      SvcParamKey name or a SvcParamKey in generic form (e.g.,
+      "key65528").
+
+      *  For single-valued SvcParams (e.g., "ech"), the value is a JSON
+         string.  A JSON string is a sequence of Unicode codepoints,
+         while a SvcParam's presentation value is a sequence of octets,
+         so each value octet is stored as a single Unicode codepoint
+         [ISOMORPHIC-DECODE].  In almost all cases, this is equivalent
+         to the ordinary string representation of the presentation
+         value.
+      *  For list-valued SvcParams (e.g., "alpn"), the value is a JSON
+         Array of Strings.  Each String represents an octet sequence, as
+         in the single-value case.
 
    An empty endpoint object corresponds to an HTTPS record with inferred
    SvcPriority, TargetName=".", and no ECH support.  An empty record of
@@ -383,17 +386,16 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
    This arrangement provides the following important properties:
 
+
+
+
+Farrell, et al.         Expires November 22, 2024               [Page 7]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
    o  Origins can indicate that different ECHConfigs are used on
       different ports.
-
-
-
-
-Farrell, et al.         Expires October 23, 2024                [Page 7]
-
-Internet-Draft           Well-Known URI for ECH               April 2024
-
-
    o  Origins can indicate that multiple CDNs are in use, each with its
       own ECHConfig.
    o  Origins that simply alias to a single target can indicate this
@@ -439,17 +441,17 @@ Internet-Draft           Well-Known URI for ECH               April 2024
    denial of service, or a privacy leak, or worse, when TLS clients
    attempt to use ECH with a backend web site.  So: Don't do that:-)
 
+
+
+
+
+Farrell, et al.         Expires November 22, 2024               [Page 8]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
    Although this configuration resource MAY be publicly accessible,
    general HTTP clients SHOULD NOT attempt to use this resource in lieu
-
-
-
-
-Farrell, et al.         Expires October 23, 2024                [Page 8]
-
-Internet-Draft           Well-Known URI for ECH               April 2024
-
-
    of HTTPS records queries through their preferred DNS server for the
    following reasons:
 
@@ -491,20 +493,25 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 10.1.  Normative References
 
+
+
+
+
+
+
+
+
+Farrell, et al.         Expires November 22, 2024               [Page 9]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
               Encrypted Client Hello", draft-ietf-tls-esni-18 (work in
               progress), March 2024,
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
               esni-18>.
-
-
-
-
-Farrell, et al.         Expires October 23, 2024                [Page 9]
-
-Internet-Draft           Well-Known URI for ECH               April 2024
-
 
    [I-D.ietf-tls-svcb-ech]
               Schwartz, B., Bishop, M., and E. Nygren, "Bootstrapping
@@ -550,16 +557,9 @@ Internet-Draft           Well-Known URI for ECH               April 2024
 
 
 
-
-
-
-
-
-
-
-Farrell, et al.         Expires October 23, 2024               [Page 10]
+Farrell, et al.         Expires November 22, 2024              [Page 10]
 
-Internet-Draft           Well-Known URI for ECH               April 2024
+Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 Appendix A.  Change Log
@@ -613,4 +613,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires October 23, 2024               [Page 11]
+Farrell, et al.         Expires November 22, 2024              [Page 11]
