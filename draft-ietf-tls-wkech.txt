@@ -385,7 +385,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    SvcParamKey is defined, the ZF MUST NOT update the DNS.  Such
    failures will not be directly visible to the client-facing server, so
    ZF implementations will need to provide some form of reporting so
-   that the situation can be resolved.
+
 
 
 
@@ -393,6 +393,9 @@ Farrell, et al.         Expires November 29, 2024               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
+
+   that the situation can be resolved.  Note that this can lead to
+   inconsistent behavior for a single origin served by multiple ZFs.
 
    A ZF MAY ignore some known params, e.g. a "dohpath" SvcParamKey
    included in params is likely irrelevant for web servers.
@@ -437,9 +440,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    MUST attempt to refresh the JSON object and regenerate the zone
    before this time.  This aims to ensure that ECHConfig values are not
    used longer than intended by backend.
-
-
-
 
 
 

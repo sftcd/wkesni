@@ -401,6 +401,7 @@ Client <-->|                    | |                    |
         the ZF MUST NOT update the DNS. Such failures will not be directly visible to
         the client-facing server, so ZF implementations will need to provide some
         form of reporting so that the situation can be resolved.
+        Note that this can lead to inconsistent behavior for a single origin served by multiple ZFs.
     </t>
 
     <t>
