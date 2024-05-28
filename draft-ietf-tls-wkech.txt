@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: November 22, 2024                           Akamai Technologies
+Expires: November 29, 2024                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                            May 21, 2024
+                                                            May 28, 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on November 22, 2024.
+   This Internet-Draft will expire on November 29, 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 1]
+Farrell, et al.         Expires November 29, 2024               [Page 1]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 2]
+Farrell, et al.         Expires November 29, 2024               [Page 2]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -125,9 +125,9 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    zone file and re-publish the zone.
 
    If ECH is being operated in split-mode then the web server (backend)
-   can similarly poll the ECH front-end at the well-known URI and then
-   create it's own value to publish for the ZF to read.  (ECH split-mode
-   is defined in [I-D.ietf-tls-esni].)
+   can similarly poll the ECH client-facing server at the well-known URI
+   and then create it's own value to publish for the ZF to read.  (ECH
+   split-mode is defined in [I-D.ietf-tls-esni] .)
 
    [[The source for this draft is in https://github.com/sftcd/wkesni/
    Issues and PRs are welcome there too.]]
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 3]
+Farrell, et al.         Expires November 29, 2024               [Page 3]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 4]
+Farrell, et al.         Expires November 29, 2024               [Page 4]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 5]
+Farrell, et al.         Expires November 29, 2024               [Page 5]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 6]
+Farrell, et al.         Expires November 29, 2024               [Page 6]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -362,11 +362,11 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
       port entries (if also present) MUST be ignored.
    o  params: A JSON Dictionary representing the SVCB SvcParams.  Each
       key in the dictionary is a string containing a registered
-      SvcParamKey name or a SvcParamKey in generic form (e.g.,
-      "key65528").
+      SvcParamKey name (e.g. "ipv6hint") or a SvcParamKey in generic
+      form (e.g., "key65528").
 
       *  For single-valued SvcParams (e.g., "ech"), the value is a JSON
-         string.  A JSON string is a sequence of Unicode codepoints,
+         String.  A JSON String is a sequence of Unicode codepoints,
          while a SvcParam's presentation value is a sequence of octets,
          so each value octet is stored as a single Unicode codepoint
          [ISOMORPHIC-DECODE].  In almost all cases, this is equivalent
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 7]
+Farrell, et al.         Expires November 29, 2024               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -445,7 +445,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 8]
+Farrell, et al.         Expires November 29, 2024               [Page 8]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -501,7 +501,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024               [Page 9]
+Farrell, et al.         Expires November 29, 2024               [Page 9]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -516,9 +516,9 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    [I-D.ietf-tls-svcb-ech]
               Schwartz, B., Bishop, M., and E. Nygren, "Bootstrapping
               TLS Encrypted ClientHello with DNS Service Bindings",
-              draft-ietf-tls-svcb-ech-01 (work in progress), March 2024,
+              draft-ietf-tls-svcb-ech-02 (work in progress), May 2024,
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              svcb-ech-01>.
+              svcb-ech-02>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -557,7 +557,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 22, 2024              [Page 10]
+Farrell, et al.         Expires November 29, 2024              [Page 10]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -579,7 +579,8 @@ Appendix A.  Change Log
    Version 04 matches a proof-of-concept bash script implementation and
    results of IETF-117 discussion.
 
-   Version 05 responds to an early artart review.
+   Version 05 responds to early artart and dnsop reviews, and some list
+   discussion/github issues.
 
 Authors' Addresses
 
@@ -612,5 +613,4 @@ Authors' Addresses
 
 
 
-
-Farrell, et al.         Expires November 22, 2024              [Page 11]
+Farrell, et al.         Expires November 29, 2024              [Page 11]

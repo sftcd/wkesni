@@ -120,10 +120,12 @@
         </t>
 
         <t>
-            If ECH is being operated in split-mode then the web server (backend) can
-            similarly poll the ECH front-end at the well-known URI and then create it's own
-            value to publish for the ZF to read. (ECH split-mode is defined in
-            <xref target="I-D.ietf-tls-esni"/>.)
+            If ECH is being operated in split-mode then the web server (backend)
+            can similarly poll the ECH client-facing server at the
+            well-known URI and then create it's own value to publish
+            for the ZF to read. (ECH split-mode is defined in
+            <xref target="I-D.ietf-tls-esni"/>
+            .)
         </t>
 
         <t>[[The source for this draft is in https://github.com/sftcd/wkesni/
@@ -576,7 +578,8 @@ Client <-->|                    | |                    |
       </t>
 
       <t>
-        Version 05 responds to an early artart review.
+          Version 05 responds to early artart and dnsop reviews, and some list
+          discussion/github issues.
       </t>
 
     </section>
