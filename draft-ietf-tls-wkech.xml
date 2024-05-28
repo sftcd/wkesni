@@ -104,7 +104,7 @@
             RR <xref target="I-D.ietf-tls-svcb-ech"/> containing the ECHConfigList.
             This mechanism is extensible to deliver other kinds of information about
             the origin, that can be of use in these circumstances, but is mainly
-            intended to provide the functionality necessary for ongoing management 
+            intended to provide the functionality necessary for ongoing management
             of ECH keys.
         </t>
 
@@ -150,7 +150,7 @@
             Note that even if client-facing server and backend are on the same web server, they almost
             certainly have different DNS names.</t>
        <t>Shared-mode: this is where client-facing and backend servers are the same web server.</t>
-       <t>Split-mode: this refers to the case where the client-facing server only does ECH decryption 
+       <t>Split-mode: this refers to the case where the client-facing server only does ECH decryption
           but the TLS session is between the client and backend, which will typically
           be on a different host to client-facing server</t>
        <t>regeninterval: the number of seconds after which the value retrieved
@@ -175,7 +175,7 @@ Client <----------->|                    |
                     |   cfs.example.com  |
                     | backend.example.com|
                     +--------------------+
-                     Client-Facing Server 
+                     Client-Facing Server
                         |            |
      (1) ZF reads       |            |  (2) ZF checks
          .well-known    V            V      ECHConfig
@@ -205,7 +205,7 @@ Client <----------->|                    |
                     at https://backend.example.com/.well-known/origin-svcb, as shown in
                     <xref target="sample-json"/>.</t>
                 <t> On the ZF, another regularly executed job uses
-                    an HTTP client to retrieve this JSON resource from backend.example.com; 
+                    an HTTP client to retrieve this JSON resource from backend.example.com;
                     this is step 1 shown in <xref target="shared-mode"/></t>
                 <t> ZF next attempts to connect to backend.example.com using these ECH values and confirms
                     that they are working.
@@ -233,7 +233,7 @@ Client <-->|                    | |                    |
            |  cfs.cdn1.example  | |  cfs.cdn2.example  |
            | backend.example.com| | backend.example.com|
            +--------------------+ +--------------------+
-                      Client-Facing Server 
+                      Client-Facing Server
                         |            |
      (1) ZF reads       |            |  (2) ZF checks
          .well-known    V            V      ECHConfig
@@ -291,12 +291,16 @@ Client <-->|                    | |                    |
             "regeninterval": 3600,
             "priority": 1,
             "target": "cdn.example.",
-            "ech": "AD7+DQA65wAgAC..AA=="
+            "params": {
+                "ech": "AD7+DQA65wAgAC..AA=="
+            }
         }, {
             "regeninterval": 3600,
             "priority": 1,
-            "port": 8413,
-            "ech": "AD7+DQA65wAgAC..AA=="
+            "params": {
+                "port": 8413,
+                "ech": "AD7+DQA65wAgAC..AA=="
+            }
         }]
     }
   ]]></artwork>
@@ -362,29 +366,26 @@ Client <-->|                    | |                    |
                 (if also present) MUST be ignored.
         </t>
             <t>
-                ech: The value is a string containing an ECHConfigList encoded
-                in Base64 <xref target="RFC4648"/>, corresponding to the value
-                of the "ech" SvcParamKey.
-            </t>
-            <t>
-                port: The value is a non-negative integer, corresponding to
-                the value of the "port" SvcParamKey.
-            </t>
-            <t>
-                alpn: The value is an array of strings corresponding to
-                the values of the "alpn" SvcParamKey.  A JSON string is a
-                sequence of Unicode codepoints, while an ALPN value is a sequence
-                of octets, so each ALPN value octet is stored as a single Unicode
-                codepoint <xref target="ISOMORPHIC-DECODE"/>.  For all ALPNs
-                registered to date, this corresponds to ordinary usage of JSON strings.
-            </t>
-            <t>
-                ipv4hint: The value is an array of strings corresponding to
-                the values of the "ipv4hint" SvcParamKey.
-            </t>
-            <t>
-                ipv6hint: The value is an array of strings corresponding to
-                the values of the "ipv6hint" SvcParamKey.
+                params: A JSON Dictionary representing the SVCB SvcParams.
+                Each key in the dictionary is a string containing a registered
+                SvcParamKey name (e.g. "ipv6hint") or a SvcParamKey in generic form (e.g.,
+                "key65528").
+                <list>
+                    <t>
+                        For single-valued SvcParams (e.g., "ech"), the value is a JSON String.
+                        A JSON String is a sequence of Unicode codepoints, while a
+                        SvcParam's presentation value is a sequence of octets, so each
+                        value octet is stored as a single Unicode codepoint <xref
+                        target="ISOMORPHIC-DECODE"/>.  In almost all cases, this is
+                        equivalent to the ordinary string representation of the presentation
+                        value.
+                    </t>
+                    <t>
+                        For list-valued SvcParams (e.g., "alpn"), the value is a JSON Array
+                        of Strings.  Each String represents an octet sequence, as in the
+                        single-value case.
+                    </t>
+                </list>
             </t>
         </list>
         An empty endpoint object corresponds to an HTTPS record with inferred
@@ -430,7 +431,7 @@ Client <-->|                    | |                    |
     <t>ZF SHOULD check that ECH with the presented endpoints
         succeeds with the backend before publication.
         In order to make such checks, the ZF SHOULD
-        attempt to access the well-known URI defined here 
+        attempt to access the well-known URI defined here
         while attempting ECH.
     </t>
 
@@ -441,7 +442,7 @@ Client <-->|                    | |                    |
         needs to allow checking for the success or failure of ECH.
     </t>
 
-    <t>If more than one ECHConfig is present in an ECHConfigList, 
+    <t>If more than one ECHConfig is present in an ECHConfigList,
        then the ZF SHOULD explode the ECHConfigList value
        presented into "singleton" values with one public key in each,
        and then test each of those separately.</t>
