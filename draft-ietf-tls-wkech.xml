@@ -397,8 +397,15 @@ Client <-->|                    | |                    |
     </t>
 
     <t>
-        [[TODO: What does the zone factory do if it encounters an unrecognized
-        field?]]
+        If the ZF does not recognise some of the JSON, e.g. when a new SvcParamKey is defined,
+        the ZF MUST NOT update the DNS. Such failures will not be directly visible to
+        the client-facing server, so ZF implementations will need to provide some
+        form of reporting so that the situation can be resolved.
+    </t>
+
+    <t>
+        A ZF MAY ignore some known params, e.g. a "dohpath" SvcParamKey included
+        in params is likely irrelevant for web servers.
     </t>
 
     <t>
