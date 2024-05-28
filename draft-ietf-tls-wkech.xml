@@ -405,8 +405,8 @@ Client <-->|                    | |                    |
     </t>
 
     <t>
-        A ZF MAY ignore some known params, e.g. a "dohpath" SvcParamKey included
-        in params is likely irrelevant for web servers.
+        A ZF MAY apply additional processing according to its own policy, such as
+        adjusting TTL values and correcting common misconfigurations.
     </t>
 
     <t>
