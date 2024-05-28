@@ -73,11 +73,11 @@ Table of Contents
    4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   5
    5.  The JSON structure for origin service binding info  . . . . .   6
    6.  Zone factory behaviour  . . . . . . . . . . . . . . . . . . .   8
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   8
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   9
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
-   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   9
-     10.1.  Normative References . . . . . . . . . . . . . . . . . .   9
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  10
      10.2.  Informative References . . . . . . . . . . . . . . . . .  10
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  11
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
@@ -381,10 +381,10 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    this kind can be useful as a simple way to make use of the HTTPS RR
    type's HSTS behavior.
 
-   [[TODO: What does the zone factory do if it encounters an
-   unrecognized field?]]
-
-   This arrangement provides the following important properties:
+   If the ZF does not recognise some of the JSON, e.g. when a new
+   SvcParamKey is defined, the ZF MUST NOT update the DNS.  Such
+   failures will not be directly visible to the client-facing server, so
+   ZF implementations will need to provide some form of reporting so
 
 
 
@@ -393,6 +393,14 @@ Farrell, et al.         Expires November 29, 2024               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
+
+   that the situation can be resolved.  Note that this can lead to
+   inconsistent behavior for a single origin served by multiple ZFs.
+
+   A ZF MAY ignore some known params, e.g. a "dohpath" SvcParamKey
+   included in params is likely irrelevant for web servers.
+
+   This arrangement provides the following important properties:
 
    o  Origins can indicate that different ECHConfigs are used on
       different ports.
@@ -433,14 +441,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    before this time.  This aims to ensure that ECHConfig values are not
    used longer than intended by backend.
 
-7.  Security Considerations
-
-   This document defines another way to publish ECHConfigList values.
-   If the wrong keys were read from here and published in the DNS, then
-   clients using ECH would do the wrong thing, likely resulting in
-   denial of service, or a privacy leak, or worse, when TLS clients
-   attempt to use ECH with a backend web site.  So: Don't do that:-)
-
 
 
 
@@ -449,6 +449,14 @@ Farrell, et al.         Expires November 29, 2024               [Page 8]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
+
+7.  Security Considerations
+
+   This document defines another way to publish ECHConfigList values.
+   If the wrong keys were read from here and published in the DNS, then
+   clients using ECH would do the wrong thing, likely resulting in
+   denial of service, or a privacy leak, or worse, when TLS clients
+   attempt to use ECH with a backend web site.  So: Don't do that:-)
 
    Although this configuration resource MAY be publicly accessible,
    general HTTP clients SHOULD NOT attempt to use this resource in lieu
@@ -489,14 +497,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    registration policy, containing a field named "Name" whose value is a
    UTF-8 string.
 
-10.  References
-
-10.1.  Normative References
-
-
-
-
-
 
 
 
@@ -505,6 +505,10 @@ Farrell, et al.         Expires November 29, 2024               [Page 9]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
+
+10.  References
+
+10.1.  Normative References
 
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
@@ -546,10 +550,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    [ISOMORPHIC-DECODE]
               WHATWG, "WHATWG definition of Isomorphic Decode",
               <https://infra.spec.whatwg.org/#isomorphic-decode>.
-
-
-
-
 
 
 

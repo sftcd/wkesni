@@ -397,8 +397,17 @@ Client <-->|                    | |                    |
     </t>
 
     <t>
-        [[TODO: What does the zone factory do if it encounters an unrecognized
-        field?]]
+        If the ZF is unable to convert the JSON into a DNS zone (e.g., due to an
+        unrecognized SvcParamKey), or if the resulting zone fails validation checks,
+        the ZF MUST NOT update the DNS. Such failures will not be directly visible to
+        the client-facing server, so ZF implementations will need to provide some
+        form of reporting so that the situation can be resolved.
+        Note that this can lead to inconsistent behavior for a single origin served by multiple ZFs.
+    </t>
+
+    <t>
+        A ZF MAY apply additional processing according to its own policy, such as
+        adjusting TTL values and correcting common misconfigurations.
     </t>
 
     <t>
