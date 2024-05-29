@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: November 29, 2024                           Akamai Technologies
+Expires: November 30, 2024                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                            May 28, 2024
+                                                            May 29, 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -38,7 +38,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on November 29, 2024.
+   This Internet-Draft will expire on November 30, 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires November 29, 2024               [Page 1]
+Farrell, et al.         Expires November 30, 2024               [Page 1]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -70,17 +70,17 @@ Table of Contents
    3.  Example uses of the well-known URI for ECH  . . . . . . . . .   4
      3.1.  Shared-mode deplpoyment.  . . . . . . . . . . . . . . . .   4
      3.2.  Split-mode, multi-CDN deplpoyment.  . . . . . . . . . . .   5
-   4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   5
+   4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   6
    5.  The JSON structure for origin service binding info  . . . . .   6
    6.  Zone factory behaviour  . . . . . . . . . . . . . . . . . . .   8
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .   9
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
    10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
      10.1.  Normative References . . . . . . . . . . . . . . . . . .  10
-     10.2.  Informative References . . . . . . . . . . . . . . . . .  10
-   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  11
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  11
+     10.2.  Informative References . . . . . . . . . . . . . . . . .  11
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  12
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  12
 
 1.  Introduction
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires November 29, 2024               [Page 2]
+Farrell, et al.         Expires November 30, 2024               [Page 2]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 29, 2024               [Page 3]
+Farrell, et al.         Expires November 30, 2024               [Page 3]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -178,18 +178,17 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
                        +--------------------+
                        |                    |
-                       |   2001:DB8::1111   |
-   Client <----------->|                    |
-                       |   cfs.example.com  |
+                       |   2001:DB8::1111   | Client-
+   Client <----------->|                    | facing
+                       |   cfs.example.com  | server
                        | backend.example.com|
                        +--------------------+
-                        Client-Facing Server
-                           |            |
+                           ^            ^
         (1) ZF reads       |            |  (2) ZF checks
             .well-known    V            V      ECHConfig
                        +--------------------+
                        |                    |
-                       |   zf.example.net   |
+                       |   zf.example.net   | Zone Factory (ZF)
                        |                    |
                        +--------------------+
                                  |
@@ -197,7 +196,7 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
                                  V
                        +--------------------+
                        |                    |
-                       |    ns.example.net  |
+                       |   ns.example.net   | Authoritative DNS
                        |                    |
                        +--------------------+
 
@@ -208,26 +207,25 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
       (e.g. a cronjob)
    o  ECHConfigList values are "current" for an hour, and remain usable
       for 3 hours from the time of generation
-   o  The cronjob updates the ECHConfigList values in a JSON resource at
-      at https://backend.example.com/.well-known/origin-svcb, as shown
-      in Figure 3.
+   o  The cronjob updates the ECHConfigList values in a JSON resource
+      (see Figure 3) at https://backend.example.com/.well-known/origin-
+      svcb
    o  On the ZF, another regularly executed job uses an HTTP client to
       retrieve this JSON resource from backend.example.com; this is step
       1 shown in Figure 1
    o  ZF next attempts to connect to backend.example.com using these ECH
       values and confirms that they are working.  this is step 2 shown
       in Figure 1
+   o  The ZF observes that the JSON resource has a regeninterval of 3600
+      seconds, and chooses a DNS TTL of 1800.  It updates the zone file
 
 
 
-
-Farrell, et al.         Expires November 29, 2024               [Page 4]
+Farrell, et al.         Expires November 30, 2024               [Page 4]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
-   o  The ZF observes that the JSON resource has a regeninterval of 3600
-      seconds, and chooses a DNS TTL of 1800.  It updates the zone file
       for backend.example.com and re-publishes the zone containing only
       the new ECHConfigList values.  this is step 3 shown in Figure 1
    o  When regeninterval seconds have passed, the ZF attempts to refresh
@@ -236,20 +234,26 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 3.2.  Split-mode, multi-CDN deplpoyment.
 
+                       +--------------------+
+                       |                    |
+                       | backend.example.com|
+                       |                    |
+                       +--------------------+
+                           ^            ^
+                           |            |
+                           V            V
               +--------------------+ +--------------------+
               |                    | |                    |
-              |   2001:DB8::1111   | |   2001:DB8::FFFF   |
-   Client <-->|                    | |                    |
-              |  cfs.cdn1.example  | |  cfs.cdn2.example  |
-              | backend.example.com| | backend.example.com|
+              |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
+   Client <-->|                    | |                    | facing
+              |  cfs.cdn1.example  | |  cfs.cdn2.example  | server
               +--------------------+ +--------------------+
-                         Client-Facing Server
-                           |            |
+                           ^            ^
         (1) ZF reads       |            |  (2) ZF checks
             .well-known    V            V      ECHConfig
                        +--------------------+
                        |                    |
-                       |   zf.example.net   |
+                       |   zf.example.net   | Zone Factory (ZF)
                        |                    |
                        +--------------------+
                                  |
@@ -257,13 +261,26 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
                                  V
                        +--------------------+
                        |                    |
-                       |    ns.example.net  |
+                       |   ns.example.net   | Authoritative DNS
                        |                    |
                        +--------------------+
 
          Figure 2: Shared-Mode Topology with Zone Factory and DNS
 
-   o  The above will change, it's a place-holder for now.
+   [[Figure 2 will change, it's a place-holder for now.]]
+
+   The steps involved here are:
+
+   o  TBD
+
+
+
+
+
+Farrell, et al.         Expires November 30, 2024               [Page 5]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
 
 4.  The origin-svcb well-known URI
 
@@ -273,14 +290,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
    The well-known URI defined here MUST be an https URL and therefore
    the ZF can verify the correct backend is being accessed.
-
-
-
-
-Farrell, et al.         Expires November 29, 2024               [Page 5]
-
-Internet-Draft           Well-Known URI for ECH                 May 2024
-
 
    If no new ECHConfig value verifies (as per Section 6), then the zone
    factory MUST NOT modify the zone.
@@ -321,6 +330,14 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
                     Figure 4: Sample JSON with aliasing
 
+
+
+
+Farrell, et al.         Expires November 30, 2024               [Page 6]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
    The JSON file at the well-known URI MUST contain an object with an
    "endpoints" key that contains an array of objects that each map to a
    desired HTTPS/SVCB resource record that the backend would like to see
@@ -329,14 +346,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    element MAY contain one or more keys from the JSON HTTP Origin Info
    registry (see IANA Considerations).  The initial registry entries
    are:
-
-
-
-
-Farrell, et al.         Expires November 29, 2024               [Page 6]
-
-Internet-Draft           Well-Known URI for ECH                 May 2024
-
 
    o  regeninterval: the number of seconds between key generation
       actions at the origin, i.e. a replacement ECHConfigList may be
@@ -376,29 +385,30 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
          Array of Strings.  Each String represents an octet sequence, as
          in the single-value case.
 
+
+
+
+
+Farrell, et al.         Expires November 30, 2024               [Page 7]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
    An empty endpoint object corresponds to an HTTPS record with inferred
    SvcPriority, TargetName=".", and no ECH support.  An empty record of
    this kind can be useful as a simple way to make use of the HTTPS RR
    type's HSTS behavior.
 
-   If the ZF does not recognise some of the JSON, e.g. when a new
-   SvcParamKey is defined, the ZF MUST NOT update the DNS.  Such
-   failures will not be directly visible to the client-facing server, so
-   ZF implementations will need to provide some form of reporting so
-
-
-
-
-Farrell, et al.         Expires November 29, 2024               [Page 7]
-
-Internet-Draft           Well-Known URI for ECH                 May 2024
-
-
-   that the situation can be resolved.  Note that this can lead to
+   If the ZF is unable to convert the JSON into a DNS zone (e.g., due to
+   an unrecognized SvcParamKey), or if the resulting zone fails
+   validation checks, the ZF MUST NOT update the DNS.  Such failures
+   will not be directly visible to the client-facing server, so ZF
+   implementations will need to provide some form of reporting so that
+   the situation can be resolved.  Note that this can lead to
    inconsistent behavior for a single origin served by multiple ZFs.
 
-   A ZF MAY ignore some known params, e.g. a "dohpath" SvcParamKey
-   included in params is likely irrelevant for web servers.
+   A ZF MAY apply additional processing according to its own policy,
+   such as adjusting TTL values and correcting common misconfigurations.
 
    This arrangement provides the following important properties:
 
@@ -431,6 +441,15 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    values with one public key in each, and then test each of those
    separately.
 
+
+
+
+
+Farrell, et al.         Expires November 30, 2024               [Page 8]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
    ZF SHOULD publish all the endpoints that are presented in the JSON
    file that pass the checks above.
 
@@ -440,15 +459,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    MUST attempt to refresh the JSON object and regenerate the zone
    before this time.  This aims to ensure that ECHConfig values are not
    used longer than intended by backend.
-
-
-
-
-
-Farrell, et al.         Expires November 29, 2024               [Page 8]
-
-Internet-Draft           Well-Known URI for ECH                 May 2024
-
 
 7.  Security Considerations
 
@@ -487,6 +497,15 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    Stephen Farrell's work on this specification was supported in part by
    the Open Technology Fund.
 
+
+
+
+
+Farrell, et al.         Expires November 30, 2024               [Page 9]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
 9.  IANA Considerations
 
    [[TBD: IANA registration of a .well-known.  Also TBD - how to handle
@@ -496,15 +515,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    registry named "JSON HTTP Origin Info" with a Standards Action
    registration policy, containing a field named "Name" whose value is a
    UTF-8 string.
-
-
-
-
-
-Farrell, et al.         Expires November 29, 2024               [Page 9]
-
-Internet-Draft           Well-Known URI for ECH                 May 2024
-
 
 10.  References
 
@@ -545,6 +555,13 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
 
+
+
+Farrell, et al.         Expires November 30, 2024              [Page 10]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
 10.2.  Informative References
 
    [ISOMORPHIC-DECODE]
@@ -557,7 +574,46 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
 
-Farrell, et al.         Expires November 29, 2024              [Page 10]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Farrell, et al.         Expires November 30, 2024              [Page 11]
 
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
@@ -613,4 +669,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires November 29, 2024              [Page 11]
+Farrell, et al.         Expires November 30, 2024              [Page 12]
