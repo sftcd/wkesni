@@ -76,8 +76,8 @@ Table of Contents
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  10
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
-   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
-     10.1.  Normative References . . . . . . . . . . . . . . . . . .  10
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  11
      10.2.  Informative References . . . . . . . . . . . . . . . . .  11
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  12
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  12
@@ -450,6 +450,11 @@ Farrell, et al.         Expires December 1, 2024                [Page 8]
 Internet-Draft           Well-Known URI for ECH                 May 2024
 
 
+   If ipv4hints or ipv6hints are present, and if those are not the same
+   values as are published in A/AAAA RRs for the backend, then the ZF
+   SHOULD check that webPKI based authentication of the backend works at
+   all of the relevant addresses.
+
    ZF SHOULD publish all the endpoints that are presented in the JSON
    file that pass the checks above.
 
@@ -480,6 +485,36 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    authenticated via HTTPS from the client-facing server's public_name
    then that satisfies this requirement.
 
+   This scheme depends on the webPKI for authentication of entities and
+   results in publication of new SVCB/HTTPS RRs.  The webPKI itself
+   however often depends on the DNS to demonstrate control over a DNS
+   name, e.g. when using the ACME protocol [RFC8555] with the HTTP-01
+   challenge type.  A temporary breach of a backend server that allows
+   the attacker to contol the JSON content described here could be used
+   to bootsrap more long-lasting control over the backend's DNS name if
+   the attacker were to request new certificates during the time when
+   the attacker's chosen values were published in the DNS, and if the
+   ACME server doing the validation solely depended on content from the
+   backend's HTTPS RR, e.g. preferring ipv6hints over the AAAA for the
+   backend.  It would seem prudent for ACME servers to be cautious if
+
+
+
+
+Farrell, et al.         Expires December 1, 2024                [Page 9]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
+
+   using ipv4hints and ipv6hint, e.g. flagging divergence between those
+   values and A/AAAA RRs.
+
+   Similarly, a ZF that also has write access to A/AAAA RRs for a
+   backend, SHOULD NOT publish HTTPS RRs that contain ipv4hints or
+   ipv6hints that are in conflict with the correct A/AAAA values unless
+   those have been verified (via webPKI) as belonging to the same
+   backend.
+
    Although the .well-known URL defined here may well be publicly
    accessible, general HTTP clients SHOULD NOT attempt to use this
    resource in lieu of HTTPS records queries through their preferred DNS
@@ -498,14 +533,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
 
    As described, in mutlti-CDN and simlar scenarios, a ZF might only
    test ECH success against one of the CDNs unless the ZF can make use
-
-
-
-Farrell, et al.         Expires December 1, 2024                [Page 9]
-
-Internet-Draft           Well-Known URI for ECH                 May 2024
-
-
    of the ipv4hints and/or ipv6hint values, or the ZF has out of band
    information about the different addresses at which
    backend.example.com can be accessed.
@@ -526,6 +553,14 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
    registry named "JSON HTTP Origin Info" with a Standards Action
    registration policy, containing a field named "Name" whose value is a
    UTF-8 string.
+
+
+
+
+Farrell, et al.         Expires December 1, 2024               [Page 10]
+
+Internet-Draft           Well-Known URI for ECH                 May 2024
+
 
 10.  References
 
@@ -554,14 +589,6 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-
-
-
-Farrell, et al.         Expires December 1, 2024               [Page 10]
-
-Internet-Draft           Well-Known URI for ECH                 May 2024
-
-
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/info/rfc8446>.
@@ -576,37 +603,10 @@ Internet-Draft           Well-Known URI for ECH                 May 2024
               WHATWG, "WHATWG definition of Isomorphic Decode",
               <https://infra.spec.whatwg.org/#isomorphic-decode>.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+   [RFC8555]  Barnes, R., Hoffman-Andrews, J., McCarney, D., and J.
+              Kasten, "Automatic Certificate Management Environment
+              (ACME)", RFC 8555, DOI 10.17487/RFC8555, March 2019,
+              <https://www.rfc-editor.org/info/rfc8555>.
 
 
 
