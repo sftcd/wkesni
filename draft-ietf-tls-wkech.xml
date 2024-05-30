@@ -482,16 +482,33 @@ Client <-->|                    | |                    | facing
 
 
     <section title="Security Considerations">
+
         <t>
-            This document defines another way to publish ECHConfigList values. If the wrong
-            keys were read from here and published in the DNS, then clients
-            using ECH would do the wrong thing, likely resulting in
-            denial of service, or a privacy leak, or worse, when TLS clients attempt to use ECH with
-            a backend web site. So: Don't do that:-)
+            This document defines a way to publish SVCB/HTTPS RR values.
+            If the wrong values were published in the DNS, then TLS clients
+            using ECH might suffer a privacy leak, or degraded service due to
+            overuse of ECH retry_configs.
         </t>
 
         <t>
-            Although this configuration resource MAY be publicly
+            When considering the content of SVCB/HTTPS RRs, the general argument for
+            the security of this scheme is that, assuming proper setup and
+            operation of the webPKI, this scheme has the backend server authenticate
+            the JSON structure that is mapped directly to the SVCB/HTTPS RR, to
+            eventually be used by TLS clients when interacting with the backend
+            server, via the client-facing server.
+        </t>
+
+        <t>
+            ECH split-mode security also requires that the backend server
+            acquire SvcParamKey values from the client-facing server via some
+            authenticated means. If the backend server acquires the JSON
+            data authenticated via HTTPS from the client-facing server's public_name
+            then that satisfies this requirement.
+        </t>
+
+        <t>
+            Although the .well-known URL defined here may well be publicly
             accessible, general HTTP clients SHOULD NOT attempt to use this
             resource in lieu of HTTPS records queries through their preferred
             DNS server for the following reasons:
@@ -551,7 +568,7 @@ Client <-->|                    | |                    | facing
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
-      <?rfc include='reference.RFC.4648'?>
+        <!-- <?rfc include='reference.RFC.4648'?> -->
       &I-D.ietf-tls-esni;
       &I-D.ietf-tls-svcb-ech;
 
