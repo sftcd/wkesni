@@ -1,5 +1,6 @@
 # XML2RFC=/Users/paul/Documents/xml2rfc-1.35/xml2rfc.tcl
-XML2RFC=xml2rfc --text --legacy
+XML2RFC =xml2rfc --text --legacy
+XML2HTML=xml2rfc --html --legacy
 
 DATE=`date +%s`
 
@@ -7,6 +8,9 @@ all: core
 
 core: 
 	$(XML2RFC) draft-ietf-tls-wkech.xml
+
+html:
+	$(XML2HTML) draft-ietf-tls-wkech.xml
 
 oldcore: 
 	$(XML2RFC) draft-farrell-tls-wkesni.xml

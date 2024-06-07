@@ -551,7 +551,6 @@ Client <-->|                    | |                    | facing
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
-      <?rfc include='reference.RFC.4648'?>
       &I-D.ietf-tls-esni;
       &I-D.ietf-tls-svcb-ech;
 
