@@ -2,9 +2,6 @@
 
 <!DOCTYPE rfc  [
   <!ENTITY nbsp    "&#160;">
-  <!ENTITY zwsp   "&#8203;">
-  <!ENTITY nbhy   "&#8209;">
-  <!ENTITY wj     "&#8288;">
 <!ENTITY I-D.ietf-tls-esni SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni">
 <!ENTITY I-D.ietf-tls-svcb-ech SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech">
 
@@ -128,9 +125,11 @@
             .)
         </t>
 
-        <t>[[The source for this draft is in https://github.com/sftcd/wkesni/
-            Issues and PRs are welcome there too.]]
-        </t>
+	<t>[[ NOTE:
+	  The source for this draft is in
+	  <eref target="https://github.com/sftcd/wkesni/"/>
+	  Issues and PRs are welcome there too.
+	]]</t>
 
       </section>
 
@@ -195,38 +194,42 @@ Client <----------->|                    | facing
                     +--------------------+
 ]]></artwork></figure>
 
-        <t>
-
-           <list style="symbols">
-                <t> Shared-mode ECH web server generates new ECHConfigList values every "regeninterval"
-                    seconds via some regular, automated process (e.g. a cronjob)</t>
-                <t> ECHConfigList values are "current" for an hour, and remain usable
-                    for 3 hours from the time of generation</t>
-                <t> The cronjob updates the ECHConfigList values in a JSON resource (see
-                    <xref target="sample-json"/>)
-                    at https://backend.example.com/.well-known/origin-svcb</t>
-                <t> On the ZF, another regularly executed job uses
-                    an HTTP client to retrieve this JSON resource from backend.example.com;
-                    this is step 1 shown in <xref target="shared-mode"/></t>
-                <t> ZF next attempts to connect to backend.example.com using these ECH values and confirms
-                    that they are working.
-                    this is step 2 shown in <xref target="shared-mode"/></t>
-                <t> The ZF observes that the JSON resource
-                    has a regeninterval of 3600 seconds, and chooses a DNS
-                    TTL of 1800.  It updates the zone file for backend.example.com and re-publishes
-                    the zone containing only the new ECHConfigList values.
-                    this is step 3 shown in <xref target="shared-mode"/></t>
-                <t> When regeninterval seconds have passed, the ZF attempts to refresh
-                    its cached copy of the JSON resource.  If the resource has changed,
-                    it repeats this process.</t>
-            </list>
-        </t>
+      <t>
+	  The shared-mode ECH server generates new ECHConfigList values every
+	  "regeninterval" seconds via some regular, automated process (e.g.,
+	  a cronjob). ECHConfigList values are "current" for an hour, and
+	  remain usable for three hours from the time of generation. The
+	  automated process updates the ECHConfigList values in a JSON
+	  resource (see <xref target="sample-json"/>) at the well-known URI,
+	  https://backend.example.com/.well-known/origin-svcb.
+      </t>
+      <t>
+	  These steps then occur.
+           <list style="numbers">
+	     <t>On the ZF, another regularly executed job uses
+	       an HTTP client to retrieve this JSON resource from backend.example.com.
+	       The data MUST be fetched via HTTPS and the certificate validity MUST
+	       be verified.</t>
+	     <t>The ZF next attempts to connect to backend.example.com using these ECH values and confirms
+	       that they are working.</t>
+	     <t> The ZF observes that the JSON resource
+	       has a regeninterval of 3600 seconds, and chooses a DNS
+	       TTL of 1800.  It updates the DNS zone file for backend.example.com and re-publishes
+	       the zone containing only the new ECHConfigList values.</t>
+	   </list>
+	  When "regeninterval" seconds have passed, the ZF attempts to
+	  refresh its cached copy of the JSON resource.  If the resource has changed,
+	  it repeats this process.
+	 </t>
 
         </section>
 
         <section title="Split-mode, multi-CDN deplpoyment.">
-
+	  <t>
+	      The following diagram, and this entire section, is a place-holder and is
+	      likely to change.</t>
 <figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="split-mode"><artwork><![CDATA[
+
                     +--------------------+
                     |                    |
                     | backend.example.com| 
@@ -239,7 +242,7 @@ Client <----------->|                    | facing
            |                    | |                    |
            |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
 Client <-->|                    | |                    | facing
-           |  cfs.cdn1.example  | |  cfs.cdn2.example  | server
+           |  cfs.cdn1.example  | |  cfs.cdn2.example  | servers
            +--------------------+ +--------------------+
                         ^            ^
      (1) ZF reads       |            |  (2) ZF checks
@@ -259,17 +262,22 @@ Client <-->|                    | |                    | facing
                     +--------------------+
 ]]></artwork></figure>
 
-            <t>[[<xref target="split-mode"/> will change, it's a place-holder for now.]]</t>
-
             <t>
-                The steps involved here are:
-                <list style="symbols">
-                    <t>TBD</t>
-                </list>
-
-            </t>
-
-        </section>
+		In this topology, the overall process is similar, but certain
+		actions must be repeated as described below.
+           <list style="numbers">
+	     <t>On the ZF, another regularly executed job uses
+	       an HTTP client to retrieve this JSON resource from the
+	       configured intermediaries.
+	       The data MUST be fetched via HTTPS and the certificate validity MUST
+	       be verified. It is TBD how the ZF knows the intermediaries.</t>
+	     <t>The ZF next attempts to connect to each intermediary using the ECH values and confirms
+	       that they are working. </t>
+	   <t>
+	       IT is TBD how the ZF sets the priorities for the backends. </t>
+	   </list>
+	    </t>
+	 </section>
     </section>
 
     <section title="The origin-svcb well-known URI">
@@ -292,7 +300,8 @@ Client <-->|                    | |                    | facing
 
 <section anchor="jsonstr" title="The JSON structure for origin service binding info">
 
-  <t>[[The JSON structure is a work in progress.]]</t>
+  <t>[[ NOTE:
+  JSON structure is a work in progress.]]</t>
 
 <figure anchor="sample-json" title="Sample JSON for ECH without aliases" >
 <artwork><![CDATA[
@@ -533,8 +542,12 @@ Client <-->|                    | |                    | facing
     </section>
 
     <section title="IANA Considerations">
-        <t>[[TBD: IANA registration of a .well-known. Also TBD - how to handle I18N for
-            $FRONTEND and $BACKEND within such a URL.]]</t>
+	<t>[[ NOTE:
+	   IANA registration of a .well-known entry.
+	  ]]</t>
+	<t>[[ NOTE:
+	  How to handle I18N for $FRONTEND and $BACKEND within such a URL.
+	  ]]</t>
 
         <t>If approved, this specification requests the creation of an IANA
             registry named "JSON HTTP Origin Info" with a Standards Action
@@ -570,7 +583,9 @@ Client <-->|                    | |                    | facing
     </references>
 
     <section title="Change Log ">
-      <t>[[RFC editor: please remove this before publication.]]</t>
+      <t>[[ NOTE:
+	RFC editor: please remove this before publication.
+      ]]</t>
 
       <t>The -00 WG draft replaces draft-farrell-tls-wkesni-03.</t>
 
