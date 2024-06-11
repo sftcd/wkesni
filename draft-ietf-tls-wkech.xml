@@ -345,120 +345,137 @@ Client <-->|                    | |                    | facing
 
     <t>
         The JSON file at the well-known URI MUST contain an object
-        with an "endpoints" key that contains an array of objects
-        that each map to a desired HTTPS/SVCB resource record that
-        the backend would like to see published.
-
-        The endpoints is an array whose elements
-        each represent HTTPS records in ServiceMode or AliasMode as
-        described below. Each element MAY contain
-        one or more keys from the JSON HTTP Origin Info registry (see
-        IANA Considerations).  The initial registry entries are:
-        <list style="symbols">
-            <t>
-                regeninterval: the number of seconds between key generation
-                actions at the origin, i.e. a replacement ECHConfigList may be
-                generated this often.
-            </t>
-            <t>
-                priority: The value is a positive integer corresponding to the
-                SvcPriority.  If omitted, the zone factory SHOULD infer
-                numerically increasing SvcPriority from the order of the
-                endpoints array.
-            </t>
-            <t>
-                target: The value is a string containing a fully qualified
-                domain name, corresponding to the HTTPS record's TargetName.
-                The default value is ".".  All labels in the name MUST contain
-                only octets from the ABNF set ALPHA / DIGIT / "-" / "_".
-            </t>
-            <t>
-                alias: The value MUST be a DNS name
-        that could be used as the TargetName of an HTTPS resource record.
-        This indicates that the backend
-        is hosted on the same endpoints as this target, and is equivalent to
-        an HTTPS AliasMode record.
-        The ZF might implement this directive
-        by publishing an AliasMode record, publishing a CNAME record, copying
-        HTTPS records from the target zone, or fetching
-        https://cfs.example.com/.well-known/origin-svcb" (if it exists).
-        In this case, the regeninterval indicates that backend does
-        not plan to change the content at the URL for at least that number of
-        seconds.
-                If an alias entry is present then any ech and port entries
-                (if also present) MUST be ignored.
-        </t>
-            <t>
-                params: A JSON Dictionary representing the SVCB SvcParams.
-                Each key in the dictionary is a string containing a registered
-                SvcParamKey name (e.g. "ipv6hint") or a SvcParamKey in generic form (e.g.,
-                "key65528").
-                <list>
-                    <t>
-                        For single-valued SvcParams (e.g., "ech"), the value is a JSON String.
-                        A JSON String is a sequence of Unicode codepoints, while a
-                        SvcParam's presentation value is a sequence of octets, so each
-                        value octet is stored as a single Unicode codepoint <xref
-                        target="ISOMORPHIC-DECODE"/>.  In almost all cases, this is
-                        equivalent to the ordinary string representation of the presentation
-                        value.
-                    </t>
-                    <t>
-                        For list-valued SvcParams (e.g., "alpn"), the value is a JSON Array
-                        of Strings.  Each String represents an octet sequence, as in the
-                        single-value case.
-                    </t>
-                </list>
-            </t>
-        </list>
+	with an "endpoints" key that contains an array of objects.
+        All other keys MUST be ignored.
+    </t>
+    <t>
+        The endpoints array MUST be a homogeneous collection of objects,
+	where every entry is either a SerivceMode entry containing
+	at least one key from the JSON HTTP Origin Info registry
+        (see IANA Considerations section), or every entry is an
+        AliasMode entry that points to another DNS name that must
+        be resolved.
+    </t>
+    <t>
         An empty endpoint object corresponds to an HTTPS record with inferred
         SvcPriority, TargetName=".", and no ECH support.  An empty record of
         this kind can be useful as a simple way to make use of the HTTPS RR
         type's HSTS behavior.
     </t>
 
-    <t>
-        If the ZF is unable to convert the JSON into a DNS zone (e.g., due to an
-        unrecognized SvcParamKey), or if the resulting zone fails validation checks,
-        the ZF MUST NOT update the DNS. Such failures will not be directly visible to
-        the client-facing server, so ZF implementations will need to provide some
-        form of reporting so that the situation can be resolved.
-        Note that this can lead to inconsistent behavior for a single origin served by multiple ZFs.
+    <t>The following keys are defined for both types of entries:
+    <list style="symbols">
+      <t>
+	  regeninterval: the number of seconds between key generation
+	  actions at the origin, i.e. a replacement ECHConfigList may be
+	  generated this often.
+      </t>
+    </list>
     </t>
 
-    <t>
-        A ZF MAY apply additional processing according to its own policy, such as
-        adjusting TTL values and correcting common misconfigurations.
-    </t>
+    <t>The following keys are defined for ServiceMode entries:
+    <list style="symbols">
+      <t>
+	  target: The value is a string containing a fully qualified
+	  domain name, corresponding to the HTTPS record's TargetName.
+	  The default value is ".".  All labels in the name MUST contain
+	  only octets from the ABNF set ALPHA / DIGIT / "-" / "_".
+      </t>
+      <t>
+	  priority: The value is a positive integer corresponding to the
+	  SvcPriority.  If omitted, the ZF MAY infer
+	  numerically increasing SvcPriority from the order of the
+	  endpoints array.
+      </t>
+      <t>
+	  params: A JSON Dictionary representing the SVCB SvcParams.  Each
+	  key in the dictionary is a string containing a registered
+	  SvcParamKey name (e.g., "ipv6hint") or a SvcParamKey in generic
+	  form (e.g., "key65528").
+	<list>
+	  <t>
+	      For single-valued SvcParams (e.g., "ech"), the value is a JSON
+	      String.  A JSON String is a sequence of Unicode codepoints,
+	      while a SvcParam's presentation value is a sequence of octets,
+	      so each value octet is stored as a single Unicode codepoint
+	      <xref target="ISOMORPHIC-DECODE"/>.  In almost all cases, this
+	      is equivalent to the ordinary string representation of the
+	      presentation value.
+	  </t>
+	  <t>
+	      For list-valued SvcParams (e.g., "alpn"), the value is a JSON Array
+	      of Strings.  Each String represents an octet sequence, as in the
+	      single-value case.
+	  </t>
+	</list>
+      </t>
+    </list>
+  </t>
 
-    <t>
-        This arrangement provides the following important properties:
-        <list style="symbols">
-            <t>
-                Origins can indicate that different ECHConfigs are used on
-                different ports.
-            </t>
-            <t>
-                Origins can indicate that multiple CDNs are in use, each with
-                its own ECHConfig.
-            </t>
-            <t>
-                Origins that simply alias to a single target can indicate this
-                without copying the ECHConfig and other parameters, which
-                can interfere with key rotation and other maintenance.
-            </t>
-            <t>
-                "port" and "target" are generally sufficient to uniquely identify
-                a ServiceMode record, so zone factories can use the endpoint list
-                to add ECH to pre-existing ServiceMode records that may have other
-                SvcParams.
-            </t>
-        </list>
+    <t>The following key is defined for AliasMode entries.  If this key is
+      present than any ech or port keys within the params key MUST be
+      ignored.
+
+    <list style="symbols">
+      <t>
+	  alias: The value MUST be a DNS name that could be used as the
+	  TargetName of an HTTPS resource record.  This indicates that the
+	  backend is hosted on the same endpoints as this target, and is
+	  equivalent to an HTTPS AliasMode record.  The ZF might implement
+	  this directive by publishing an AliasMode record, publishing a
+	  CNAME record, copying HTTPS records from the target zone, or
+	  fetching https://cfs.example.com/.well-known/origin-svcb (if it
+	  exists).  In this case, the regeninterval indicates that backend
+	  does not plan to change the content at the URL for at least that
+	  number of seconds.  If an alias entry is present then any ech and
+	  port entries (if also present) MUST be ignored.
+      </t>
+    </list>
+  </t>
+
+  <t>These definitions, taken with the <xref target="zfbehave">ZF behaviour</xref>
+      specified below, provide the following important properties:
+      <list style="symbols">
+	<t>
+	    Origins can indicate that different ECHConfigs are used on
+	    different ports.
+	</t>
+	<t>
+	    Origins can indicate that multiple CDNs are in use, each with
+	    its own ECHConfig.
+	</t>
+	<t>
+	    Origins that simply alias to a single target can indicate this
+	    without copying the ECHConfig and other parameters, which
+	    can interfere with key rotation and other maintenance.
+	</t>
+	<t>
+	    "port" and "target" are generally sufficient to uniquely identify
+	    a ServiceMode record, so zone factories can use the endpoint list
+	    to add ECH to pre-existing ServiceMode records that may have other
+	    SvcParams.
+	</t>
+      </list>
     </t>
 
 </section>
 
-<section anchor="zfbehave" title="Zone factory behaviour">
+<section anchor="zfbehave" title="Zone Factory behaviour">
+
+    <t>
+	If the ZF is unable to convert the JSON into a DNS zone (e.g., due
+	to an unrecognized SvcParamKey), or if the resulting zone fails
+	validation checks, the ZF MUST NOT update the DNS. Such failures
+	will not be directly visible to the client-facing server, so ZF
+	implementations will need to provide some form of reporting so that
+	the situation can be resolved. Note that this can lead to
+	inconsistent behavior for a single origin served by multiple ZFs.
+    </t>
+
+    <t>
+	A ZF MAY apply additional processing according to its own policy, such as
+	adjusting TTL values and correcting common misconfigurations.
+    </t>
 
     <t>ZF SHOULD check that ECH with the presented endpoints
         succeeds with the backend before publication.
