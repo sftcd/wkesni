@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: December 9, 2024                            Akamai Technologies
+Expires: December 13, 2024                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                            June 7, 2024
+                                                           June 11, 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -17,11 +17,10 @@ Expires: December 9, 2024                            Akamai Technologies
 Abstract
 
    We define a well-known URI at which an HTTP origin can inform an
-   authoritative DNS server, or other interested parties, about this
-   origin's Service Bindings, such as its "HTTPS" DNS records.  This
-   data can include Encrypted ClientHello (ECH) configurations, allowing
-   the origin, in collaboration with DNS infrastructure elements, to
-   publish and rotate its own ECH keys.
+   authoritative DNS server, or other interested parties, about its
+   Service Bindings.  The data can include Encrypted ClientHello (ECH)
+   configurations, allowing the origin, in collaboration with DNS
+   infrastructure elements, to publish and rotate its own ECH keys.
 
    The source for this draft is in <https://github.com/sftcd/wkesni/>
    Issues and PRs are welcome there too.
@@ -41,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 9, 2024.
+   This Internet-Draft will expire on December 13, 2024.
 
 Copyright Notice
 
@@ -50,15 +49,15 @@ Copyright Notice
 
    This document is subject to BCP 78 and the IETF Trust's Legal
    Provisions Relating to IETF Documents
+   (https://trustee.ietf.org/license-info) in effect on the date of
 
 
 
-Farrell, et al.         Expires December 9, 2024                [Page 1]
+Farrell, et al.         Expires December 13, 2024               [Page 1]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
-   (https://trustee.ietf.org/license-info) in effect on the date of
    publication of this document.  Please review these documents
    carefully, as they describe your rights and restrictions with respect
    to this document.  Code Components extracted from this document must
@@ -70,7 +69,7 @@ Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
-   3.  Example uses of the well-known URI for ECH  . . . . . . . . .   4
+   3.  Example uses of the well-known URI for ECH  . . . . . . . . .   3
      3.1.  Shared-mode deplpoyment.  . . . . . . . . . . . . . . . .   4
      3.2.  Split-mode, multi-CDN deplpoyment.  . . . . . . . . . . .   5
    4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   6
@@ -105,17 +104,15 @@ Table of Contents
    include an HTTPS or SVCB RR [I-D.ietf-tls-svcb-ech] containing the
    ECHConfigList.  This mechanism is extensible to deliver other kinds
    of information about the origin, that can be of use in these
+   circumstances, but is mainly intended to provide the functionality
+   necessary for ongoing management of ECH keys.
 
 
 
-
-Farrell, et al.         Expires December 9, 2024                [Page 2]
+Farrell, et al.         Expires December 13, 2024               [Page 2]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
-
-   circumstances, but is mainly intended to provide the functionality
-   necessary for ongoing management of ECH keys.
 
    We use the term "zone factory" (ZF) for the entity that does have
    write access to the zone file.  We assume the ZF can also make HTTPS
@@ -131,7 +128,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    can similarly poll the ECH client-facing server at the well-known URI
    and then create it's own value to publish for the ZF to read.  ECH
    split-mode is defined in [I-D.ietf-tls-esni] and some examples are
-   shown below (Section 3)..
+   shown below (Section 3).
 
 2.  Terminology
 
@@ -160,19 +157,18 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    o  regeninterval: the number of seconds after which the value
       retrieved after acessing a well-known URI may be changed.
 
-
-
-
-
-
-Farrell, et al.         Expires December 9, 2024                [Page 3]
-
-Internet-Draft           Well-Known URI for ECH                June 2024
-
-
 3.  Example uses of the well-known URI for ECH
 
    Some example deployments are described here.
+
+
+
+
+
+Farrell, et al.         Expires December 13, 2024               [Page 3]
+
+Internet-Draft           Well-Known URI for ECH                June 2024
+
 
 3.1.  Shared-mode deplpoyment.
 
@@ -218,16 +214,18 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       in Figure 1
    o  The ZF observes that the JSON resource has a regeninterval of 3600
       seconds, and chooses a DNS TTL of 1800.  It updates the zone file
+      for backend.example.com and re-publishes the zone containing only
+      the new ECHConfigList values.  this is step 3 shown in Figure 1
 
 
 
-Farrell, et al.         Expires December 9, 2024                [Page 4]
+
+
+Farrell, et al.         Expires December 13, 2024               [Page 4]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
-      for backend.example.com and re-publishes the zone containing only
-      the new ECHConfigList values.  this is step 3 shown in Figure 1
    o  When regeninterval seconds have passed, the ZF attempts to refresh
       its cached copy of the JSON resource.  If the resource has
       changed, it repeats this process.
@@ -277,7 +275,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 9, 2024                [Page 5]
+
+
+Farrell, et al.         Expires December 13, 2024               [Page 5]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 9, 2024                [Page 6]
+Farrell, et al.         Expires December 13, 2024               [Page 6]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 9, 2024                [Page 7]
+Farrell, et al.         Expires December 13, 2024               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -445,7 +445,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 9, 2024                [Page 8]
+Farrell, et al.         Expires December 13, 2024               [Page 8]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -501,7 +501,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 9, 2024                [Page 9]
+Farrell, et al.         Expires December 13, 2024               [Page 9]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -557,7 +557,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 9, 2024               [Page 10]
+Farrell, et al.         Expires December 13, 2024              [Page 10]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -613,7 +613,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 9, 2024               [Page 11]
+Farrell, et al.         Expires December 13, 2024              [Page 11]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -669,4 +669,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires December 9, 2024               [Page 12]
+Farrell, et al.         Expires December 13, 2024              [Page 12]
