@@ -79,7 +79,7 @@ Table of Contents
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  10
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
      9.1.  Well-known endpoint registration  . . . . . . . . . . . .  10
-     9.2.  JSON HTTP Origin Information  . . . . . . . . . . . . . .  10
+     9.2.  JSON Service Binding Info . . . . . . . . . . . . . . . .  10
    10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
      10.1.  Normative References . . . . . . . . . . . . . . . . . .  11
      10.2.  Informative References . . . . . . . . . . . . . . . . .  11
@@ -348,6 +348,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
                     Figure 4: Sample JSON with aliasing
 
    The JSON file at the well-known URI MUST contain an object with an
+<<<<<<< HEAD
    two keys: "regeninterval", whose value is a number, and "endpoints"
    whose value is an array of objects.  All other keys MUST be ignored.
 
@@ -384,6 +385,15 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    invalid configurations.
 
    The following keys are defined for ServiceMode entries:
+=======
+   "endpoints" key that contains an array of objects that each map to a
+   desired HTTPS/SVCB resource record that the backend would like to see
+   published.  The endpoints is an array whose elements each represent
+   HTTPS records in ServiceMode or AliasMode as described below.  Each
+   element MAY contain one or more keys from the JSON Service Binding
+   Info registry (see IANA Considerations).  The initial registry
+   entries are:
+>>>>>>> 8f8c464 (fixup! Fill out IANA section)
 
 
 
@@ -556,10 +566,10 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    Items in curly braces should be replaced with their actual values.
 
-9.2.  JSON HTTP Origin Information
+9.2.  JSON Service Binding Info
 
    If approved, this specification requests the creation of an IANA
-   registry named "JSON HTTP Origin Info" with a Standards Action
+   registry named "JSON Service Binding Info" with a Standards Action
    registration policy.  The table has three columns:
 
       Name: the name of the top-level field being added
