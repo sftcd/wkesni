@@ -401,7 +401,7 @@ Client <-->|                    | |                    | facing
 	  params: A JSON Dictionary representing the SVCB SvcParams.  Each
 	  key in the dictionary is a string containing a registered
 	  SvcParamKey name (e.g., "ipv6hint") or a SvcParamKey in generic
-	  form (e.g., "key65528").
+	  form (e.g., "key65528").  The default value is "{}".
 	<list>
 	  <t>
 	      For single-valued SvcParams (e.g., "ech"), the value is a JSON
