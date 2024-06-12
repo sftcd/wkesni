@@ -333,9 +333,6 @@ Client <-->|                    | |                    | facing
     <artwork><![CDATA[
      {
         "endpoints": [{
-            "alias": "cdn1.example.net",
-            "regeninterval": 108000
-        }, {
             "alias": "cdn2.example.com",
             "regeninterval": 108000
         }]
@@ -347,20 +344,32 @@ Client <-->|                    | |                    | facing
         The JSON file at the well-known URI MUST contain an object
 	with an "endpoints" key that contains an array of objects.
         All other keys MUST be ignored.
-    </t>
-    <t>
-        The endpoints array MUST be a homogeneous collection of objects,
-	where every entry is either a SerivceMode entry containing
-	at least one key from the JSON HTTP Origin Info registry
-        (see IANA Considerations section), or every entry is an
-        AliasMode entry that points to another DNS name that must
-        be resolved.
-    </t>
-    <t>
-        An empty endpoint object corresponds to an HTTPS record with inferred
-        SvcPriority, TargetName=".", and no ECH support.  An empty record of
-        this kind can be useful as a simple way to make use of the HTTPS RR
+        The length of the list implies restrictions and meaning to the content
+        of the entries:
+    <list style="symbols">
+      <t>
+        An empty endpoints array corresponds to an HTTPS record with inferred
+        SvcPriority, the TargetName equal to ".", and no ECH support.  This can
+        can be useful as a simple way to make use of the HTTPS RR
         type's HSTS behavior.
+      </t>
+      <t>
+	An endpoints array with one element can be either a ServiceMode
+	entry, containing at least one key from the JSON HTTP Origin Info
+	registry (see <xref target="iana">IANA Considerations</xref>, below)
+	or an AliasMode entry that points to another DNS name that must
+        be resolved.
+      </t>
+      <t>
+	If the endpoints array has more than one element, every item MUST
+        be a ServiceMode entry.
+      </t>
+    </list>
+    </t>
+    <t>
+	The intent of these restrictions is to reduce the chance of misconfiguration
+	by the ZF and to avoid introducing semantics not defined by
+        <xref target="RFC9460"/>.
     </t>
 
     <t>The following keys are defined for both types of entries:
@@ -412,9 +421,7 @@ Client <-->|                    | |                    | facing
     </list>
   </t>
 
-    <t>The following key is defined for AliasMode entries.  If this key is
-      present than any ech or port keys within the params key MUST be
-      ignored.
+    <t>The following key is defined for AliasMode entries.
 
     <list style="symbols">
       <t>
@@ -562,7 +569,7 @@ Client <-->|                    | |                    | facing
             the Open Technology Fund.</t>
     </section>
 
-    <section title="IANA Considerations">
+    <section anchor="iana" title="IANA Considerations">
 	<t>[[ NOTE:
 	   IANA registration of a .well-known entry.
 	  ]]</t>
@@ -585,6 +592,7 @@ Client <-->|                    | |                    | facing
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
+      <?rfc include='reference.RFC.9460'?>
       &I-D.ietf-tls-esni;
       &I-D.ietf-tls-svcb-ech;
 

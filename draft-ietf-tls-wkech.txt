@@ -340,9 +340,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
         {
            "endpoints": [{
-               "alias": "cdn1.example.net",
-               "regeninterval": 108000
-           }, {
                "alias": "cdn2.example.com",
                "regeninterval": 108000
            }]
@@ -352,18 +349,24 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    The JSON file at the well-known URI MUST contain an object with an
    "endpoints" key that contains an array of objects.  All other keys
-   MUST be ignored.
+   MUST be ignored.  The length of the list implies restrictions and
+   meaning to the content of the entries:
 
-   The endpoints array MUST be a homogeneous collection of objects,
-   where every entry is either a SerivceMode entry containing at least
-   one key from the JSON HTTP Origin Info registry (see IANA
-   Considerations section), or every entry is an AliasMode entry that
-   points to another DNS name that must be resolved.
+   o  An empty endpoints array corresponds to an HTTPS record with
+      inferred SvcPriority, the TargetName equal to ".", and no ECH
+      support.  This can can be useful as a simple way to make use of
+      the HTTPS RR type's HSTS behavior.
+   o  An endpoints array with one element can be either a ServiceMode
+      entry, containing at least one key from the JSON HTTP Origin Info
+      registry (see IANA Considerations (Section 9), below) or an
+      AliasMode entry that points to another DNS name that must be
+      resolved.
+   o  If the endpoints array has more than one element, every item MUST
+      be a ServiceMode entry.
 
-   An empty endpoint object corresponds to an HTTPS record with inferred
-   SvcPriority, TargetName=".", and no ECH support.  An empty record of
-   this kind can be useful as a simple way to make use of the HTTPS RR
-   type's HSTS behavior.
+   The intent of these restrictions is to reduce the chance of
+   misconfiguration by the ZF and to avoid introducing semantics not
+   defined by [RFC9460].
 
    The following keys are defined for both types of entries:
 
@@ -382,9 +385,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       SvcPriority from the order of the endpoints array.
    o  params: A JSON Dictionary representing the SVCB SvcParams.  Each
       key in the dictionary is a string containing a registered
-      SvcParamKey name (e.g., "ipv6hint") or a SvcParamKey in generic
-      form (e.g., "key65528").
-
 
 
 
@@ -393,6 +393,9 @@ Farrell, et al.         Expires December 14, 2024               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
+
+      SvcParamKey name (e.g., "ipv6hint") or a SvcParamKey in generic
+      form (e.g., "key65528").
 
       *  For single-valued SvcParams (e.g., "ech"), the value is a JSON
          String.  A JSON String is a sequence of Unicode codepoints,
@@ -405,9 +408,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
          Array of Strings.  Each String represents an octet sequence, as
          in the single-value case.
 
-   The following key is defined for AliasMode entries.  If this key is
-   present than any ech or port keys within the params key MUST be
-   ignored.
+   The following key is defined for AliasMode entries.
 
    o  alias: The value MUST be a DNS name that could be used as the
       TargetName of an HTTPS resource record.  This indicates that the
@@ -441,7 +442,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    If the ZF is unable to convert the JSON into a DNS zone (e.g., due to
    an unrecognized SvcParamKey), or if the resulting zone fails
    validation checks, the ZF MUST NOT update the DNS.  Such failures
-   will not be directly visible to the client-facing server, so ZF
 
 
 
@@ -450,6 +450,7 @@ Farrell, et al.         Expires December 14, 2024               [Page 8]
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
+   will not be directly visible to the client-facing server, so ZF
    implementations will need to provide some form of reporting so that
    the situation can be resolved.  Note that this can lead to
    inconsistent behavior for a single origin served by multiple ZFs.
@@ -497,7 +498,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    o  The bootstrap connection would not be able to use ECH, so it would
       reveal all the information that ECH seeks to protect.
-
 
 
 
@@ -586,16 +586,16 @@ Internet-Draft           Well-Known URI for ECH                June 2024
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
 
+   [RFC9460]  Schwartz, B., Bishop, M., and E. Nygren, "Service Binding
+              and Parameter Specification via the DNS (SVCB and HTTPS
+              Resource Records)", RFC 9460, DOI 10.17487/RFC9460,
+              November 2023, <https://www.rfc-editor.org/info/rfc9460>.
+
 10.2.  Informative References
 
    [ISOMORPHIC-DECODE]
               WHATWG, "WHATWG definition of Isomorphic Decode",
               <https://infra.spec.whatwg.org/#isomorphic-decode>.
-
-
-
-
-
 
 
 
