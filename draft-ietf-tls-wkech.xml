@@ -433,10 +433,7 @@ Client <-->|                    | |                    | facing
 	  this directive by publishing an AliasMode record, publishing a
 	  CNAME record, copying HTTPS records from the target zone, or
 	  fetching https://cfs.example.com/.well-known/origin-svcb (if it
-	  exists).  In this case, the regeninterval indicates that backend
-	  does not plan to change the content at the URL for at least that
-	  number of seconds.  If an alias entry is present then any ech and
-	  port entries (if also present) MUST be ignored.
+	  exists).
       </t>
     </list>
   </t>
