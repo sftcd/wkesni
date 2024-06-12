@@ -361,8 +361,9 @@ Client <-->|                    | |                    | facing
         be resolved.
       </t>
       <t>
-	If the endpoints array has more than one element, every item MUST
-        be a ServiceMode entry.
+	If the endpoints array has more than one element, every item SHOULD
+        be a ServiceMode entry, due to restrictions on the use of multiple AliasMode
+        records (<relref target="RFC9460" section="2.4.2" displayFormat="comma" />).
       </t>
     </list>
     </t>
