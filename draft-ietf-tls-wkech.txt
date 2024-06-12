@@ -79,7 +79,7 @@ Table of Contents
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  10
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
      9.1.  Well-known endpoint registration  . . . . . . . . . . . .  10
-     9.2.  JSON HTTP Origin Information  . . . . . . . . . . . . . .  10
+     9.2.  JSON Service Binding Info . . . . . . . . . . . . . . . .  10
    10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
      10.1.  Normative References . . . . . . . . . . . . . . . . . .  11
      10.2.  Informative References . . . . . . . . . . . . . . . . .  11
@@ -355,9 +355,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    desired HTTPS/SVCB resource record that the backend would like to see
    published.  The endpoints is an array whose elements each represent
    HTTPS records in ServiceMode or AliasMode as described below.  Each
-   element MAY contain one or more keys from the JSON HTTP Origin Info
-   registry (see IANA Considerations).  The initial registry entries
-   are:
+   element MAY contain one or more keys from the JSON Service Binding
+   Info registry (see IANA Considerations).  The initial registry
+   entries are:
 
    o  regeninterval: the number of seconds between key generation
       actions at the origin, i.e. a replacement ECHConfigList may be
@@ -539,10 +539,10 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    Items in curly braces should be replaced with their actual values.
 
-9.2.  JSON HTTP Origin Information
+9.2.  JSON Service Binding Info
 
    If approved, this specification requests the creation of an IANA
-   registry named "JSON HTTP Origin Info" with a Standards Action
+   registry named "JSON Service Binding Info" with a Standards Action
    registration policy.  The table has three columns:
 
       Name: the name of the top-level field being added

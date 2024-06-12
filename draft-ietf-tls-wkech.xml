@@ -352,7 +352,7 @@ Client <-->|                    | |                    | facing
         The endpoints is an array whose elements
         each represent HTTPS records in ServiceMode or AliasMode as
         described below. Each element MAY contain
-        one or more keys from the JSON HTTP Origin Info registry (see
+        one or more keys from the JSON Service Binding Info registry (see
         IANA Considerations).  The initial registry entries are:
         <list style="symbols">
             <t>
@@ -568,10 +568,10 @@ Client <-->|                    | |                    | facing
 	</t>
       </section>
 
-      <section title="JSON HTTP Origin Information">
+      <section title="JSON Service Binding Info">
 
         <t>If approved, this specification requests the creation of an IANA
-            registry named "JSON HTTP Origin Info" with a Standards Action
+            registry named "JSON Service Binding Info" with a Standards Action
 	  registration policy. The table has three columns:
 	<list>
 	  <t>Name: the name of the top-level field being added</t>
