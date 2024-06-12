@@ -333,9 +333,6 @@ Client <-->|                    | |                    | facing
     <artwork><![CDATA[
      {
         "endpoints": [{
-            "alias": "cdn1.example.net",
-            "regeninterval": 108000
-        }, {
             "alias": "cdn2.example.com",
             "regeninterval": 108000
         }]
@@ -347,20 +344,33 @@ Client <-->|                    | |                    | facing
         The JSON file at the well-known URI MUST contain an object
 	with an "endpoints" key that contains an array of objects.
         All other keys MUST be ignored.
-    </t>
-    <t>
-        The endpoints array MUST be a homogeneous collection of objects,
-	where every entry is either a SerivceMode entry containing
-	at least one key from the JSON HTTP Origin Info registry
-        (see IANA Considerations section), or every entry is an
-        AliasMode entry that points to another DNS name that must
-        be resolved.
-    </t>
-    <t>
-        An empty endpoint object corresponds to an HTTPS record with inferred
-        SvcPriority, TargetName=".", and no ECH support.  An empty record of
-        this kind can be useful as a simple way to make use of the HTTPS RR
+        The length of the list implies restrictions and meaning to the content
+        of the entries:
+    <list style="symbols">
+      <t>
+        An empty endpoints array corresponds to an HTTPS record with inferred
+        SvcPriority, the TargetName equal to ".", and no ECH support.  This can
+        can be useful as a simple way to make use of the HTTPS RR
         type's HSTS behavior.
+      </t>
+      <t>
+	An endpoints array with one element can be either a ServiceMode
+	entry, containing at least one key from the JSON HTTP Origin Info
+	registry (see <xref target="iana">IANA Considerations</xref>, below)
+	or an AliasMode entry that points to another DNS name that must
+        be resolved.
+      </t>
+      <t>
+	If the endpoints array has more than one element, every item SHOULD
+        be a ServiceMode entry, due to restrictions on the use of multiple AliasMode
+        records (<relref target="RFC9460" section="2.4.2" displayFormat="comma" />).
+      </t>
+    </list>
+    </t>
+    <t>
+	The intent of these restrictions is to reduce the chance of misconfiguration
+	by the ZF and to avoid introducing semantics not defined by
+        <xref target="RFC9460"/>.
     </t>
 
     <t>The following keys are defined for both types of entries:
@@ -391,7 +401,7 @@ Client <-->|                    | |                    | facing
 	  params: A JSON Dictionary representing the SVCB SvcParams.  Each
 	  key in the dictionary is a string containing a registered
 	  SvcParamKey name (e.g., "ipv6hint") or a SvcParamKey in generic
-	  form (e.g., "key65528").
+	  form (e.g., "key65528").  The default value is "{}".
 	<list>
 	  <t>
 	      For single-valued SvcParams (e.g., "ech"), the value is a JSON
@@ -412,9 +422,7 @@ Client <-->|                    | |                    | facing
     </list>
   </t>
 
-    <t>The following key is defined for AliasMode entries.  If this key is
-      present than any ech or port keys within the params key MUST be
-      ignored.
+    <t>The following key is defined for AliasMode entries.
 
     <list style="symbols">
       <t>
@@ -425,10 +433,7 @@ Client <-->|                    | |                    | facing
 	  this directive by publishing an AliasMode record, publishing a
 	  CNAME record, copying HTTPS records from the target zone, or
 	  fetching https://cfs.example.com/.well-known/origin-svcb (if it
-	  exists).  In this case, the regeninterval indicates that backend
-	  does not plan to change the content at the URL for at least that
-	  number of seconds.  If an alias entry is present then any ech and
-	  port entries (if also present) MUST be ignored.
+	  exists).
       </t>
     </list>
   </t>
@@ -437,23 +442,13 @@ Client <-->|                    | |                    | facing
       specified below, provide the following important properties:
       <list style="symbols">
 	<t>
-	    Origins can indicate that different ECHConfigs are used on
-	    different ports.
-	</t>
-	<t>
-	    Origins can indicate that multiple CDNs are in use, each with
-	    its own ECHConfig.
+	    Origins can express any useful configuration that is representable by HTTPS records, including multiple endpoints representing different ports, providers, etc.
 	</t>
 	<t>
 	    Origins that simply alias to a single target can indicate this
-	    without copying the ECHConfig and other parameters, which
-	    can interfere with key rotation and other maintenance.
-	</t>
-	<t>
-	    "port" and "target" are generally sufficient to uniquely identify
-	    a ServiceMode record, so zone factories can use the endpoint list
-	    to add ECH to pre-existing ServiceMode records that may have other
-	    SvcParams.
+	    without copying the ECHConfig and other parameters, avoiding
+	    the maintenance burden of staying synchronized with the target's
+	    key rotations and configuration updates.
 	</t>
       </list>
     </t>
@@ -562,7 +557,7 @@ Client <-->|                    | |                    | facing
             the Open Technology Fund.</t>
     </section>
 
-    <section title="IANA Considerations">
+    <section anchor="iana" title="IANA Considerations">
 	<t>[[ NOTE:
 	   IANA registration of a .well-known entry.
 	  ]]</t>
@@ -585,6 +580,7 @@ Client <-->|                    | |                    | facing
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
+      <?rfc include='reference.RFC.9460'?>
       &I-D.ietf-tls-esni;
       &I-D.ietf-tls-svcb-ech;
 
