@@ -550,10 +550,10 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       Notes: any short additional information the registrant wishes to
       add
 
-   The table should be created with the following initial entry:
+   The table should be populated with the following two entries, where
+   Items in curly braces should be replaced with their actual values,
+   and the "Notes" column is empty.
 
-      Name: endpoints
-      Reference: {This RFC}
 
 
 
@@ -562,10 +562,9 @@ Farrell, et al.         Expires December 14, 2024              [Page 10]
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
-      Notes:
-
-   Items in curly braces should be replaced with their actual values.
-   The "Notes" column is empty.
+   Name             Reference                  Notes
+   endpoints       {This RFC}
+   regeninterval   {This RFC}
 
 10.  References
 
@@ -607,6 +606,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    [ISOMORPHIC-DECODE]
               WHATWG, "WHATWG definition of Isomorphic Decode",
               <https://infra.spec.whatwg.org/#isomorphic-decode>.
+
 
 
 

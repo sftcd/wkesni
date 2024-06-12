@@ -580,14 +580,23 @@ Client <-->|                    | |                    | facing
 	</list>
         </t>
 	<t>
-	    The table should be created with the following initial entry:
-	  <list>
-	    <t>Name: endpoints</t>
-	    <t>Reference: {This RFC}</t>
-	    <t>Notes:</t>
-	  </list>
-	    Items in curly braces should be replaced with their actual values.
-	    The "Notes" column is empty.
+	    The table should be populated with the following two entries, where
+	    Items in curly braces should be replaced with their actual values,
+	    and the "Notes" column is empty.
+	  <!-- TABLE; not supported in "legacy" mode?
+	<table name="Initial values for the registry">
+	  <thead><tr><td>Name</td><td>Reference</td><td>Notes</td></tr></thead>
+	  <tr><td>endpoints</td><td>{This RFC}</td><td></td></tr>
+	  <tr><td>regeninterval</td><td>{This RFC}</td><td></td></tr>
+	</table>
+	  -->
+      </t>
+      <t>
+<figure><artwork><![CDATA[
+Name             Reference                  Notes
+endpoints       {This RFC}
+regeninterval   {This RFC}
+]]></artwork></figure>
 	</t>
 
       </section>
