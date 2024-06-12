@@ -370,9 +370,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       SHOULD be a ServiceMode entry, due to restrictions on the use of
       multiple AliasMode records (see , Section 2.4.2 [RFC9460]).
 
-   The intent of these restrictions is to reduce the chance of
-   misconfiguration by the ZF and to avoid introducing semantics not
-   defined by [RFC9460].
+   This format is designed to allow full use of the capabilities of
+   HTTPS records [RFC9460] in natural JSON while minimizing the risk of
+   invalid configurations.
 
    The following keys are defined for both types of entries:
 
@@ -384,8 +384,8 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    o  target: The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
-      value is ".".  All labels in the name MUST contain only octets
-      from the ABNF set ALPHA / DIGIT / "-" / "_".
+      value is ".".
+
 
 
 
