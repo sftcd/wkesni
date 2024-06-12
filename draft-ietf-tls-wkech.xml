@@ -380,9 +380,9 @@ Client <-->|                    | |                    | facing
     </list>
     </t>
     <t>
-	The intent of these restrictions is to reduce the chance of misconfiguration
-	by the ZF and to avoid introducing semantics not defined by
-        <xref target="RFC9460"/>.
+	This format is designed to allow full use of the capabilities of
+        HTTPS records <xref target="RFC9460"/> in natural JSON
+        while minimizing the risk of invalid configurations.
     </t>
 
     <t>The following keys are defined for both types of entries:
