@@ -348,29 +348,41 @@ Client <-->|                    | |                    | facing
         of the entries:
     <list style="symbols">
       <t>
-        An empty endpoints array corresponds to an HTTPS record with inferred
-        SvcPriority, the TargetName equal to ".", and no ECH support.  This can
-        can be useful as a simple way to make use of the HTTPS RR
-        type's HSTS behavior.
-      </t>
+	  An empty endpoints array means that all HTTPS records that the
+	  ZF has published for the origin should be deleted.
+	</t>
       <t>
-	An endpoints array with one element can be either a ServiceMode
-	entry, containing at least one key from the JSON HTTP Origin Info
-	registry (see <xref target="iana">IANA Considerations</xref>, below)
-	or an AliasMode entry that points to another DNS name that must
-        be resolved.
+	  An endpoints array with one element what can be one of
+	  three things:
+	<list style="symbols">
+	  <t>
+	    An empty object, which the ZF should take to be an HTTPS record
+	    with inferred SvcPriority, a TargetName equal to ".", and no ECH
+	    support. This can can be useful as a simple way to make use of
+	    the HTTPS RR type's HSTS behavior.
+	  </t>
+	  <t>
+	      A ServiceMode entry, containing at least one key from the JSON
+	      HTTP Origin Info registry (see <xref target="iana">IANA
+	      Considerations</xref>, below).
+	  </t>
+	  <t>
+	    An AliasMode entry that points to another DNS name that must
+	    be resolved.
+	  </t>
+	  </list>
       </t>
       <t>
 	If the endpoints array has more than one element, every item SHOULD
         be a ServiceMode entry, due to restrictions on the use of multiple AliasMode
-        records (<relref target="RFC9460" section="2.4.2" displayFormat="comma" />).
+	  records (see <xref target="RFC9460">, Section 2.4.2</xref>).
       </t>
     </list>
     </t>
     <t>
-	The intent of these restrictions is to reduce the chance of misconfiguration
-	by the ZF and to avoid introducing semantics not defined by
-        <xref target="RFC9460"/>.
+	This format is designed to allow full use of the capabilities of
+        HTTPS records <xref target="RFC9460"/> in natural JSON
+        while minimizing the risk of invalid configurations.
     </t>
 
     <t>The following keys are defined for both types of entries:
