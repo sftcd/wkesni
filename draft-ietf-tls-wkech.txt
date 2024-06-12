@@ -352,17 +352,23 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    MUST be ignored.  The length of the list implies restrictions and
    meaning to the content of the entries:
 
-   o  An empty endpoints array corresponds to an HTTPS record with
-      inferred SvcPriority, the TargetName equal to ".", and no ECH
-      support.  This can can be useful as a simple way to make use of
-      the HTTPS RR type's HSTS behavior.
-   o  An endpoints array with one element can be either a ServiceMode
-      entry, containing at least one key from the JSON HTTP Origin Info
-      registry (see IANA Considerations (Section 9), below) or an
-      AliasMode entry that points to another DNS name that must be
-      resolved.
-   o  If the endpoints array has more than one element, every item MUST
-      be a ServiceMode entry.
+   o  An empty endpoints array means that all HTTPS records that the ZF
+      has published for the origin should be deleted.
+   o  An endpoints array with one element what can be one of three
+      things:
+
+      *  An empty object, which the ZF should take to be an HTTPS record
+         with inferred SvcPriority, a TargetName equal to ".", and no
+         ECH support.  This can can be useful as a simple way to make
+         use of the HTTPS RR type's HSTS behavior.
+      *  A ServiceMode entry, containing at least one key from the JSON
+         HTTP Origin Info registry (see IANA Considerations (Section 9),
+         below).
+      *  An AliasMode entry that points to another DNS name that must be
+         resolved.
+   o  If the endpoints array has more than one element, every item
+      SHOULD be a ServiceMode entry, due to restrictions on the use of
+      multiple AliasMode records (see , Section 2.4.2 [RFC9460]).
 
    The intent of these restrictions is to reduce the chance of
    misconfiguration by the ZF and to avoid introducing semantics not
@@ -380,12 +386,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       name, corresponding to the HTTPS record's TargetName.  The default
       value is ".".  All labels in the name MUST contain only octets
       from the ABNF set ALPHA / DIGIT / "-" / "_".
-   o  priority: The value is a positive integer corresponding to the
-      SvcPriority.  If omitted, the ZF MAY infer numerically increasing
-      SvcPriority from the order of the endpoints array.
-   o  params: A JSON Dictionary representing the SVCB SvcParams.  Each
-      key in the dictionary is a string containing a registered
-
 
 
 
@@ -394,8 +394,13 @@ Farrell, et al.         Expires December 14, 2024               [Page 7]
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
+   o  priority: The value is a positive integer corresponding to the
+      SvcPriority.  If omitted, the ZF MAY infer numerically increasing
+      SvcPriority from the order of the endpoints array.
+   o  params: A JSON Dictionary representing the SVCB SvcParams.  Each
+      key in the dictionary is a string containing a registered
       SvcParamKey name (e.g., "ipv6hint") or a SvcParamKey in generic
-      form (e.g., "key65528").
+      form (e.g., "key65528").  The default value is "{}".
 
       *  For single-valued SvcParams (e.g., "ech"), the value is a JSON
          String.  A JSON String is a sequence of Unicode codepoints,
@@ -417,31 +422,26 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       this directive by publishing an AliasMode record, publishing a
       CNAME record, copying HTTPS records from the target zone, or
       fetching https://cfs.example.com/.well-known/origin-svcb (if it
-      exists).  In this case, the regeninterval indicates that backend
-      does not plan to change the content at the URL for at least that
-      number of seconds.  If an alias entry is present then any ech and
-      port entries (if also present) MUST be ignored.
+      exists).
 
    These definitions, taken with the ZF behaviour (Section 6) specified
    below, provide the following important properties:
 
-   o  Origins can indicate that different ECHConfigs are used on
-      different ports.
-   o  Origins can indicate that multiple CDNs are in use, each with its
-      own ECHConfig.
+   o  Origins can express any useful configuration that is representable
+      by HTTPS records, including multiple endpoints representing
+      different ports, providers, etc.
    o  Origins that simply alias to a single target can indicate this
-      without copying the ECHConfig and other parameters, which can
-      interfere with key rotation and other maintenance.
-   o  "port" and "target" are generally sufficient to uniquely identify
-      a ServiceMode record, so zone factories can use the endpoint list
-      to add ECH to pre-existing ServiceMode records that may have other
-      SvcParams.
+      without copying the ECHConfig and other parameters, avoiding the
+      maintenance burden of staying synchronized with the target's key
+      rotations and configuration updates.
 
 6.  Zone Factory behaviour
 
    If the ZF is unable to convert the JSON into a DNS zone (e.g., due to
    an unrecognized SvcParamKey), or if the resulting zone fails
    validation checks, the ZF MUST NOT update the DNS.  Such failures
+   will not be directly visible to the client-facing server, so ZF
+   implementations will need to provide some form of reporting so that
 
 
 
@@ -450,8 +450,6 @@ Farrell, et al.         Expires December 14, 2024               [Page 8]
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
-   will not be directly visible to the client-facing server, so ZF
-   implementations will need to provide some form of reporting so that
    the situation can be resolved.  Note that this can lead to
    inconsistent behavior for a single origin served by multiple ZFs.
 
@@ -498,6 +496,8 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    o  The bootstrap connection would not be able to use ECH, so it would
       reveal all the information that ECH seeks to protect.
+
+
 
 
 
