@@ -546,18 +546,51 @@ Client <-->|                    | |                    | facing
     </section>
 
     <section title="IANA Considerations">
-	<t>[[ NOTE:
-	   IANA registration of a .well-known entry.
-	  ]]</t>
-	<t>[[ NOTE:
-	  How to handle I18N for $FRONTEND and $BACKEND within such a URL.
-	  ]]</t>
+      <t>IANA is requested to take two actions: registering a new well-known
+      URI in the registry at
+      <eref target="https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml#well-known-uris-1"/>
+	and creating a new registry for defining items in the JSON object
+	found at that endpoint.</t>
+
+      <section title="Well-known endpoint registration">
+	<t>
+	    IANA is requested to add the following entry to the Well-Known URIs table:
+	  <list>
+	    <t>URI Suffix:  origin-svcb</t>
+	    <t>Change Controller: IETF</t>
+	    <t>Reference: {This RFC}</t>
+	    <t>Status: permanent</t>
+	    <t>Related Information: Must be fetched via HTTPS</t>
+	    <t>Date Registered: {When registered}</t>
+	    <t>Date Modified:</t>
+	  </list>
+	  Items in curly braces should be replaced with their actual values.
+	</t>
+      </section>
+
+      <section title="JSON HTTP Origin Information">
 
         <t>If approved, this specification requests the creation of an IANA
             registry named "JSON HTTP Origin Info" with a Standards Action
-            registration policy, containing a field named "Name"
-            whose value is a UTF-8 string.
+	  registration policy. The table has three columns:
+	<list>
+	  <t>Name: the name of the top-level field being added</t>
+	  <t>Reference: the document that defines the semantics of the field</t>
+	  <t>Notes: any short additional information the registrant wishes to add</t>
+	</list>
         </t>
+	<t>
+	    The table should be created with the following initial entry:
+	  <list>
+	    <t>Name: endpoints</t>
+	    <t>Reference: {This RFC}</t>
+	    <t>Notes:</t>
+	  </list>
+	    Items in curly braces should be replaced with their actual values.
+	    The "Notes" column is empty.
+	</t>
+
+      </section>
 
     </section>
   </middle>
