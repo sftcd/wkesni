@@ -400,8 +400,7 @@ Client <-->|                    | |                    | facing
       <t>
 	  target: The value is a string containing a fully qualified
 	  domain name, corresponding to the HTTPS record's TargetName.
-	  The default value is ".".  All labels in the name MUST contain
-	  only octets from the ABNF set ALPHA / DIGIT / "-" / "_".
+	  The default value is ".".
       </t>
       <t>
 	  priority: The value is a positive integer corresponding to the
