@@ -442,23 +442,13 @@ Client <-->|                    | |                    | facing
       specified below, provide the following important properties:
       <list style="symbols">
 	<t>
-	    Origins can indicate that different ECHConfigs are used on
-	    different ports.
-	</t>
-	<t>
-	    Origins can indicate that multiple CDNs are in use, each with
-	    its own ECHConfig.
+	    Origins can express any useful configuration that is representable by HTTPS records, including multiple endpoints representing different ports, providers, etc.
 	</t>
 	<t>
 	    Origins that simply alias to a single target can indicate this
-	    without copying the ECHConfig and other parameters, which
-	    can interfere with key rotation and other maintenance.
-	</t>
-	<t>
-	    "port" and "target" are generally sufficient to uniquely identify
-	    a ServiceMode record, so zone factories can use the endpoint list
-	    to add ECH to pre-existing ServiceMode records that may have other
-	    SvcParams.
+	    without copying the ECHConfig and other parameters, avoiding
+	    the maintenance burden of staying synchronized with the target's
+	    key rotations and configuration updates.
 	</t>
       </list>
     </t>
