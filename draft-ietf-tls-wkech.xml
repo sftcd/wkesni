@@ -341,7 +341,6 @@ Client <-->|                    | |                    | facing
 
     <t>
         The JSON file at the well-known URI MUST contain an object
-<<<<<<< HEAD
 	with an two keys: "regeninterval", whose value is a number, and "endpoints"
 	whose value is an array of objects.
         All other keys MUST be ignored.
@@ -390,78 +389,6 @@ Client <-->|                    | |                    | facing
 	  records (see <xref target="RFC9460">, Section 2.4.2</xref>).
       </t>
     </list>
-=======
-        with an "endpoints" key that contains an array of objects
-        that each map to a desired HTTPS/SVCB resource record that
-        the backend would like to see published.
-
-        The endpoints is an array whose elements
-        each represent HTTPS records in ServiceMode or AliasMode as
-        described below. Each element MAY contain
-        one or more keys from the JSON Service Binding Info registry (see
-        IANA Considerations).  The initial registry entries are:
-        <list style="symbols">
-            <t>
-                regeninterval: the number of seconds between key generation
-                actions at the origin, i.e. a replacement ECHConfigList may be
-                generated this often.
-            </t>
-            <t>
-                priority: The value is a positive integer corresponding to the
-                SvcPriority.  If omitted, the zone factory SHOULD infer
-                numerically increasing SvcPriority from the order of the
-                endpoints array.
-            </t>
-            <t>
-                target: The value is a string containing a fully qualified
-                domain name, corresponding to the HTTPS record's TargetName.
-                The default value is ".".  All labels in the name MUST contain
-                only octets from the ABNF set ALPHA / DIGIT / "-" / "_".
-            </t>
-            <t>
-                alias: The value MUST be a DNS name
-        that could be used as the TargetName of an HTTPS resource record.
-        This indicates that the backend
-        is hosted on the same endpoints as this target, and is equivalent to
-        an HTTPS AliasMode record.
-        The ZF might implement this directive
-        by publishing an AliasMode record, publishing a CNAME record, copying
-        HTTPS records from the target zone, or fetching
-        https://cfs.example.com/.well-known/origin-svcb" (if it exists).
-        In this case, the regeninterval indicates that backend does
-        not plan to change the content at the URL for at least that number of
-        seconds.
-                If an alias entry is present then any ech and port entries
-                (if also present) MUST be ignored.
-        </t>
-            <t>
-                params: A JSON Dictionary representing the SVCB SvcParams.
-                Each key in the dictionary is a string containing a registered
-                SvcParamKey name (e.g. "ipv6hint") or a SvcParamKey in generic form (e.g.,
-                "key65528").
-                <list>
-                    <t>
-                        For single-valued SvcParams (e.g., "ech"), the value is a JSON String.
-                        A JSON String is a sequence of Unicode codepoints, while a
-                        SvcParam's presentation value is a sequence of octets, so each
-                        value octet is stored as a single Unicode codepoint <xref
-                        target="ISOMORPHIC-DECODE"/>.  In almost all cases, this is
-                        equivalent to the ordinary string representation of the presentation
-                        value.
-                    </t>
-                    <t>
-                        For list-valued SvcParams (e.g., "alpn"), the value is a JSON Array
-                        of Strings.  Each String represents an octet sequence, as in the
-                        single-value case.
-                    </t>
-                </list>
-            </t>
-        </list>
-        An empty endpoint object corresponds to an HTTPS record with inferred
-        SvcPriority, TargetName=".", and no ECH support.  An empty record of
-        this kind can be useful as a simple way to make use of the HTTPS RR
-        type's HSTS behavior.
->>>>>>> 8f8c464 (fixup! Fill out IANA section)
     </t>
 
     <t>
@@ -681,14 +608,23 @@ Client <-->|                    | |                    | facing
 	</list>
         </t>
 	<t>
-	    The table should be created with the following initial entry:
-	  <list>
-	    <t>Name: endpoints</t>
-	    <t>Reference: {This RFC}</t>
-	    <t>Notes:</t>
-	  </list>
-	    Items in curly braces should be replaced with their actual values.
-	    The "Notes" column is empty.
+	    The table should be populated with the following two entries, where
+	    Items in curly braces should be replaced with their actual values,
+	    and the "Notes" column is empty.
+	  <!-- TABLE; not supported in "legacy" mode?
+	<table name="Initial values for the registry">
+	  <thead><tr><td>Name</td><td>Reference</td><td>Notes</td></tr></thead>
+	  <tr><td>endpoints</td><td>{This RFC}</td><td></td></tr>
+	  <tr><td>regeninterval</td><td>{This RFC}</td><td></td></tr>
+	</table>
+	  -->
+      </t>
+      <t>
+<figure><artwork><![CDATA[
+Name             Reference                  Notes
+endpoints       {This RFC}
+regeninterval   {This RFC}
+]]></artwork></figure>
 	</t>
 
       </section>
