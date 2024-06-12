@@ -310,15 +310,14 @@ Client <-->|                    | |                    | facing
 <figure anchor="sample-json" title="Sample JSON for ECH without aliases" >
 <artwork><![CDATA[
     {
+        "regeninterval": 3600,
         "endpoints": [{
-            "regeninterval": 3600,
             "priority": 1,
             "target": "cdn.example.",
             "params": {
                 "ech": "AD7+DQA65wAgAC..AA=="
             }
         }, {
-            "regeninterval": 3600,
             "priority": 1,
             "params": {
                 "port": 8413,
@@ -332,9 +331,9 @@ Client <-->|                    | |                    | facing
 <figure anchor="sample-json-alias" title="Sample JSON with aliasing" >
     <artwork><![CDATA[
      {
+        "regeninterval": 108000,
         "endpoints": [{
-            "alias": "cdn2.example.com",
-            "regeninterval": 108000
+            "alias": "cdn1.example.com",
         }]
       }
     ]]></artwork>
@@ -342,10 +341,22 @@ Client <-->|                    | |                    | facing
 
     <t>
         The JSON file at the well-known URI MUST contain an object
-	with an "endpoints" key that contains an array of objects.
+	with an two keys: "regeninterval", whose value is a number, and "endpoints"
+	whose value is an array of objects.
         All other keys MUST be ignored.
-        The length of the list implies restrictions and meaning to the content
-        of the entries:
+    </t>
+    <t>
+	The "regeninterval" must be a number greater than zero
+	and specifies the number of seconds between key generation
+	actions at the origin, i.e. a replacement ECHConfigList may be
+	generated this often.
+	This is used by the ZF to generate DNS TTL values and to determine
+        when to next poll the origin for updates.
+    </t>
+    <t>
+        The "endpoints" key is an array of objects. The number of items in
+        the array implies restrictions and meaning to the content
+        of the items:
     <list style="symbols">
       <t>
 	  An empty endpoints array means that all HTTPS records that the
@@ -379,20 +390,11 @@ Client <-->|                    | |                    | facing
       </t>
     </list>
     </t>
+
     <t>
 	This format is designed to allow full use of the capabilities of
         HTTPS records <xref target="RFC9460"/> in natural JSON
         while minimizing the risk of invalid configurations.
-    </t>
-
-    <t>The following keys are defined for both types of entries:
-    <list style="symbols">
-      <t>
-	  regeninterval: the number of seconds between key generation
-	  actions at the origin, i.e. a replacement ECHConfigList may be
-	  generated this often.
-      </t>
-    </list>
     </t>
 
     <t>The following keys are defined for ServiceMode entries:
