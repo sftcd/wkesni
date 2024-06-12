@@ -74,7 +74,7 @@ Table of Contents
      3.2.  Split-mode, multi-CDN deplpoyment.  . . . . . . . . . . .   5
    4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   6
    5.  The JSON structure for origin service binding info  . . . . .   6
-   6.  Zone Factory behaviour  . . . . . . . . . . . . . . . . . . .   8
+   6.  Zone Factory behaviour  . . . . . . . . . . . . . . . . . . .   9
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  10
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
@@ -310,15 +310,14 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    [[ NOTE: JSON structure is a work in progress.]]
 
        {
+           "regeninterval": 3600,
            "endpoints": [{
-               "regeninterval": 3600,
                "priority": 1,
                "target": "cdn.example.",
                "params": {
                    "ech": "AD7+DQA65wAgAC..AA=="
                }
            }, {
-               "regeninterval": 3600,
                "priority": 1,
                "params": {
                    "port": 8413,
@@ -333,24 +332,34 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
+
 Farrell, et al.         Expires December 14, 2024               [Page 6]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
         {
+           "regeninterval": 108000,
            "endpoints": [{
-               "alias": "cdn2.example.com",
-               "regeninterval": 108000
+               "alias": "cdn1.example.com",
            }]
          }
 
                     Figure 4: Sample JSON with aliasing
 
    The JSON file at the well-known URI MUST contain an object with an
-   "endpoints" key that contains an array of objects.  All other keys
-   MUST be ignored.  The length of the list implies restrictions and
-   meaning to the content of the entries:
+   two keys: "regeninterval", whose value is a number, and "endpoints"
+   whose value is an array of objects.  All other keys MUST be ignored.
+
+   The "regeninterval" must be a number greater than zero and specifies
+   the number of seconds between key generation actions at the origin,
+   i.e. a replacement ECHConfigList may be generated this often.  This
+   is used by the ZF to generate DNS TTL values and to determine when to
+   next poll the origin for updates.
+
+   The "endpoints" key is an array of objects.  The number of items in
+   the array implies restrictions and meaning to the content of the
+   items:
 
    o  An empty endpoints array means that all HTTPS records that the ZF
       has published for the origin should be deleted.
@@ -374,17 +383,8 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    HTTPS records [RFC9460] in natural JSON while minimizing the risk of
    invalid configurations.
 
-   The following keys are defined for both types of entries:
-
-   o  regeninterval: the number of seconds between key generation
-      actions at the origin, i.e. a replacement ECHConfigList may be
-      generated this often.
-
    The following keys are defined for ServiceMode entries:
 
-   o  target: The value is a string containing a fully qualified domain
-      name, corresponding to the HTTPS record's TargetName.  The default
-      value is ".".
 
 
 
@@ -394,6 +394,9 @@ Farrell, et al.         Expires December 14, 2024               [Page 7]
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
+   o  target: The value is a string containing a fully qualified domain
+      name, corresponding to the HTTPS record's TargetName.  The default
+      value is ".".
    o  priority: The value is a positive integer corresponding to the
       SvcPriority.  If omitted, the ZF MAY infer numerically increasing
       SvcPriority from the order of the endpoints array.
@@ -435,13 +438,10 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       maintenance burden of staying synchronized with the target's key
       rotations and configuration updates.
 
-6.  Zone Factory behaviour
 
-   If the ZF is unable to convert the JSON into a DNS zone (e.g., due to
-   an unrecognized SvcParamKey), or if the resulting zone fails
-   validation checks, the ZF MUST NOT update the DNS.  Such failures
-   will not be directly visible to the client-facing server, so ZF
-   implementations will need to provide some form of reporting so that
+
+
+
 
 
 
@@ -450,6 +450,13 @@ Farrell, et al.         Expires December 14, 2024               [Page 8]
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
+6.  Zone Factory behaviour
+
+   If the ZF is unable to convert the JSON into a DNS zone (e.g., due to
+   an unrecognized SvcParamKey), or if the resulting zone fails
+   validation checks, the ZF MUST NOT update the DNS.  Such failures
+   will not be directly visible to the client-facing server, so ZF
+   implementations will need to provide some form of reporting so that
    the situation can be resolved.  Note that this can lead to
    inconsistent behavior for a single origin served by multiple ZFs.
 
@@ -491,13 +498,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    Although this configuration resource MAY be publicly accessible,
    general HTTP clients SHOULD NOT attempt to use this resource in lieu
-   of HTTPS records queries through their preferred DNS server for the
-   following reasons:
-
-   o  The bootstrap connection would not be able to use ECH, so it would
-      reveal all the information that ECH seeks to protect.
-
-
 
 
 
@@ -506,6 +506,11 @@ Farrell, et al.         Expires December 14, 2024               [Page 9]
 Internet-Draft           Well-Known URI for ECH                June 2024
 
 
+   of HTTPS records queries through their preferred DNS server for the
+   following reasons:
+
+   o  The bootstrap connection would not be able to use ECH, so it would
+      reveal all the information that ECH seeks to protect.
    o  The origin could serve the user with a uniquely identifying
       configuration, potentially resulting in an unexpected tracking
       vector.
@@ -544,12 +549,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 10.1.  Normative References
 
-   [I-D.ietf-tls-esni]
-              Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
-              Encrypted Client Hello", draft-ietf-tls-esni-18 (work in
-              progress), March 2024,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              esni-18>.
+
 
 
 
@@ -561,6 +561,13 @@ Farrell, et al.         Expires December 14, 2024              [Page 10]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
+
+   [I-D.ietf-tls-esni]
+              Rescorla, E., Oku, K., Sullivan, N., and C. Wood, "TLS
+              Encrypted Client Hello", draft-ietf-tls-esni-18 (work in
+              progress), March 2024,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
+              esni-18>.
 
    [I-D.ietf-tls-svcb-ech]
               Schwartz, B., Bishop, M., and E. Nygren, "Bootstrapping
@@ -596,13 +603,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    [ISOMORPHIC-DECODE]
               WHATWG, "WHATWG definition of Isomorphic Decode",
               <https://infra.spec.whatwg.org/#isomorphic-decode>.
-
-
-
-
-
-
-
 
 
 
