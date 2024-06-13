@@ -572,7 +572,9 @@ Client <-->|                    | |                    | facing
 
         <t>If approved, this specification requests the creation of an IANA
             registry named "JSON Service Binding Info" with a Standards Action
-	  registration policy. The table has three columns:
+	  registration policy. The request is to put the table in a new file
+	  "json-svcb.xml" in the existing "dns-svcb" registry group.
+	  The table has three columns:
 	<list>
 	  <t>Name: the name of the top-level field being added</t>
 	  <t>Reference: the document that defines the semantics of the field</t>
