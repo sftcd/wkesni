@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: December 14, 2024                           Akamai Technologies
+Expires: December 15, 2024                           Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                           June 12, 2024
+                                                           June 13, 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -40,7 +40,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 14, 2024.
+   This Internet-Draft will expire on December 15, 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 1]
+Farrell, et al.         Expires December 15, 2024               [Page 1]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -78,8 +78,10 @@ Table of Contents
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
    8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  10
    9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  10
-   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  10
-     10.1.  Normative References . . . . . . . . . . . . . . . . . .  10
+     9.1.  Well-known endpoint registration  . . . . . . . . . . . .  10
+     9.2.  JSON Service Binding Info . . . . . . . . . . . . . . . .  10
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  11
      10.2.  Informative References . . . . . . . . . . . . . . . . .  11
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  12
    Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  12
@@ -104,15 +106,16 @@ Table of Contents
    include an HTTPS or SVCB RR [I-D.ietf-tls-svcb-ech] containing the
    ECHConfigList.  This mechanism is extensible to deliver other kinds
    of information about the origin, that can be of use in these
-   circumstances, but is mainly intended to provide the functionality
-   necessary for ongoing management of ECH keys.
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 2]
+Farrell, et al.         Expires December 15, 2024               [Page 2]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
+
+   circumstances, but is mainly intended to provide the functionality
+   necessary for ongoing management of ECH keys.
 
    We use the term "zone factory" (ZF) for the entity that does have
    write access to the zone file.  We assume the ZF can also make HTTPS
@@ -162,10 +165,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-
-
-
-Farrell, et al.         Expires December 14, 2024               [Page 3]
+Farrell, et al.         Expires December 15, 2024               [Page 3]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 4]
+Farrell, et al.         Expires December 15, 2024               [Page 4]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 5]
+Farrell, et al.         Expires December 15, 2024               [Page 5]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 6]
+Farrell, et al.         Expires December 15, 2024               [Page 6]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -355,9 +355,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    desired HTTPS/SVCB resource record that the backend would like to see
    published.  The endpoints is an array whose elements each represent
    HTTPS records in ServiceMode or AliasMode as described below.  Each
-   element MAY contain one or more keys from the JSON HTTP Origin Info
-   registry (see IANA Considerations).  The initial registry entries
-   are:
+   element MAY contain one or more keys from the JSON Service Binding
+   Info registry (see IANA Considerations).  The initial registry
+   entries are:
 
    o  regeninterval: the number of seconds between key generation
       actions at the origin, i.e. a replacement ECHConfigList may be
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 7]
+Farrell, et al.         Expires December 15, 2024               [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -445,7 +445,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 8]
+Farrell, et al.         Expires December 15, 2024               [Page 8]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -501,7 +501,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires December 14, 2024               [Page 9]
+Farrell, et al.         Expires December 15, 2024               [Page 9]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -518,15 +518,57 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 9.  IANA Considerations
 
-   [[ NOTE: IANA registration of a .well-known entry.  ]]
+   IANA is requested to take two actions: registering a new well-known
+   URI in the registry at <https://www.iana.org/assignments/well-known-
+   uris/well-known-uris.xhtml#well-known-uris-1> and creating a new
+   registry for defining items in the JSON object found at that
+   endpoint.
 
-   [[ NOTE: How to handle I18N for $FRONTEND and $BACKEND within such a
-   URL.  ]]
+9.1.  Well-known endpoint registration
+
+   IANA is requested to add the following entry to the Well-Known URIs
+   table:
+
+      URI Suffix: origin-svcb
+      Change Controller: IETF
+      Reference: {This RFC}
+      Status: permanent
+      Related Information: Must be fetched via HTTPS
+      Date Registered: {When registered}
+      Date Modified:
+
+   Items in curly braces should be replaced with their actual values.
+
+9.2.  JSON Service Binding Info
 
    If approved, this specification requests the creation of an IANA
-   registry named "JSON HTTP Origin Info" with a Standards Action
-   registration policy, containing a field named "Name" whose value is a
-   UTF-8 string.
+   registry named "JSON Service Binding Info" with a Standards Action
+   registration policy.  The request is to put the table in a new file
+   "json-svcb.xml" in the existing "dns-svcb" registry group.  The table
+   has three columns:
+
+      Name: the name of the top-level field being added
+      Reference: the document that defines the semantics of the field
+      Notes: any short additional information the registrant wishes to
+      add
+
+
+
+
+
+
+Farrell, et al.         Expires December 15, 2024              [Page 10]
+
+Internet-Draft           Well-Known URI for ECH                June 2024
+
+
+   The table should be populated with the following two entries, where
+   Items in curly braces should be replaced with their actual values,
+   and the "Notes" column is empty.
+
+   Name             Reference                  Notes
+   endpoints       {This RFC}
+   regeninterval   {This RFC}
 
 10.  References
 
@@ -555,13 +597,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/info/rfc8174>.
 
-
-
-Farrell, et al.         Expires December 14, 2024              [Page 10]
-
-Internet-Draft           Well-Known URI for ECH                June 2024
-
-
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/info/rfc8446>.
@@ -578,42 +613,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.         Expires December 14, 2024              [Page 11]
+Farrell, et al.         Expires December 15, 2024              [Page 11]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -669,4 +669,4 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires December 14, 2024              [Page 12]
+Farrell, et al.         Expires December 15, 2024              [Page 12]
