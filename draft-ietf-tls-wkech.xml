@@ -405,6 +405,9 @@ Client <-->|                    | |                    | facing
 	  The default value is ".".
       </t>
       <t>
+           [[ TODO: Restrict the allowed characters or specify the encoding rules for TargetName. ]]
+      </t>
+      <t>
 	  priority: The value is a positive integer corresponding to the
 	  SvcPriority.  If omitted, the ZF MAY infer
 	  numerically increasing SvcPriority from the order of the
