@@ -431,7 +431,7 @@ Client <-->|                    | |                    | facing
 	  front of the origin.</t>
 	<t>Configuring any intermediaries to preserve the well-known resource from
 	  the origin.</t>
-	<t>Use a mechanism other than HTTP over TLS to fetch the data.</t>
+	<t>Using a mechanism other than HTTP over TLS to transfer the configuration.</t>
       </list>
     </t>
 
