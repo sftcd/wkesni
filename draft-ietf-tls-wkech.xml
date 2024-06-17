@@ -429,7 +429,7 @@ Client <-->|                    | |                    | facing
 	<t>A not-obvious DNS name for the true origin known to the ZF; this
 	is also common practice when a CDN or other intermediary is used in
 	  front of the origin.</t>
-	<t>Configurating the intermediary to not modify the well-known resource from
+	<t>Configuring any intermediaries to preserve the well-known resource from
 	  the origin.</t>
 	<t>Use a mechanism other than HTTP over TLS to fetch the data.</t>
       </list>
