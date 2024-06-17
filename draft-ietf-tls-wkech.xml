@@ -419,8 +419,12 @@ Client <-->|                    | |                    | facing
 
     <t>
 	The ZF must make sure that it is using an unmodified version of the well-known
-	resource. There are a number of ways to achieve this, but recommending one
-	is outside the scope of this document. Possibilities include:
+	resource. Unless other arrangements are made, the ZF MUST fetch
+	the well-known endpoint securely from the relevant origin, and any
+	HTTP gateways MUST NOT modify or inject their own version of the
+	resource.
+        Details about the nature of other arrangements are outside the scope
+        of this document, but possibilities include:
       <list>
 	<t>A not-obvious DNS name for the true origin known to the ZF; this
 	is also common practice when a CDN or other intermediary is used in
