@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="US-ASCII"?>
 
 <!DOCTYPE rfc  [
-  <!ENTITY nbsp    "&#160;">
 <!ENTITY I-D.ietf-tls-esni SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni">
 <!ENTITY I-D.ietf-tls-svcb-ech SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech">
 
@@ -15,43 +14,36 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-05" ipr="trust200902" >
+<rfc category="exp" docName="draft-ietf-tls-wkech-05" ipr="trust200902" submissionType="IETF">
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
     <author fullname="Stephen Farrell" initials="S." surname="Farrell">
       <organization>Trinity College Dublin</organization>
-
       <address>
         <postal>
           <street/>
-
           <city>Dublin</city>
-
           <region/>
-
           <code>2</code>
-
           <country>Ireland</country>
         </postal>
-
         <phone>+353-1-896-2354</phone>
-
         <email>stephen.farrell@cs.tcd.ie</email>
       </address>
     </author>
 
     <author initials="R." surname="Salz" fullname="Rich Salz">
-        <organization>Akamai Technologies</organization>
-        <address>
-            <email>rsalz@akamai.com</email>
-        </address>
+      <organization>Akamai Technologies</organization>
+      <address>
+	<email>rsalz@akamai.com</email>
+      </address>
     </author>
 
     <author initials="B." surname="Schwartz" fullname="Benjamin Schwartz">
       <organization>Meta Platforms, Inc.</organization>
       <address>
-        <email>ietf@bemasc.net</email>
+	<email>ietf@bemasc.net</email>
       </address>
     </author>
 
@@ -74,12 +66,13 @@
             configurations, allowing the origin, in collaboration with DNS
             infrastructure elements, to publish and rotate its own ECH keys.
         </t>
-	<t>
-	  The source for this draft is in <eref target="https://github.com/sftcd/wkesni/"/>
-	  Issues and PRs are welcome there too.
-	</t>
       </abstract>
-  </front>
+      <note removeInRFC="true">
+	<t>The source for this draft is in
+	  <eref target="https://github.com/sftcd/wkesni/"/>
+	  Issues and PRs are welcome there too.</t>
+      </note>
+    </front>
 
   <middle>
     <section title="Introduction">
@@ -129,12 +122,6 @@
 	    <xref target="examples">below</xref>.
         </t>
 
-	<t>[[ NOTE:
-	  The source for this draft is in
-	  <eref target="https://github.com/sftcd/wkesni/"/>
-	  Issues and PRs are welcome there too.
-	]]</t>
-
       </section>
 
       <section title="Terminology">
@@ -145,22 +132,28 @@
         when, they appear in all capitals, as shown here.</t>
 
     <t>We define or re-use the following terms:
-    <list style="symbols">
-        <t>Zone factory (ZF): an entity that has write-access to the DNS</t>
-        <t>Client-Facing Server: the web server that has an ECH private value. This
-            processes the outer ClientHello and attempts ECH decryption.
-            The name of client-facing server will typically be the public_name value used in an
-            ECHConfig.</t>
-       <t>Backend: the web server that will process the inner ClientHello.
-            Note that even if client-facing server and backend are on the same web server, they almost
-            certainly have different DNS names.</t>
-       <t>Shared-mode: this is where client-facing and backend servers are the same web server.</t>
-       <t>Split-mode: this refers to the case where the client-facing server only does ECH decryption
-          but the TLS session is between the client and backend, which will typically
-          be on a different host to client-facing server</t>
-       <t>regeninterval: the number of seconds after which the value retrieved
-           after acessing a well-known URI may be changed.</t>
-    </list>
+    <dl>
+      <dt>Zone factory (ZF):</dt>
+      <dd>an entity that has write-access to the DNS</dd>
+      <dt>Client-Facing Server:</dt>
+      <dd>the web server that has an ECH private value. This
+	processes the outer ClientHello and attempts ECH decryption.
+	The name of client-facing server will typically be the public_name value used in an
+	ECHConfig.</dd>
+      <dt>Backend:</dt>
+      <dd>the web server that will process the inner ClientHello.
+	Note that even if client-facing server and backend are on the same web server, they almost
+	certainly have different DNS names.</dd>
+      <dt>Shared-mode:</dt>
+      <dd>this is where client-facing and backend servers are the same web server.</dd>
+      <dt>Split-mode:</dt>
+      <dd>this refers to the case where the client-facing server only does ECH decryption
+	but the TLS session is between the client and backend, which will typically
+	be on a different host to client-facing server</dd>
+      <dt>regeninterval:</dt>
+      <dd>the number of seconds after which the value retrieved
+	after acessing a well-known URI may be changed.</dd>
+    </dl>
     </t>
 
       </section>
@@ -208,19 +201,19 @@ Client <----------->|                    | facing
 	  https://backend.example.com/.well-known/origin-svcb.
       </t>
       <t>
-	  These steps then occur.
-           <list style="numbers">
-	     <t>On the ZF, another regularly executed job uses
+	  These steps then occur:
+           <ol>
+	     <li>On the ZF, another regularly executed job uses
 	       an HTTP client to retrieve this JSON resource from backend.example.com.
 	       The data MUST be fetched via HTTPS and the certificate validity MUST
-	       be verified.</t>
-	     <t>The ZF next attempts to connect to backend.example.com using these ECH values and confirms
-	       that they are working.</t>
-	     <t> The ZF observes that the JSON resource
+	       be verified.</li>
+	     <li>The ZF next attempts to connect to backend.example.com using these ECH values and confirms
+	       that they are working.</li>
+	     <li> The ZF observes that the JSON resource
 	       has a regeninterval of 3600 seconds, and chooses a DNS
 	       TTL of 1800.  It updates the DNS zone file for backend.example.com and re-publishes
-	       the zone containing only the new ECHConfigList values.</t>
-	   </list>
+	       the zone containing only the new ECHConfigList values.</li>
+	   </ol>
 	  When "regeninterval" seconds have passed, the ZF attempts to
 	  refresh its cached copy of the JSON resource.  If the resource has changed,
 	  it repeats this process.
@@ -269,18 +262,20 @@ Client <-->|                    | |                    | facing
             <t>
 		In this topology, the overall process is similar, but certain
 		actions must be repeated as described below.
-           <list style="numbers">
-	     <t>On the ZF, another regularly executed job uses
+           <ol>
+	     <li>On the ZF, another regularly executed job uses
 	       an HTTP client to retrieve this JSON resource from the
 	       configured intermediaries.
 	       The data MUST be fetched via HTTPS and the certificate validity MUST
-	       be verified. It is TBD how the ZF knows the intermediaries.</t>
-	     <t>The ZF next attempts to connect to each intermediary using the ECH values and confirms
-	       that they are working. </t>
-	   <t>
-	       IT is TBD how the ZF sets the priorities for the backends. </t>
-	   </list>
+	       be verified.</li>
+	     <li>The ZF next attempts to connect to each intermediary using the ECH values and confirms
+	       that they are working. </li>
+	   </ol>
 	    </t>
+	    <t>How the ZF knows the DNS and TLS service names of the intermediaries is outside
+	      the scope of this document, as is specifying how the ZF determines the
+	      prioritity values.
+	  </t>
 	 </section>
     </section>
 
@@ -303,9 +298,6 @@ Client <-->|                    | |                    | facing
 
 
 <section anchor="jsonstr" title="The JSON structure for origin service binding info">
-
-  <t>[[ NOTE:
-  JSON structure is a work in progress.]]</t>
 
 <figure anchor="sample-json" title="Sample JSON for ECH without aliases" >
 <artwork><![CDATA[
@@ -357,38 +349,38 @@ Client <-->|                    | |                    | facing
         The "endpoints" key is an array of objects. The number of items in
         the array implies restrictions and meaning to the content
         of the items:
-    <list style="symbols">
-      <t>
+    <ul>
+      <li>
 	  An empty endpoints array means that all HTTPS records that the
 	  ZF has published for the origin should be deleted.
-	</t>
-      <t>
+	</li>
+      <li>
 	  An endpoints array with one element what can be one of
 	  three things:
-	<list style="symbols">
-	  <t>
+	<ol>
+	  <li>
 	    An empty object, which the ZF should take to be an HTTPS record
 	    with inferred SvcPriority, a TargetName equal to ".", and no ECH
 	    support. This can can be useful as a simple way to make use of
 	    the HTTPS RR type's HSTS behavior.
-	  </t>
-	  <t>
+	  </li>
+	  <li>
 	      A ServiceMode entry, containing at least one key from the JSON
 	      HTTP Origin Info registry (see <xref target="iana">IANA
 	      Considerations</xref>, below).
-	  </t>
-	  <t>
+	  </li>
+	  <li>
 	    An AliasMode entry that points to another DNS name that must
 	    be resolved.
-	  </t>
-	  </list>
-      </t>
-      <t>
+	  </li>
+	  </ol>
+      </li>
+      <li>
 	If the endpoints array has more than one element, every item SHOULD
         be a ServiceMode entry, due to restrictions on the use of multiple AliasMode
 	  records (see <xref target="RFC9460">, Section 2.4.2</xref>).
-      </t>
-    </list>
+      </li>
+    </ul>
     </t>
 
     <t>
@@ -397,29 +389,26 @@ Client <-->|                    | |                    | facing
         while minimizing the risk of invalid configurations.
     </t>
 
-    <t>The following keys are defined for ServiceMode entries:
-    <list style="symbols">
-      <t>
-	  target: The value is a string containing a fully qualified
-	  domain name, corresponding to the HTTPS record's TargetName.
-	  The default value is ".".
-      </t>
-      <t>
-           [[ TODO: Restrict the allowed characters or specify the encoding rules for TargetName. ]]
-      </t>
-      <t>
-	  priority: The value is a positive integer corresponding to the
+  <t>The following keys are defined for ServiceMode entries:
+    <dl>
+      <dt>target:</dt>
+      <dd>The value is a string containing a fully qualified
+	domain name, corresponding to the HTTPS record's TargetName.
+	The default value is ".".
+        Do we need to Restrict the allowed characters or specify the encoding rules for TargetName?
+      </dd>
+      <dt>priority:</dt>
+      <dd>The value is a positive integer corresponding to the
 	  SvcPriority.  If omitted, the ZF MAY infer
 	  numerically increasing SvcPriority from the order of the
-	  endpoints array.
-      </t>
-      <t>
-	  params: A JSON Dictionary representing the SVCB SvcParams.  Each
+	  endpoints array.</dd>
+      <dt>params:</dt>
+      <dd>A JSON Dictionary representing the SVCB SvcParams.  Each
 	  key in the dictionary is a string containing a registered
 	  SvcParamKey name (e.g., "ipv6hint") or a SvcParamKey in generic
 	  form (e.g., "key65528").  The default value is "{}".
-	<list>
-	  <t>
+	<ul>
+	  <li>
 	      For single-valued SvcParams (e.g., "ech"), the value is a JSON
 	      String.  A JSON String is a sequence of Unicode codepoints,
 	      while a SvcParam's presentation value is a sequence of octets,
@@ -427,22 +416,21 @@ Client <-->|                    | |                    | facing
 	      <xref target="ISOMORPHIC-DECODE"/>.  In almost all cases, this
 	      is equivalent to the ordinary string representation of the
 	      presentation value.
-	  </t>
-	  <t>
+	  </li>
+	  <li>
 	      For list-valued SvcParams (e.g., "alpn"), the value is a JSON Array
 	      of Strings.  Each String represents an octet sequence, as in the
 	      single-value case.
-	  </t>
-	</list>
-      </t>
-    </list>
+	  </li>
+	</ul>
+      </dd>
+    </dl>
   </t>
 
-    <t>The following key is defined for AliasMode entries.
-
-    <list style="symbols">
-      <t>
-	  alias: The value MUST be a DNS name that could be used as the
+  <t>The following key is defined for AliasMode entries.
+    <dl>
+      <dt>alias:</dt>
+      <dd>The value MUST be a DNS name that could be used as the
 	  TargetName of an HTTPS resource record.  This indicates that the
 	  backend is hosted on the same endpoints as this target, and is
 	  equivalent to an HTTPS AliasMode record.  The ZF might implement
@@ -450,23 +438,23 @@ Client <-->|                    | |                    | facing
 	  CNAME record, copying HTTPS records from the target zone, or
 	  fetching https://cfs.example.com/.well-known/origin-svcb (if it
 	  exists).
-      </t>
-    </list>
+      </dd>
+    </dl>
   </t>
 
   <t>These definitions, taken with the <xref target="zfbehave">ZF behaviour</xref>
       specified below, provide the following important properties:
-      <list style="symbols">
-	<t>
+    <ul>
+	<li>
 	    Origins can express any useful configuration that is representable by HTTPS records, including multiple endpoints representing different ports, providers, etc.
-	</t>
-	<t>
+	</li>
+	<li>
 	    Origins that simply alias to a single target can indicate this
 	    without copying the ECHConfig and other parameters, avoiding
 	    the maintenance burden of staying synchronized with the target's
 	    key rotations and configuration updates.
-	</t>
-      </list>
+	</li>
+      </ul>
     </t>
 
 </section>
@@ -536,18 +524,18 @@ Client <-->|                    | |                    | facing
             accessible, general HTTP clients SHOULD NOT attempt to use this
             resource in lieu of HTTPS records queries through their preferred
             DNS server for the following reasons:
-            <list style="symbols">
-                <t>
+	  <ul>
+                <li>
                     The bootstrap connection would not be able to use ECH,
                     so it would reveal all the information that ECH seeks
                     to protect.
-                </t>
-                <t>
+                </li>
+                <li>
                     The origin could serve the user with a uniquely
                     identifying configuration, potentially resulting in an
                     unexpected tracking vector.
-                </t>
-            </list>
+                </li>
+            </ul>
         </t>
 
         <t>
@@ -581,19 +569,21 @@ Client <-->|                    | |                    | facing
 	found at that endpoint.</t>
 
       <section title="Well-known endpoint registration">
-	<t>
-	    IANA is requested to add the following entry to the Well-Known URIs table:
-	  <list>
-	    <t>URI Suffix:  origin-svcb</t>
-	    <t>Change Controller: IETF</t>
-	    <t>Reference: {This RFC}</t>
-	    <t>Status: permanent</t>
-	    <t>Related Information: Must be fetched via HTTPS</t>
-	    <t>Date Registered: {When registered}</t>
-	    <t>Date Modified:</t>
-	  </list>
-	  Items in curly braces should be replaced with their actual values.
-	</t>
+	<t>IANA is requested to add the following entry to the Well-Known URIs table:</t>
+	  <table>
+	    <name>Additional Well-Known entry</name>
+	  <thead><tr><td>Column</td><td>Value</td></tr></thead>
+	  <tbody>
+	    <tr><td>URI Suffix</td><td>origin-svcb</td></tr>
+	    <tr><td>Change Controller</td><td>IETF</td></tr>
+	    <tr><td>Reference</td><td>{This RFC}</td></tr>
+	    <tr><td>Status</td><td>permanent</td></tr>
+	    <tr><td>Related Information</td><td>Must be fetched via HTTPS</td></tr>
+	    <tr><td>Date Registered</td><td>{When registered}</td></tr>
+	    <tr><td>Date Modified</td><td></td></tr>
+	  </tbody>
+	</table>
+	<t>Items in curly braces should be replaced with their actual values.</t>
       </section>
 
       <section title="JSON Service Binding Info">
@@ -603,31 +593,25 @@ Client <-->|                    | |                    | facing
 	  registration policy. The request is to put the table in a new file
 	  "json-svcb.xml" in the existing "dns-svcb" registry group.
 	  The table has three columns:
-	<list>
-	  <t>Name: the name of the top-level field being added</t>
-	  <t>Reference: the document that defines the semantics of the field</t>
-	  <t>Notes: any short additional information the registrant wishes to add</t>
-	</list>
+	<dl>
+	  <dt>Name:</dt><dd>the name of the top-level field being added</dd>
+	  <dt>Reference:</dt><dd>the document that defines the semantics of the field</dd>
+	  <dt>Notes:</dt><dd>any short additional information the registrant wishes to add</dd>
+	</dl>
         </t>
 	<t>
 	    The table should be populated with the following two entries, where
 	    Items in curly braces should be replaced with their actual values,
 	    and the "Notes" column is empty.
-	  <!-- TABLE; not supported in "legacy" mode?
-	<table name="Initial values for the registry">
+        </t>
+	<table>
+	  <name>Initial values for the registry</name>
 	  <thead><tr><td>Name</td><td>Reference</td><td>Notes</td></tr></thead>
-	  <tr><td>endpoints</td><td>{This RFC}</td><td></td></tr>
-	  <tr><td>regeninterval</td><td>{This RFC}</td><td></td></tr>
+	  <tbody>
+	    <tr><td>endpoints</td><td>{This RFC}</td><td></td></tr>
+	    <tr><td>regeninterval</td><td>{This RFC}</td><td></td></tr>
+	  </tbody>
 	</table>
-	  -->
-      </t>
-      <t>
-<figure><artwork><![CDATA[
-Name             Reference                  Notes
-endpoints       {This RFC}
-regeninterval   {This RFC}
-]]></artwork></figure>
-	</t>
 
       </section>
 
@@ -659,11 +643,7 @@ regeninterval   {This RFC}
         </reference>
     </references>
 
-    <section title="Change Log ">
-      <t>[[ NOTE:
-	RFC editor: please remove this before publication.
-      ]]</t>
-
+    <section title="Change Log" removeInRFC="true">
       <t>The -00 WG draft replaces draft-farrell-tls-wkesni-03.</t>
 
       <t>
