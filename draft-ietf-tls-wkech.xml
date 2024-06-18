@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="US-ASCII"?>
 
-<!DOCTYPE rfc  [
-<!ENTITY I-D.ietf-tls-esni SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni">
-<!ENTITY I-D.ietf-tls-svcb-ech SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech">
-
-]>
-
 <?rfc toc="yes"?>
 <?rfc symrefs="yes"?>
 <?rfc compact="yes"?>
@@ -14,7 +8,8 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-05" ipr="trust200902" submissionType="IETF">
+<rfc category="exp" docName="draft-ietf-tls-wkech-05"
+  ipr="trust200902" submissionType="IETF" xmlns:xi="http://www.w3.org/2001/XInclude">
   <front>
     <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
 
@@ -620,14 +615,13 @@ Client <-->|                    | |                    | facing
 
   <back>
     <references title="Normative References">
-      <?rfc include='reference.RFC.2119'?>
-      <?rfc include='reference.RFC.8174'?>
-      <?rfc include='reference.RFC.8446'?>
-      <?rfc include='reference.RFC.8615'?>
-      <?rfc include='reference.RFC.9460'?>
-      &I-D.ietf-tls-esni;
-      &I-D.ietf-tls-svcb-ech;
-
+      <xi:include href="https://bib.ietf.org/reference.RFC.2119"/>
+      <xi:include href="https://bib.ietf.org/reference.RFC.8174"/>
+      <xi:include href="https://bib.ietf.org/reference.RFC.8446"/>
+      <xi:include href="https://bib.ietf.org/reference.RFC.8615"/>
+      <xi:include href="https://bib.ietf.org/reference.RFC.9460"/>
+      <xi:include href="https://bib.ietf.org/reference.I-D.ietf-tls-esni"/>
+      <xi:include href="https://bib.ietf.org/reference.I-D.ietf-tls-svcb-ech"/>
     </references>
 
     <references title="Informative References">
