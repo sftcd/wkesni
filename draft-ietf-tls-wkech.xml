@@ -490,6 +490,11 @@ Client <-->|                    | |                    | facing
        presented into "singleton" values with one public key in each,
        and then test each of those separately.</t>
 
+   <t>If ipv4hints or ipv6hints are present, and if those are not
+      the same values as are published in A/AAAA RRs for the backend,
+      then the ZF SHOULD check that webPKI based authentication of
+      the backend works at all of the relevant addresses.</t>
+
     <t>ZF SHOULD publish all the endpoints
         that are presented in the JSON file that pass
         the checks above.</t>
@@ -506,16 +511,61 @@ Client <-->|                    | |                    | facing
 
 
     <section title="Security Considerations">
+
         <t>
-            This document defines another way to publish ECHConfigList values. If the wrong
-            keys were read from here and published in the DNS, then clients
-            using ECH would do the wrong thing, likely resulting in
-            denial of service, or a privacy leak, or worse, when TLS clients attempt to use ECH with
-            a backend web site. So: Don't do that:-)
+            This document defines a way to publish SVCB/HTTPS RR values.
+            If the wrong values were published in the DNS, then TLS clients
+            using ECH might suffer a privacy leak, or degraded service due to
+            overuse of ECH retry_configs.
         </t>
 
         <t>
-            Although this configuration resource MAY be publicly
+            Similarly, a ZF that also has write access to A/AAAA RRs for a
+            backend, SHOULD NOT publish HTTPS RRs that contain ipv4hints or
+            ipv6hints that are in conflict with the correct A/AAAA values
+            unless those have been verified (via webPKI) as belonging to
+            the same backend.
+        </t>
+
+        <t>
+            When considering the content of SVCB/HTTPS RRs, the general argument for
+            the security of this scheme is that,
+            this scheme has the backend server authenticate
+            the JSON structure that is mapped directly to the SVCB/HTTPS RR, to
+            eventually be used by TLS clients when interacting with the backend
+            server, via the client-facing server.
+        </t>
+
+        <t>
+            ECH split-mode security also requires that the backend server
+            acquire SvcParamKey values from the client-facing server via some
+            authenticated means. If the backend server acquires the JSON
+	    data from the well-known URL and it is properly
+	    authenticated via HTTPS from the client-facing server's public_name
+            then that satisfies this requirement.
+        </t>
+
+        <t>
+	    The system described here
+	    depends on the webPKI for authentication of entities
+            and results in publication of new SVCB/HTTPS RRs. The webPKI
+            itself, however, often depends on the DNS to demonstrate control
+            over a DNS name, e.g. when using the ACME protocol
+            <xref target="RFC8555"/> with the HTTP-01 challenge type. A
+            temporary breach of a backend server that allows the attacker to
+            contol the JSON content described here could be used to bootsrap
+            more long-lasting control over the backend's DNS name if the
+            attacker were to request new certificates during the time when
+            the attacker's chosen values were published in the DNS, and if
+            the ACME server doing the validation solely depended on content
+            from the backend's HTTPS RR, e.g. preferring ipv6hints over the
+            AAAA for the backend. It would seem prudent for ACME servers to
+            be cautious if using ipv4hints and ipv6hint, e.g. flagging
+            divergence between those values and A/AAAA RRs.
+        </t>
+
+        <t>
+            Although the .well-known URL defined here may well be publicly
             accessible, general HTTP clients SHOULD NOT attempt to use this
             resource in lieu of HTTPS records queries through their preferred
             DNS server for the following reasons:
@@ -615,16 +665,17 @@ Client <-->|                    | |                    | facing
 
   <back>
     <references title="Normative References">
-      <xi:include href="https://bib.ietf.org/reference.RFC.2119"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.8174"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.8446"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.8615"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.9460"/>
-      <xi:include href="https://bib.ietf.org/reference.I-D.ietf-tls-esni"/>
-      <xi:include href="https://bib.ietf.org/reference.I-D.ietf-tls-svcb-ech"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8615.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.9460.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech.xml"/>
     </references>
 
     <references title="Informative References">
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8555.xml"/>
       <reference anchor="ISOMORPHIC-DECODE"
                    target="https://infra.spec.whatwg.org/#isomorphic-decode">
           <front>

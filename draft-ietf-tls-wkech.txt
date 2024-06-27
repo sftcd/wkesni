@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: 20 December 2024                            Akamai Technologies
+Expires: 29 December 2024                            Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                            18 June 2024
+                                                            27 June 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 20 December 2024.
+   This Internet-Draft will expire on 29 December 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 1]
+Farrell, et al.         Expires 29 December 2024                [Page 1]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -78,15 +78,15 @@ Table of Contents
    5.  The JSON structure for origin service binding info  . . . . .   7
    6.  Zone Factory behaviour  . . . . . . . . . . . . . . . . . . .   9
    7.  Security Considerations . . . . . . . . . . . . . . . . . . .  10
-   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  11
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  11
-     9.1.  Well-known endpoint registration  . . . . . . . . . . . .  11
-     9.2.  JSON Service Binding Info . . . . . . . . . . . . . . . .  12
+   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  12
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  12
+     9.1.  Well-known endpoint registration  . . . . . . . . . . . .  12
+     9.2.  JSON Service Binding Info . . . . . . . . . . . . . . . .  13
    10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
      10.1.  Normative References . . . . . . . . . . . . . . . . . .  13
      10.2.  Informative References . . . . . . . . . . . . . . . . .  14
    Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  14
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  14
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  15
 
 1.  Introduction
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 2]
+Farrell, et al.         Expires 29 December 2024                [Page 2]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 3]
+Farrell, et al.         Expires 29 December 2024                [Page 3]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 4]
+Farrell, et al.         Expires 29 December 2024                [Page 4]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 5]
+Farrell, et al.         Expires 29 December 2024                [Page 5]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 6]
+Farrell, et al.         Expires 29 December 2024                [Page 6]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 7]
+Farrell, et al.         Expires 29 December 2024                [Page 7]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -445,7 +445,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 8]
+Farrell, et al.         Expires 29 December 2024                [Page 8]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -501,7 +501,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 20 December 2024                [Page 9]
+Farrell, et al.         Expires 29 December 2024                [Page 9]
 
 Internet-Draft           Well-Known URI for ECH                June 2024
 
@@ -524,6 +524,11 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    values with one public key in each, and then test each of those
    separately.
 
+   If ipv4hints or ipv6hints are present, and if those are not the same
+   values as are published in A/AAAA RRs for the backend, then the ZF
+   SHOULD check that webPKI based authentication of the backend works at
+   all of the relevant addresses.
+
    ZF SHOULD publish all the endpoints that are presented in the JSON
    file that pass the checks above.
 
@@ -536,16 +541,59 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 7.  Security Considerations
 
-   This document defines another way to publish ECHConfigList values.
-   If the wrong keys were read from here and published in the DNS, then
-   clients using ECH would do the wrong thing, likely resulting in
-   denial of service, or a privacy leak, or worse, when TLS clients
-   attempt to use ECH with a backend web site.  So: Don't do that:-)
+   This document defines a way to publish SVCB/HTTPS RR values.  If the
+   wrong values were published in the DNS, then TLS clients using ECH
+   might suffer a privacy leak, or degraded service due to overuse of
+   ECH retry_configs.
 
-   Although this configuration resource MAY be publicly accessible,
-   general HTTP clients SHOULD NOT attempt to use this resource in lieu
-   of HTTPS records queries through their preferred DNS server for the
-   following reasons:
+   Similarly, a ZF that also has write access to A/AAAA RRs for a
+   backend, SHOULD NOT publish HTTPS RRs that contain ipv4hints or
+   ipv6hints that are in conflict with the correct A/AAAA values unless
+   those have been verified (via webPKI) as belonging to the same
+   backend.
+
+
+
+
+
+
+Farrell, et al.         Expires 29 December 2024               [Page 10]
+
+Internet-Draft           Well-Known URI for ECH                June 2024
+
+
+   When considering the content of SVCB/HTTPS RRs, the general argument
+   for the security of this scheme is that, this scheme has the backend
+   server authenticate the JSON structure that is mapped directly to the
+   SVCB/HTTPS RR, to eventually be used by TLS clients when interacting
+   with the backend server, via the client-facing server.
+
+   ECH split-mode security also requires that the backend server acquire
+   SvcParamKey values from the client-facing server via some
+   authenticated means.  If the backend server acquires the JSON data
+   from the well-known URL and it is properly authenticated via HTTPS
+   from the client-facing server's public_name then that satisfies this
+   requirement.
+
+   The system described here depends on the webPKI for authentication of
+   entities and results in publication of new SVCB/HTTPS RRs.  The
+   webPKI itself, however, often depends on the DNS to demonstrate
+   control over a DNS name, e.g. when using the ACME protocol [RFC8555]
+   with the HTTP-01 challenge type.  A temporary breach of a backend
+   server that allows the attacker to contol the JSON content described
+   here could be used to bootsrap more long-lasting control over the
+   backend's DNS name if the attacker were to request new certificates
+   during the time when the attacker's chosen values were published in
+   the DNS, and if the ACME server doing the validation solely depended
+   on content from the backend's HTTPS RR, e.g. preferring ipv6hints
+   over the AAAA for the backend.  It would seem prudent for ACME
+   servers to be cautious if using ipv4hints and ipv6hint, e.g. flagging
+   divergence between those values and A/AAAA RRs.
+
+   Although the .well-known URL defined here may well be publicly
+   accessible, general HTTP clients SHOULD NOT attempt to use this
+   resource in lieu of HTTPS records queries through their preferred DNS
+   server for the following reasons:
 
    *  The bootstrap connection would not be able to use ECH, so it would
       reveal all the information that ECH seeks to protect.
@@ -554,18 +602,21 @@ Internet-Draft           Well-Known URI for ECH                June 2024
       configuration, potentially resulting in an unexpected tracking
       vector.
 
-
-
-
-Farrell, et al.         Expires 20 December 2024               [Page 10]
-
-Internet-Draft           Well-Known URI for ECH                June 2024
-
-
    The .well-known URI chosen here means that services running on
    different ports of the same backend are trusting the service running
    on the default port (443) for that backend to provide correct
    endpoint information.
+
+
+
+
+
+
+
+Farrell, et al.         Expires 29 December 2024               [Page 11]
+
+Internet-Draft           Well-Known URI for ECH                June 2024
+
 
    As described, in mutlti-CDN and simlar scenarios, a ZF might only
    test ECH success against one of the CDNs unless the ZF can make use
@@ -593,31 +644,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    IANA is requested to add the following entry to the Well-Known URIs
    table:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.         Expires 20 December 2024               [Page 11]
-
-Internet-Draft           Well-Known URI for ECH                June 2024
-
-
             +---------------------+---------------------------+
             | Column              | Value                     |
             +---------------------+---------------------------+
@@ -640,6 +666,14 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
    Items in curly braces should be replaced with their actual values.
 
+
+
+
+Farrell, et al.         Expires 29 December 2024               [Page 12]
+
+Internet-Draft           Well-Known URI for ECH                June 2024
+
+
 9.2.  JSON Service Binding Info
 
    If approved, this specification requests the creation of an IANA
@@ -657,22 +691,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    The table should be populated with the following two entries, where
    Items in curly braces should be replaced with their actual values,
    and the "Notes" column is empty.
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.         Expires 20 December 2024               [Page 12]
-
-Internet-Draft           Well-Known URI for ECH                June 2024
-
 
                   +---------------+------------+-------+
                   | Name          | Reference  | Notes |
@@ -702,6 +720,16 @@ Internet-Draft           Well-Known URI for ECH                June 2024
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/info/rfc8446>.
 
+
+
+
+
+
+Farrell, et al.         Expires 29 December 2024               [Page 13]
+
+Internet-Draft           Well-Known URI for ECH                June 2024
+
+
    [RFC8615]  Nottingham, M., "Well-Known Uniform Resource Identifiers
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
@@ -718,18 +746,6 @@ Internet-Draft           Well-Known URI for ECH                June 2024
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
               esni-18>.
 
-
-
-
-
-
-
-
-Farrell, et al.         Expires 20 December 2024               [Page 13]
-
-Internet-Draft           Well-Known URI for ECH                June 2024
-
-
    [I-D.ietf-tls-svcb-ech]
               Schwartz, B. M., Bishop, M., and E. Nygren, "Bootstrapping
               TLS Encrypted ClientHello with DNS Service Bindings", Work
@@ -738,6 +754,11 @@ Internet-Draft           Well-Known URI for ECH                June 2024
               ietf-tls-svcb-ech-02>.
 
 10.2.  Informative References
+
+   [RFC8555]  Barnes, R., Hoffman-Andrews, J., McCarney, D., and J.
+              Kasten, "Automatic Certificate Management Environment
+              (ACME)", RFC 8555, DOI 10.17487/RFC8555, March 2019,
+              <https://www.rfc-editor.org/info/rfc8555>.
 
    [ISOMORPHIC-DECODE]
               WHATWG, "WHATWG definition of Isomorphic Decode",
@@ -756,6 +777,14 @@ Appendix A.  Change Log
    Version 02 is just a keep-alive
 
    Version 03 reflects some local implementation experience with -02
+
+
+
+
+Farrell, et al.         Expires 29 December 2024               [Page 14]
+
+Internet-Draft           Well-Known URI for ECH                June 2024
+
 
    Version 04 matches a proof-of-concept bash script implementation and
    results of IETF-117 discussion.
@@ -777,13 +806,6 @@ Authors' Addresses
    Rich Salz
    Akamai Technologies
    Email: rsalz@akamai.com
-
-
-
-
-Farrell, et al.         Expires 20 December 2024               [Page 14]
-
-Internet-Draft           Well-Known URI for ECH                June 2024
 
 
    Benjamin Schwartz
@@ -815,26 +837,4 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.         Expires 20 December 2024               [Page 15]
+Farrell, et al.         Expires 29 December 2024               [Page 15]
