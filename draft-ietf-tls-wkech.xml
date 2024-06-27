@@ -665,18 +665,17 @@ Client <-->|                    | |                    | facing
 
   <back>
     <references title="Normative References">
-      <xi:include href="https://bib.ietf.org/reference.RFC.2119"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.8174"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.8446"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.8555"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.8615"/>
-      <xi:include href="https://bib.ietf.org/reference.RFC.9460"/>
-      <xi:include href="https://bib.ietf.org/reference.I-D.ietf-tls-esni"/>
-      <xi:include href="https://bib.ietf.org/reference.I-D.ietf-tls-svcb-ech"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8615.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.9460.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech.xml"/>
     </references>
 
     <references title="Informative References">
-      <xi:include href="https://bib.ietf.org/reference.RFC.8555"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8555.xml"/>
       <reference anchor="ISOMORPHIC-DECODE"
                    target="https://infra.spec.whatwg.org/#isomorphic-decode">
           <front>
