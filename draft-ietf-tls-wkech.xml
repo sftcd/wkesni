@@ -496,9 +496,17 @@ Client <-->|                    | |                    | facing
         </t>
 
         <t>
+            Similarly, a ZF that also has write access to A/AAAA RRs for a
+            backend, SHOULD NOT publish HTTPS RRs that contain ipv4hints or
+            ipv6hints that are in conflict with the correct A/AAAA values
+            unless those have been verified (via webPKI) as belonging to
+            the same backend.
+        </t>
+
+        <t>
             When considering the content of SVCB/HTTPS RRs, the general argument for
-            the security of this scheme is that, assuming proper setup and
-            operation of the webPKI, this scheme has the backend server authenticate
+            the security of this scheme is that,
+            this scheme has the backend server authenticate
             the JSON structure that is mapped directly to the SVCB/HTTPS RR, to
             eventually be used by TLS clients when interacting with the backend
             server, via the client-facing server.
@@ -508,14 +516,16 @@ Client <-->|                    | |                    | facing
             ECH split-mode security also requires that the backend server
             acquire SvcParamKey values from the client-facing server via some
             authenticated means. If the backend server acquires the JSON
-            data authenticated via HTTPS from the client-facing server's public_name
+	    data from the well-known URL and it is properly
+	    authenticated via HTTPS from the client-facing server's public_name
             then that satisfies this requirement.
         </t>
 
         <t>
-            This scheme depends on the webPKI for authentication of entities
+	    The system described here
+	    depends on the webPKI for authentication of entities
             and results in publication of new SVCB/HTTPS RRs. The webPKI
-            itself however often depends on the DNS to demonstrate control
+            itself, however, often depends on the DNS to demonstrate control
             over a DNS name, e.g. when using the ACME protocol
             <xref target="RFC8555"/> with the HTTP-01 challenge type. A
             temporary breach of a backend server that allows the attacker to
@@ -528,14 +538,6 @@ Client <-->|                    | |                    | facing
             AAAA for the backend. It would seem prudent for ACME servers to
             be cautious if using ipv4hints and ipv6hint, e.g. flagging
             divergence between those values and A/AAAA RRs.
-        </t>
-
-        <t>
-            Similarly, a ZF that also has write access to A/AAAA RRs for a
-            backend, SHOULD NOT publish HTTPS RRs that contain ipv4hints or
-            ipv6hints that are in conflict with the correct A/AAAA values
-            unless those have been verified (via webPKI) as belonging to
-            the same backend.
         </t>
 
         <t>
@@ -599,14 +601,13 @@ Client <-->|                    | |                    | facing
       <?rfc include='reference.RFC.8174'?>
       <?rfc include='reference.RFC.8446'?>
       <?rfc include='reference.RFC.8615'?>
-        <!-- <?rfc include='reference.RFC.4648'?> -->
       &I-D.ietf-tls-esni;
       &I-D.ietf-tls-svcb-ech;
 
     </references>
 
     <references title="Informative References">
-      <?rfc include='reference.RFC.8555'?>
+      <xi:include href="https://bib.ietf.org/reference.RFC.8555"/>
       <reference anchor="ISOMORPHIC-DECODE"
                    target="https://infra.spec.whatwg.org/#isomorphic-decode">
           <front>
