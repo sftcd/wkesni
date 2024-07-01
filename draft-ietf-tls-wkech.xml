@@ -344,11 +344,11 @@ Client <-->|                    | |                    | facing
 	More precise expiration times are common (e.g., the "notAfter" field
 	in certificate lifetime validity, discussed in Section 4.1.2.5 of
 	<xref target="RFC5280"/>), but are too stringent for this use-case.
-	The ZF cannot afford to fail open (by removing the HTTP records) or
-	failed closed (by removing the IP addresses), but it can "stretch"
-	the lifetime of the HTTPS records because of the fallback connection
-	behavior. Since we have to accept this stretching, it makese sense to
-	avoid an explicit expiration time and speak about the intended update
+	The ZF cannot afford to fail open (by removing the HTTPS records) or
+	fail closed (by removing the IP addresses), but it can safely "stretch"
+	the lifetime of the HTTPS records because of ECH's "retry_configs"
+	behavior. Since we have to accept this stretching, it makes sense to
+	avoid an explicit expiration time and instead speak about the intended update
 	frequency. This also make it clear the origin must tolerate some
 	amount of version skew, and gives operational flexibility to avoid
 	unreasonable update frequencies.
