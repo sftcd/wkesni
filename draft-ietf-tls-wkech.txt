@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: 29 December 2024                            Akamai Technologies
+Expires: 8 January 2025                              Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                            27 June 2024
+                                                             7 July 2024
 
 
          A well-known URI for publishing ECHConfigList values.
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 29 December 2024.
+   This Internet-Draft will expire on 8 January 2025.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Farrell, et al.         Expires 29 December 2024                [Page 1]
+Farrell, et al.          Expires 8 January 2025                 [Page 1]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -105,19 +105,20 @@ Table of Contents
    Note that this is not intended for universal deployment, but rather
    for cases where the web server doesn't have write access to the
    relevant zone file (or equivalent).  That zone file will eventually
-   include an HTTPS or SVCB RR [I-D.ietf-tls-svcb-ech] containing the
+   include an HTTPS or SVCB RR [RFC9460] containing the ECHConfigList in
 
 
 
-Farrell, et al.         Expires 29 December 2024                [Page 2]
+Farrell, et al.          Expires 8 January 2025                 [Page 2]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
-   ECHConfigList.  This mechanism is extensible to deliver other kinds
-   of information about the origin, that can be of use in these
-   circumstances, but is mainly intended to provide the functionality
-   necessary for ongoing management of ECH keys.
+   an "ech=" SvcParamKey.  [I-D.ietf-tls-svcb-ech] This mechanism is
+   extensible to deliver other kinds of information about the origin,
+   that can be of use in these circumstances, but is mainly intended to
+   provide the functionality necessary for ongoing management of ECH
+   keys.
 
    We use the term "zone factory" (ZF) for the entity that does have
    write access to the zone file.  We assume the ZF can also make HTTPS
@@ -164,10 +165,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-
-Farrell, et al.         Expires 29 December 2024                [Page 3]
+Farrell, et al.          Expires 8 January 2025                 [Page 3]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
       only does ECH decryption but the TLS session is between the client
@@ -185,7 +185,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
                        +--------------------+
                        |                    |
-                       |   2001:DB8::1111   | Client-
+    TLS                |   2001:DB8::1111   | Client-
    Client <----------->|                    | facing
                        |   cfs.example.com  | server
                        | backend.example.com|
@@ -221,9 +221,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024                [Page 4]
+Farrell, et al.          Expires 8 January 2025                 [Page 4]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
    1.  On the ZF, another regularly executed job uses an HTTP client to
@@ -237,7 +237,7 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    3.  The ZF observes that the JSON resource has a regeninterval of
        3600 seconds, and chooses a DNS TTL of 1800.  It updates the DNS
        zone file for backend.example.com and re-publishes the zone
-       containing only the new ECHConfigList values.
+       containing the new ECHConfigList values instead of the old.
 
    When "regeninterval" seconds have passed, the ZF attempts to refresh
    its cached copy of the JSON resource.  If the resource has changed,
@@ -245,8 +245,8 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 3.2.  Split-mode, multi-CDN deplpoyment.
 
-   The following diagram, and this entire section, is a place-holder and
-   is likely to change.
+   The following diagram, and this entire section, is a place-holder
+   just to have something on which to base discussion, and will change.
 
 
 
@@ -277,23 +277,23 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024                [Page 5]
+Farrell, et al.          Expires 8 January 2025                 [Page 5]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
                        +--------------------+
-                       |                    |
+                       |        REAL        |
                        | backend.example.com|
                        |                    |
                        +--------------------+
-                           ^            ^
-                           |            |
-                           V            V
+                           ^^           ^^
+                           ||    VPN    ||
+                           VV           VV
               +--------------------+ +--------------------+
               |                    | |                    |
-              |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
-   Client <-->|                    | |                    | facing
+    TLS       |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
+   Client <-->|backend.example.com | | backend.example.com| facing
               |  cfs.cdn1.example  | |  cfs.cdn2.example  | servers
               +--------------------+ +--------------------+
                            ^            ^
@@ -315,28 +315,33 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
           Figure 2: Shared-Mode Topology with Zone Factory and DNS
 
-   In this topology, the overall process is similar, but certain actions
-   must be repeated as described below.
+   In this topology, the overall process is as in the previous section,
+   but with the following differences:
 
-   1.  On the ZF, another regularly executed job uses an HTTP client to
-       retrieve this JSON resource from the configured intermediaries.
-       The data MUST be fetched via HTTPS and the certificate validity
-       MUST be verified.
+   1.  There are two client-facing servers (in different CDNs) for the
+       one "REAL" backend server that hosts the actual web resources.
 
-   2.  The ZF next attempts to connect to each intermediary using the
-       ECH values and confirms that they are working.
+   2.  ECH split-mode is assumed to be supported by both CDNs.
 
-   How the ZF knows the DNS and TLS service names of the intermediaries
-   is outside the scope of this document, as is specifying how the ZF
-   determines the prioritity values.
+   3.  The "REAL" backend.example.com content is hosted on some
+       machine(s) accessible from the client-facing servers via a VPN.
 
-
+   4.  The ZF notes that backend.example.com has multiple AAAA RR values
+       published, so queries for the .well-known at each of those.  In
+       this case the values received differ.
 
 
-Farrell, et al.         Expires 29 December 2024                [Page 6]
+
+
+Farrell, et al.          Expires 8 January 2025                 [Page 6]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
+
+   5.  The ZF next attempts to connect to each CFS using the relevant
+       ECH values and confirms that they are all working.
+
+   6.  Note tha the ZF is not aware that ECH split-mode is in use.
 
 4.  The origin-svcb well-known URI
 
@@ -380,47 +385,43 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
                     Figure 4: Sample JSON with aliasing
 
-   The JSON file at the well-known URI MUST contain an object with an
-   two keys: "regeninterval", whose value is a number, and "endpoints"
-   whose value is an array of objects.  All other keys MUST be ignored.
 
 
 
 
-
-
-Farrell, et al.         Expires 29 December 2024                [Page 7]
+Farrell, et al.          Expires 8 January 2025                 [Page 7]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
-   The "regeninterval" must be a number greater than zero and specifies
-   the number of seconds between key generation actions at the origin,
-   i.e. a replacement ECHConfigList may be generated this often.  This
-   is used by the ZF to generate DNS TTL values and to determine when to
+   The JSON file at the well-known URI MUST contain an object with two
+   keys: "regeninterval", whose value is a number, and "endpoints" whose
+   value is an array of objects.  All other keys MUST be ignored.
+
+   The "regeninterval" must be a positive integer and specifies the
+   number of seconds between key generation actions at the origin, i.e.
+   a replacement ECHConfigList may be generated this often.  This is
+   used by the ZF to generate DNS TTL values and to determine when to
    next poll the origin for updates.
 
    More precise expiration times are common (e.g., the "notAfter" field
    in certificate lifetime validity, discussed in Section 4.1.2.5 of
    [RFC5280]), but are too stringent for this use-case.  The ZF cannot
-   afford to fail open (by removing the HTTP records) or failed closed
-   (by removing the IP addresses), but it can "stretch" the lifetime of
-   the HTTPS records because of the fallback connection behavior.  Since
-   we have to accept this stretching, it makese sense to avoid an
-   explicit expiration time and speak about the intended update
-   frequency.  This also make it clear the origin must tolerate some
-   amount of version skew, and gives operational flexibility to avoid
-   unreasonable update frequencies.
+   afford to fail open (by removing the HTTPS records) or fail closed
+   (by removing the IP addresses), but it can safely "stretch" the
+   lifetime of the HTTPS records because of ECH's "retry_configs"
+   behavior.  Since we have to accept this stretching, it makes sense to
+   avoid an explicit expiration time and instead speak about the
+   intended update frequency.  This also make it clear the origin must
+   tolerate some amount of version skew, and gives operational
+   flexibility to avoid unreasonable update frequencies.
 
-   The "endpoints" key is an array of objects.  The number of items in
-   the array implies restrictions and meaning to the content of the
-   items:
+   The "endpoints" key is an array of objects.
 
    *  An empty endpoints array means that all HTTPS records that the ZF
       has published for the origin should be deleted.
 
-   *  An endpoints array with one element what can be one of three
-      things:
+   *  An endpoints array with one element can be one of three things:
 
       1.  An empty object, which the ZF should take to be an HTTPS
           record with inferred SvcPriority, a TargetName equal to ".",
@@ -444,18 +445,16 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-
-Farrell, et al.         Expires 29 December 2024                [Page 8]
+Farrell, et al.          Expires 8 January 2025                 [Page 8]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
    The following keys are defined for ServiceMode entries:
 
    target:  The value is a string containing a fully qualified domain
       name, corresponding to the HTTPS record's TargetName.  The default
-      value is ".".  Do we need to Restrict the allowed characters or
-      specify the encoding rules for TargetName?
+      value is ".".
 
    priority:  The value is a positive integer corresponding to the
       SvcPriority.  If omitted, the ZF MAY infer numerically increasing
@@ -501,9 +500,10 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024                [Page 9]
+
+Farrell, et al.          Expires 8 January 2025                 [Page 9]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
    *  Origins that simply alias to a single target can indicate this
@@ -513,12 +513,12 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 6.  Zone Factory behaviour
 
-   If the ZF is unable to convert the JSON into a DNS zone (e.g., due to
-   an unrecognized SvcParamKey), or if the resulting zone fails
-   validation checks, the ZF MUST NOT update the DNS.  Such failures
-   will not be directly visible to the client-facing server, so ZF
-   implementations will need to provide some form of reporting so that
-   the situation can be resolved.  Note that this can lead to
+   If the ZF is unable to convert the JSON into a DNS zone fragment
+   (e.g., due to an unrecognized SvcParamKey), or if the resulting zone
+   fails validation checks, the ZF MUST NOT update the DNS.  Such
+   failures will not be directly visible to the client-facing server, so
+   ZF implementations will need to provide some form of reporting so
+   that the situation can be resolved.  Note that this can lead to
    inconsistent behavior for a single origin served by multiple ZFs.
 
    A ZF MAY apply additional processing according to its own policy,
@@ -557,9 +557,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024               [Page 10]
+Farrell, et al.          Expires 8 January 2025                [Page 10]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
 7.  Security Considerations
@@ -600,8 +600,8 @@ Internet-Draft           Well-Known URI for ECH                June 2024
    the DNS, and if the ACME server doing the validation solely depended
    on content from the backend's HTTPS RR, e.g. preferring ipv6hints
    over the AAAA for the backend.  It would seem prudent for ACME
-   servers to be cautious if using ipv4hints and ipv6hint, e.g. flagging
-   divergence between those values and A/AAAA RRs.
+   servers to be cautious if using ipv4hints and ipv6hints, e.g.
+   flagging divergence between those values and A/AAAA RRs.
 
    Although the .well-known URL defined here may well be publicly
    accessible, general HTTP clients SHOULD NOT attempt to use this
@@ -613,9 +613,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024               [Page 11]
+Farrell, et al.          Expires 8 January 2025                [Page 11]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
    *  The origin could serve the user with a uniquely identifying
@@ -669,9 +669,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024               [Page 12]
+Farrell, et al.          Expires 8 January 2025                [Page 12]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
             +---------------------+---------------------------+
@@ -725,9 +725,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024               [Page 13]
+Farrell, et al.          Expires 8 January 2025                [Page 13]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
                   +---------------+------------+-------+
@@ -781,9 +781,9 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024               [Page 14]
+Farrell, et al.          Expires 8 January 2025                [Page 14]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
    [I-D.ietf-tls-esni]
@@ -837,9 +837,9 @@ Authors' Addresses
 
 
 
-Farrell, et al.         Expires 29 December 2024               [Page 15]
+Farrell, et al.          Expires 8 January 2025                [Page 15]
 
-Internet-Draft           Well-Known URI for ECH                June 2024
+Internet-Draft           Well-Known URI for ECH                July 2024
 
 
    Stephen Farrell
@@ -893,4 +893,4 @@ Internet-Draft           Well-Known URI for ECH                June 2024
 
 
 
-Farrell, et al.         Expires 29 December 2024               [Page 16]
+Farrell, et al.          Expires 8 January 2025                [Page 16]
