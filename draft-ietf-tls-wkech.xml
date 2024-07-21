@@ -90,7 +90,8 @@
             universal deployment, but rather for cases where the web server
             doesn't have write access to the relevant zone file (or
             equivalent). That zone file will eventually include an HTTPS or SVCB
-            RR <xref target="I-D.ietf-tls-svcb-ech"/> containing the ECHConfigList.
+            RR <xref target="RFC9460"/> containing the ECHConfigList in an 
+            "ech=" SvcParamKey.  <xref target="I-D.ietf-tls-svcb-ech"/>
             This mechanism is extensible to deliver other kinds of information about
             the origin, that can be of use in these circumstances, but is mainly
             intended to provide the functionality necessary for ongoing management
@@ -163,7 +164,7 @@
 <figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="shared-mode"><artwork><![CDATA[
                     +--------------------+
                     |                    |
-                    |   2001:DB8::1111   | Client-
+ TLS                |   2001:DB8::1111   | Client-
 Client <----------->|                    | facing
                     |   cfs.example.com  | server
                     | backend.example.com|
@@ -207,7 +208,7 @@ Client <----------->|                    | facing
 	     <li> The ZF observes that the JSON resource
 	       has a regeninterval of 3600 seconds, and chooses a DNS
 	       TTL of 1800.  It updates the DNS zone file for backend.example.com and re-publishes
-	       the zone containing only the new ECHConfigList values.</li>
+	       the zone containing the new ECHConfigList values instead of the old.</li>
 	   </ol>
 	  When "regeninterval" seconds have passed, the ZF attempts to
 	  refresh its cached copy of the JSON resource.  If the resource has changed,
@@ -218,22 +219,22 @@ Client <----------->|                    | facing
 
         <section title="Split-mode, multi-CDN deplpoyment.">
 	  <t>
-	      The following diagram, and this entire section, is a place-holder and is
-	      likely to change.</t>
+          The following diagram, and this entire section, is a place-holder just
+          to have something on which to base discussion, and will change.</t>
 <figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="split-mode"><artwork><![CDATA[
 
                     +--------------------+
-                    |                    |
+                    |        REAL        |
                     | backend.example.com| 
                     |                    |
                     +--------------------+
-                        ^            ^
-                        |            |  
-                        V            V 
+                        ^^           ^^
+                        ||    VPN    ||  
+                        VV           VV
            +--------------------+ +--------------------+
            |                    | |                    |
-           |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
-Client <-->|                    | |                    | facing
+ TLS       |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
+Client <-->|backend.example.com | | backend.example.com| facing
            |  cfs.cdn1.example  | |  cfs.cdn2.example  | servers
            +--------------------+ +--------------------+
                         ^            ^
@@ -254,23 +255,23 @@ Client <-->|                    | |                    | facing
                     +--------------------+
 ]]></artwork></figure>
 
-            <t>
-		In this topology, the overall process is similar, but certain
-		actions must be repeated as described below.
-           <ol>
-	     <li>On the ZF, another regularly executed job uses
-	       an HTTP client to retrieve this JSON resource from the
-	       configured intermediaries.
-	       The data MUST be fetched via HTTPS and the certificate validity MUST
-	       be verified.</li>
-	     <li>The ZF next attempts to connect to each intermediary using the ECH values and confirms
-	       that they are working. </li>
-	   </ol>
-	    </t>
-	    <t>How the ZF knows the DNS and TLS service names of the intermediaries is outside
-	      the scope of this document, as is specifying how the ZF determines the
-	      prioritity values.
-	  </t>
+     <t>
+		In this topology, the overall process is as in the previous section, 
+		but with the following differences:
+        <ol>
+           <li>There are two client-facing servers (in different CDNs) for the
+               one "REAL" backend server that hosts the actual web resources.</li>
+           <li>ECH split-mode is assumed to be supported by both CDNs.</li>
+           <li>The "REAL" backend.example.com content is hosted on some machine(s)
+               accessible from the client-facing servers via a VPN.</li>
+           <li>The ZF notes that backend.example.com has multiple AAAA RR values
+               published, so queries for the .well-known at each of those. In this
+               case the values received differ.</li>
+	       <li>The ZF next attempts to connect to each CFS using the relevant ECH values and confirms
+	           that they are all working. </li>
+           <li>Note tha the ZF is not aware that ECH split-mode is in use.</li>
+	    </ol>
+     </t>
 	 </section>
     </section>
 
@@ -328,12 +329,12 @@ Client <-->|                    | |                    | facing
 
     <t>
         The JSON file at the well-known URI MUST contain an object
-	with an two keys: "regeninterval", whose value is a number, and "endpoints"
+	with two keys: "regeninterval", whose value is a number, and "endpoints"
 	whose value is an array of objects.
         All other keys MUST be ignored.
     </t>
     <t>
-	The "regeninterval" must be a number greater than zero
+	The "regeninterval" must be a positive integer 
 	and specifies the number of seconds between key generation
 	actions at the origin, i.e. a replacement ECHConfigList may be
 	generated this often.
@@ -354,16 +355,14 @@ Client <-->|                    | |                    | facing
 	unreasonable update frequencies.
     </t>
     <t>
-        The "endpoints" key is an array of objects. The number of items in
-        the array implies restrictions and meaning to the content
-        of the items:
+        The "endpoints" key is an array of objects. 
     <ul>
       <li>
 	  An empty endpoints array means that all HTTPS records that the
 	  ZF has published for the origin should be deleted.
 	</li>
       <li>
-	  An endpoints array with one element what can be one of
+	  An endpoints array with one element can be one of
 	  three things:
 	<ol>
 	  <li>
@@ -384,7 +383,7 @@ Client <-->|                    | |                    | facing
 	  </ol>
       </li>
       <li>
-	If the endpoints array has more than one element, every item SHOULD
+	    If the endpoints array has more than one element, every item SHOULD
         be a ServiceMode entry, due to restrictions on the use of multiple AliasMode
 	  records (see <xref target="RFC9460">, Section 2.4.2</xref>).
       </li>
@@ -403,7 +402,6 @@ Client <-->|                    | |                    | facing
       <dd>The value is a string containing a fully qualified
 	domain name, corresponding to the HTTPS record's TargetName.
 	The default value is ".".
-        Do we need to Restrict the allowed characters or specify the encoding rules for TargetName?
       </dd>
       <dt>priority:</dt>
       <dd>The value is a positive integer corresponding to the
@@ -470,7 +468,7 @@ Client <-->|                    | |                    | facing
 <section anchor="zfbehave" title="Zone Factory behaviour">
 
     <t>
-	If the ZF is unable to convert the JSON into a DNS zone (e.g., due
+	If the ZF is unable to convert the JSON into a DNS zone fragment (e.g., due
 	to an unrecognized SvcParamKey), or if the resulting zone fails
 	validation checks, the ZF MUST NOT update the DNS. Such failures
 	will not be directly visible to the client-facing server, so ZF
@@ -573,7 +571,7 @@ Client <-->|                    | |                    | facing
             the ACME server doing the validation solely depended on content
             from the backend's HTTPS RR, e.g. preferring ipv6hints over the
             AAAA for the backend. It would seem prudent for ACME servers to
-            be cautious if using ipv4hints and ipv6hint, e.g. flagging
+            be cautious if using ipv4hints and ipv6hints, e.g. flagging
             divergence between those values and A/AAAA RRs.
         </t>
 
