@@ -11,7 +11,7 @@
 <rfc category="exp" docName="draft-ietf-tls-wkech-05"
   ipr="trust200902" submissionType="IETF" xmlns:xi="http://www.w3.org/2001/XInclude">
   <front>
-    <title abbrev="Well-Known URI for ECH">A well-known URI for publishing ECHConfigList values.</title>
+    <title abbrev="Well-Known URI for SVCB">A well-known URI for publishing service parameters</title>
 
     <author fullname="Stephen Farrell" initials="S." surname="Farrell">
       <organization>Trinity College Dublin</organization>
@@ -43,13 +43,9 @@
     </author>
 
     <date year="2024"/>
-
     <area>Security Area</area>
-
     <workgroup>TLS</workgroup>
-
     <keyword>TLS</keyword>
-
     <keyword>ECH</keyword>
 
     <abstract>
@@ -725,6 +721,15 @@ Client <-->|backend.example.com | | backend.example.com| facing
       <t>
           Version 05 responds to early artart and dnsop reviews, and some list
           discussion/github issues.
+      </t>
+
+      <t>
+	  Version 06 updated the IANA and Security considerations, fixed
+	  conformance HTTPS SVCB and resolved many issues.
+      </t>
+
+      <t>
+	  Version 07 changed the name.
       </t>
 
     </section>
