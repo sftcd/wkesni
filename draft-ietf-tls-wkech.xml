@@ -229,11 +229,11 @@ Client <----------->|                    | facing
 
                     +--------------------+
                     |        REAL        |
-                    | backend.example.com| 
+                    | backend.example.com|
                     |                    |
                     +--------------------+
                         ^^           ^^
-                        ||    VPN    ||  
+                        ||    VPN    ||
                         VV           VV
            +--------------------+ +--------------------+
            |                    | |                    |
@@ -260,7 +260,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
 ]]></artwork></figure>
 
      <t>
-		In this topology, the overall process is as in the previous section, 
+		In this topology, the overall process is as in the previous section,
 		but with the following differences:
         <ol>
            <li>There are two client-facing servers (in different CDNs) for the
@@ -305,7 +305,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
         "regeninterval": 3600,
         "endpoints": [{
             "priority": 1,
-            "target": "cdn.example.",
+            "target": "cdn.example",
             "params": {
                 "ech": "AD7+DQA65wAgAC..AA=="
             }
@@ -338,7 +338,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
         All other keys MUST be ignored.
     </t>
     <t>
-	The "regeninterval" must be a positive integer 
+	The "regeninterval" must be a positive integer
 	and specifies the number of seconds between key generation
 	actions at the origin, i.e. a replacement ECHConfigList may be
 	generated this often.
@@ -359,7 +359,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
 	unreasonable update frequencies.
     </t>
     <t>
-        The "endpoints" key is an array of objects. 
+        The "endpoints" key is an array of objects.
     <ul>
       <li>
 	  An empty endpoints array means that all HTTPS records that the
@@ -403,9 +403,13 @@ Client <-->|backend.example.com | | backend.example.com| facing
   <t>The following keys are defined for ServiceMode entries:
     <dl>
       <dt>target:</dt>
-      <dd>The value is a string containing a fully qualified
-	domain name, corresponding to the HTTPS record's TargetName.
-	The default value is ".".
+      <dd>The value is a string containing a fully qualified domain name
+      corresponding to the HTTPS record's TargetName with the final "." removed.
+      The default value is the empty string (""), corresponding to
+      a TargetName of ".". To avoid complex conversion logic, the characters
+      in this value MUST be limited to lowercase lower ASCII letters (a-z),
+      digits (0-9), "-", "_", and ".". These are the characters used in preferred
+      name syntax and underscore labels.
       </dd>
       <dt>priority:</dt>
       <dd>The value is a positive integer corresponding to the
