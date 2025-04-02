@@ -248,7 +248,7 @@ Client <----------->|                    | facing
                     |                    |
      TLS            |   2001:DB8::1111   |
     Client <-->     |backend.example.com |
-                    |   cfs.cdn.example  |
+                    |     cfs.example    |
                     +--------------------+
                         ^            ^
      (3) ZF reads       |            |  (4) ZF checks
@@ -270,7 +270,7 @@ Client <----------->|                    | facing
 
 <t>
     In this topology, the overall process is as in the previous section,
-    but with the following differences: 
+    but with the following differences: but with the following differences:
     <ol>
         <li>ECH split-mode is supported by the CDN.</li>
         <li>
@@ -287,7 +287,7 @@ Client <----------->|                    | facing
         </li>
         <li>
             backend.example.com content is hosted on some machine(s)
-            accessible via the client-facing servers and the via the VPN.
+            accessible via the client-facing servers and via the VPN.
         </li>
         <li>
             backend.example.com has to acquire the ECH config
@@ -296,15 +296,17 @@ Client <----------->|                    | facing
             https://cfs.cds.example/.well-known/origin-svcb
         </li>
         <li>
-            backend.example.com then publishes it's chosen JSON
+            backend.example.com then publishes its chosen JSON
             (presumably including the relevant ECH config information)
             at https://backend.example.com/.well-known/origin-svcb
-            That resource is hosted on the "real" backend.example.com 
+            That resource is hosted on the "real" backend.example.com
             machine.
+        </li>
         <li>
-            The ZF attempts to connect to the backend using the 
-            published IP address, using the relevant ECH values and confirms
-            that all is working.
+            The ZF attempts to connect to https://backend.example.com using
+            the generated HTTPS record(s), including the
+            relevant ECH values, and confirms that all is
+            working before updating the zone.
         </li>
         <li>
             Note that the ZF is not aware that ECH split-mode is in use.
