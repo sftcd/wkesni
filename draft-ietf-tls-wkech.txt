@@ -293,8 +293,8 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
                        +--------------------+
                        |                    |
         TLS            |   2001:DB8::1111   |
-       Client <-->     |backend.example.com |
-                       |     cfs.example    |
+        Client <---->  |backend.example.com |
+                       |   cfs.lb.example   |
                        +--------------------+
                            ^            ^
         (3) ZF reads       |            |  (4) ZF checks
@@ -319,17 +319,17 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    but with the following differences: but with the following
    differences:
 
-   1.  ECH split-mode is supported by the CDN.
+   1.  The client-facing server, (CDS), is a load-balancer and only does
+       ECH decryption.  The load-balancer is called cfs.lb.example.
 
-   2.  The client-facing server, e.g. in a CDN, for the backend server
-       only does ECH decryption.
-
-   3.  Traffic between the CFS and backend is protected using some kind
+   2.  Traffic between the CFS and backend is protected using some kind
        of VPN.
 
-   4.  The A/AAAA values for backend.example.com and cfs.cdn.example are
+   3.  The A/AAAA values for backend.example.com and cfs.lb.example are
        the same.
 
+   4.  backend.example.com content is hosted on some machine(s)
+       accessible via the CFS and via the VPN.
 
 
 
@@ -338,23 +338,20 @@ Farrell, et al.          Expires 4 October 2025                 [Page 6]
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
-   5.  backend.example.com content is hosted on some machine(s)
-       accessible via the client-facing servers and via the VPN.
-
-   6.  backend.example.com has to acquire the ECH config information
+   5.  backend.example.com wants to acquire the ECH config information
        from the CFS by querying the CFS' .well-known URL, in this case
-       https://cfs.cds.example/.well-known/origin-svcb
+       https://cfs.lb.example/.well-known/origin-svcb
 
-   7.  backend.example.com then publishes its chosen JSON (presumably
+   6.  backend.example.com then publishes its chosen JSON (presumably
        including the relevant ECH config information) at
        https://backend.example.com/.well-known/origin-svcb That resource
        is hosted on the "real" backend.example.com machine.
 
-   8.  The ZF attempts to connect to https://backend.example.com using
+   7.  The ZF attempts to connect to https://backend.example.com using
        the generated HTTPS record(s), including the relevant ECH values,
        and confirms that all is working before updating the zone.
 
-   9.  Note that the ZF is not aware that ECH split-mode is in use.
+   8.  Note that the ZF is not aware that ECH split-mode is in use.
 
 4.  The origin-svcb well-known URI
 
@@ -387,14 +384,15 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
            }]
        }
 
+               Figure 3: Sample JSON for ECH without aliases
+
+
 
 
 Farrell, et al.          Expires 4 October 2025                 [Page 7]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
-
-               Figure 3: Sample JSON for ECH without aliases
 
         {
            "regeninterval": 108000,
@@ -442,6 +440,8 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
       2.  A ServiceMode entry, containing at least one key from the JSON
           HTTP Origin Info registry (see IANA Considerations
           (Section 9), below).
+
+
 
 
 

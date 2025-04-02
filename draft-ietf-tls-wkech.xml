@@ -255,8 +255,8 @@ Client <----------->|                    | facing
                     +--------------------+
                     |                    |
      TLS            |   2001:DB8::1111   |
-    Client <-->     |backend.example.com |
-                    |     cfs.example    |
+     Client <---->  |backend.example.com |
+                    |   cfs.lb.example   |
                     +--------------------+
                         ^            ^
      (3) ZF reads       |            |  (4) ZF checks
@@ -280,10 +280,10 @@ Client <----------->|                    | facing
     In this topology, the overall process is as in the previous section,
     but with the following differences: but with the following differences:
     <ol>
-        <li>ECH split-mode is supported by the CDN.</li>
         <li>
-            The client-facing server, e.g. in a CDN, for the backend
-            server only does ECH decryption.
+            The client-facing server, (CDS), is a load-balancer and
+            only does ECH decryption. The load-balancer is
+            called cfs.lb.example.
         </li>
         <li>
             Traffic between the CFS and backend is protected using
@@ -291,17 +291,17 @@ Client <----------->|                    | facing
         </li>
         <li>
             The A/AAAA values for backend.example.com and
-            cfs.cdn.example are the same.
+            cfs.lb.example are the same.
         </li>
         <li>
             backend.example.com content is hosted on some machine(s)
-            accessible via the client-facing servers and via the VPN.
+            accessible via the CFS and via the VPN.
         </li>
         <li>
-            backend.example.com has to acquire the ECH config
+            backend.example.com wants to acquire the ECH config
             information from the CFS by querying the CFS'
             .well-known URL, in this case
-            https://cfs.cds.example/.well-known/origin-svcb
+            https://cfs.lb.example/.well-known/origin-svcb
         </li>
         <li>
             backend.example.com then publishes its chosen JSON
