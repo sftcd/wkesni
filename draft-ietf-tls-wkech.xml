@@ -407,9 +407,10 @@ Client <-->|backend.example.com | | backend.example.com| facing
       corresponding to the HTTPS record's TargetName with the final "." removed.
       The default value is the empty string (""), corresponding to
       a TargetName of ".". To avoid complex conversion logic, the characters
-      in this value MUST be limited to lowercase lower ASCII letters (a-z),
-      digits (0-9), "-", "_", and ".". These are the characters used in preferred
-      name syntax and underscore labels.
+      in this value MUST be limited to lower ASCII letters, digits,
+      "-", "_", and "." (ALPHA / DIGIT / "-" / "_" / "." in {{?ABNF=RFC5234}}).
+      These are the characters used in preferred name syntax {{?RFC1034}} and
+      underscore labels.
       </dd>
       <dt>priority:</dt>
       <dd>The value is a positive integer corresponding to the
