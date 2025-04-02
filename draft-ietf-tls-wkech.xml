@@ -303,6 +303,21 @@ Client <-->|backend.example.com | | backend.example.com| facing
     <t>If no new ECHConfig value verifies (as per <xref target="zfbehave"/>), then the
             zone factory MUST NOT modify the zone. </t>
 
+            <t>
+                With this scheme, web origins can only "speak for themselves" so
+                that if the backend is e.g. at port 8443 rather
+                then the default 443, then the ZF MUST access
+                https://backend.example.com:8443/.well-known/origin-scvb
+                when considering modifications to the HTTPS/SVCB records for
+                _8443._https.example.com.
+                As a consequence, a ZF will need to be configured to
+                periodically refresh the JSON resource for each origin
+                separately, that is, a ZF cannot "discover" from port
+                443 that some other service, for which the ZF is
+                expected to update the DNS, is also present on another
+                port on the same host.
+            </t>
+
     </section>
 
 
@@ -471,15 +486,27 @@ Client <-->|backend.example.com | | backend.example.com| facing
       specified below, provide the following important properties:
     <ul>
 	<li>
-	    Origins can express any useful configuration that is representable by HTTPS records, including multiple endpoints representing different ports, providers, etc.
-	</li>
-	<li>
-	    Origins that simply alias to a single target can indicate this
-	    without copying the ECHConfig and other parameters, avoiding
-	    the maintenance burden of staying synchronized with the target's
-	    key rotations and configuration updates.
-	</li>
-      </ul>
+        Origins can express any useful configuration that is representable by
+        HTTPS records, including multiple endpoints representing different
+        ports, providers, etc.
+    </li>
+    <li>
+        Origins that simply alias to a single target can indicate this
+        without copying the ECHConfig and other parameters, avoiding the
+        maintenance burden of staying synchronized with the target's key
+        rotations and configuration updates.
+    </li>
+</ul>
+</t>
+
+    <t>
+        Note that there are multiple, and possibly confusing, port numbers
+        involved here. The port that is part of the web origin in the 
+        .well-known URL is part of the QNAME that will be used by clients
+        in accessing the origin's HTTPS/SVCB resource records. The "port"
+        field in the RR value, and in the JSON structure, is the value
+        to be used in specifying an "alternative endpoint" as defined
+        in <xref target="RFC9460">section 1.3</xref>.
     </t>
 
 </section>
@@ -611,13 +638,6 @@ Client <-->|backend.example.com | | backend.example.com| facing
                     unexpected tracking vector.
                 </li>
             </ul>
-        </t>
-
-        <t>
-            The .well-known URI chosen here means that services running
-            on different ports of the same backend are trusting the
-            service running on the default port (443) for that backend
-            to provide correct endpoint information.
         </t>
 
         <t>
@@ -756,7 +776,8 @@ Client <-->|backend.example.com | | backend.example.com| facing
       </t>
 
       <t>
-          Version 07 has editorial changes and clarifications.
+          Version 07 clarifies that origins only speak for themselves
+          and has editorial changes and clarifications.
       </t>
 
     </section>
