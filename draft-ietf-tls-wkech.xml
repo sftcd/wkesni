@@ -305,7 +305,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
         "regeninterval": 3600,
         "endpoints": [{
             "priority": 1,
-            "target": "cdn.example.",
+            "target": "cdn.example",
             "params": {
                 "ech": "AD7+DQA65wAgAC..AA=="
             }
@@ -403,9 +403,14 @@ Client <-->|backend.example.com | | backend.example.com| facing
   <t>The following keys are defined for ServiceMode entries:
     <dl>
       <dt>target:</dt>
-      <dd>The value is a string containing a fully qualified
-	domain name, corresponding to the HTTPS record's TargetName.
-	The default value is ".".
+      <dd>The value is a string containing a fully qualified domain name
+      corresponding to the HTTPS record's TargetName with the final "." removed.
+      The default value is the empty string (""), corresponding to
+      a TargetName of ".". To avoid complex conversion logic, the characters
+      in this value MUST be limited to lower ASCII letters, digits,
+      "-", "_", and "." (ALPHA / DIGIT / "-" / "_" / "." in {{?ABNF=RFC5234}}).
+      These are the characters used in preferred name syntax {{?RFC1034}} and
+      underscore labels.
       </dd>
       <dt>priority:</dt>
       <dd>The value is a positive integer corresponding to the
