@@ -8,7 +8,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-05"
+<rfc category="exp" docName="draft-ietf-tls-wkech-07"
   ipr="trust200902" submissionType="IETF" xmlns:xi="http://www.w3.org/2001/XInclude">
   <front>
     <title abbrev="Well-Known URI for SVCB">A well-known URI for publishing service parameters</title>
@@ -42,7 +42,7 @@
       </address>
     </author>
 
-    <date year="2024"/>
+    <date year="2025"/>
     <area>Security Area</area>
     <workgroup>TLS</workgroup>
     <keyword>TLS</keyword>
@@ -73,9 +73,8 @@
 	    for TLS1.3 <xref target="RFC8446"/>
 	    defines a confidentiality mechanism for server names and other
 	    ClientHello content in TLS.
-	    The <xref target="RFC9460">Service Bindings (SVCB) in DNS</xref>
-	    RFC
-	    defines how to put information needed to make connections
+	    The <xref target="RFC9460">Service Bindings (SVCB) in DNS RFC</xref>
+	    defines how to handle information needed to make connections
 	    to services by using a new DNS record set (RRset).
 	    The <xref target="I-D.ietf-tls-svcb-ech"/> document defines
 	    an entry in that RRset for Encrypted Client Hello (ECH).
@@ -98,7 +97,7 @@
 	    access to the relevant zone file (or equivalent).
 	    This mechanism is extensible to deliver other kinds of
 	    information about the origin, that can be of use in these
-	    circumstances. This document will use the ECH data to provide
+	    circumstances. This document uses the ECH data to provide
 	    a concrete example.
         </t>
 
@@ -201,23 +200,33 @@ Client <----------->|                    | facing
 	  https://backend.example.com/.well-known/origin-svcb.
       </t>
       <t>
-	  These steps then occur:
+	  These steps may then occur:
            <ol>
-	     <li>On the ZF, another regularly executed job uses
-	       an HTTP client to retrieve this JSON resource from backend.example.com.
-	       The data MUST be fetched via HTTPS and the certificate validity MUST
-	       be verified.</li>
-	     <li>The ZF next attempts to connect to backend.example.com using these ECH values and confirms
-	       that they are working.</li>
-	     <li> The ZF observes that the JSON resource
-	       has a regeninterval of 3600 seconds, and chooses a DNS
-	       TTL of 1800.  It updates the DNS zone file for backend.example.com and re-publishes
-	       the zone containing the new ECHConfigList values instead of the old.</li>
-	   </ol>
-	  When "regeninterval" seconds have passed, the ZF attempts to
-	  refresh its cached copy of the JSON resource.  If the resource has changed,
-	  it repeats this process.
-	 </t>
+            <li>
+                On the ZF, another regularly executed job uses
+                an HTTP client to retrieve this JSON resource from
+                backend.example.com. The data MUST be fetched via
+                HTTPS and the certificate validity MUST
+                be verified.
+            </li>
+            <li>
+                If there is no change to the JSON content, then the ZF is done
+                processing for this backend. If there is a change to the JSON
+                content, the ZF attempts to connect to backend.example.com using
+                these ECH values and confirms that they are working.
+            </li>
+            <li>
+                The ZF observes that the JSON resource has a
+                regeninterval of 3600 seconds, and chooses a DNS TTL
+                of 1800. It updates the DNS zone file for backend.example.com
+                and re-publishes the zone containing the
+                new ECHConfigList values instead of the old.
+            </li>
+        </ol>
+            When "regeninterval" seconds have passed, the ZF attempts to
+            refresh its cached copy of the JSON resource. If the resource has
+            changed, it repeats this process.
+        </t>
 
         </section>
 
@@ -423,8 +432,9 @@ Client <-->|backend.example.com | | backend.example.com| facing
       The default value is the empty string (""), corresponding to
       a TargetName of ".". To avoid complex conversion logic, the characters
       in this value MUST be limited to lower ASCII letters, digits,
-      "-", "_", and "." (ALPHA / DIGIT / "-" / "_" / "." in {{?ABNF=RFC5234}}).
-      These are the characters used in preferred name syntax {{?RFC1034}} and
+      "-", "_", and "." (ALPHA / DIGIT / "-" / "_" / "." in 
+      <xref target="RFC5234">ABNF</xref>).
+      These are the characters used in preferred name syntax <xref target="RFC1034"/> and
       underscore labels.
       </dd>
       <dt>priority:</dt>
@@ -518,7 +528,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
 	adjusting TTL values and correcting common misconfigurations.
     </t>
 
-    <t>ZF SHOULD check that ECH with the presented endpoints
+    <t>A ZF SHOULD check that ECH with the presented endpoints
         succeeds with the backend before publication.
         In order to make such checks, the ZF SHOULD
         attempt to access the well-known URI defined here
@@ -542,11 +552,11 @@ Client <-->|backend.example.com | | backend.example.com| facing
       then the ZF SHOULD check that webPKI based authentication of
       the backend works at all of the relevant addresses.</t>
 
-    <t>ZF SHOULD publish all the endpoints
+    <t>A ZF SHOULD publish all the endpoints
         that are presented in the JSON file that pass
         the checks above.</t>
 
-    <t>ZF SHOULD set a DNS TTL less than regeninterval, i.e. short enough so that any
+    <t>A ZF SHOULD set a DNS TTL less than regeninterval, i.e. short enough so that any
         cached DNS resource records are likely to have expired before the JSON
         object's content is likely to have changed. The ZF
         MUST attempt to refresh the JSON object and regenerate the zone
@@ -576,7 +586,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
 
         <t>
             When considering the content of SVCB/HTTPS RRs, the general argument for
-            the security of this scheme is that,
+            the security of this scheme is that
             this scheme has the backend server authenticate
             the JSON structure that is mapped directly to the SVCB/HTTPS RR, to
             eventually be used by TLS clients when interacting with the backend
@@ -705,7 +715,9 @@ Client <-->|backend.example.com | | backend.example.com| facing
 
   <back>
     <references title="Normative References">
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.1034.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.5234.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.5280.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml"/>
@@ -764,7 +776,8 @@ Client <-->|backend.example.com | | backend.example.com| facing
       </t>
 
       <t>
-          Version 07 clarifies that origins only speak for themselves.
+          Version 07 clarifies that origins only speak for themselves
+          and has editorial changes and clarifications.
       </t>
 
     </section>
