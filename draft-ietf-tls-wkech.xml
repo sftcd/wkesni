@@ -230,28 +230,36 @@ Client <----------->|                    | facing
 
         </section>
 
-        <section title="Split-mode, multi-CDN deplpoyment.">
+        <section title="Split-mode deployment.">
 	  <t>
           The following diagram, and this entire section, is a place-holder just
           to have something on which to base discussion, and will change.</t>
-<figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="split-mode"><artwork><![CDATA[
+
+        <t>
+            In this section, we describe one possible way in which ECH
+            split-mode could be deployed and make use of this .well-known
+            scheme. There are of course various other deployment options that
+            might be more effective.
+        </t>
+
+<figure title="Split-Mode Topology with Zone Factory and DNS" anchor="split-mode"><artwork><![CDATA[
 
                     +--------------------+
                     |        REAL        |
                     | backend.example.com|
                     |                    |
                     +--------------------+
-                        ^^           ^^
-                        ||    VPN    ||
-                        VV           VV
-           +--------------------+ +--------------------+
-           |                    | |                    |
- TLS       |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
-Client <-->|backend.example.com | | backend.example.com| facing
-           |  cfs.cdn1.example  | |  cfs.cdn2.example  | servers
-           +--------------------+ +--------------------+
+      (1) backend       ^^           ^^   (2) backend publishes
+          reads CFS'    ||    VPN    ||       backend's
+          .well-known   VV           VV       .well-known
+                    +--------------------+
+                    |                    |
+     TLS            |   2001:DB8::1111   |
+     Client <---->  |backend.example.com |
+                    |   cfs.lb.example   |
+                    +--------------------+
                         ^            ^
-     (1) ZF reads       |            |  (2) ZF checks
+     (3) ZF reads       |            |  (4) ZF checks
          .well-known    V            V      ECHConfig
                     +--------------------+
                     |                    |
@@ -259,7 +267,7 @@ Client <-->|backend.example.com | | backend.example.com| facing
                     |                    |
                     +--------------------+
                               |
-                              | (3) ZF publishes new HTTPS RR
+                              | (5) ZF publishes new HTTPS RR
                               V
                     +--------------------+
                     |                    |
@@ -268,23 +276,54 @@ Client <-->|backend.example.com | | backend.example.com| facing
                     +--------------------+
 ]]></artwork></figure>
 
-     <t>
-		In this topology, the overall process is as in the previous section,
-		but with the following differences:
-        <ol>
-           <li>There are two client-facing servers (in different CDNs) for the
-               one "REAL" backend server that hosts the actual web resources.</li>
-           <li>ECH split-mode is assumed to be supported by both CDNs.</li>
-           <li>The "REAL" backend.example.com content is hosted on some machine(s)
-               accessible from the client-facing servers via a VPN.</li>
-           <li>The ZF notes that backend.example.com has multiple AAAA RR values
-               published, so queries for the .well-known at each of those. In this
-               case the values received differ.</li>
-	       <li>The ZF next attempts to connect to each CFS using the relevant ECH values and confirms
-	           that they are all working. </li>
-           <li>Note tha the ZF is not aware that ECH split-mode is in use.</li>
-	    </ol>
-     </t>
+<t>
+    In this topology, the overall process is as in the previous section,
+    but with the following differences: but with the following differences:
+    <ol>
+        <li>
+            The client-facing server, (CFS), is a load-balancer and
+            only does ECH decryption. The load-balancer is
+            called cfs.lb.example.
+        </li>
+        <li>
+            Traffic between the CFS and backend is protected using
+            some kind of VPN.
+        </li>
+        <li>
+            The A/AAAA values for backend.example.com and
+            cfs.lb.example are the same.
+        </li>
+        <li>
+            backend.example.com content is hosted on some machine(s)
+            accessible via the CFS and via the VPN.
+        </li>
+        <li>
+            backend.example.com wants to acquire the ECH config
+            information from the CFS by querying the CFS'
+            .well-known URL, in this case
+            https://cfs.lb.example/.well-known/origin-svcb
+        </li>
+        <li>
+            backend.example.com then publishes its chosen JSON
+            (presumably including the relevant ECH config information)
+            at https://backend.example.com/.well-known/origin-svcb
+            That resource is hosted on the "real" backend.example.com
+            machine.
+        </li>
+        <li>
+            The ZF attempts to connect to https://backend.example.com using
+            the generated HTTPS record(s), including the
+            relevant ECH values, and confirms that all is
+            working before updating the zone.
+        </li>
+    </ol>
+</t>
+
+<t>
+    Note that the in this example ZF does not necessarily know that ECH
+    split-mode is in use.
+</t>
+
 	 </section>
     </section>
 
@@ -780,6 +819,9 @@ Client <-->|backend.example.com | | backend.example.com| facing
           and has editorial changes and clarifications.
       </t>
 
+    </section>
+    <section title="Examples">
+        <t>TBD - add some examples with names, JSON etc. and brief explanations.</t>
     </section>
   </back>
 </rfc>
