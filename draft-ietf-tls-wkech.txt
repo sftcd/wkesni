@@ -319,7 +319,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    but with the following differences: but with the following
    differences:
 
-   1.  The client-facing server, (CDS), is a load-balancer and only does
+   1.  The client-facing server, (CFS), is a load-balancer and only does
        ECH decryption.  The load-balancer is called cfs.lb.example.
 
    2.  Traffic between the CFS and backend is protected using some kind

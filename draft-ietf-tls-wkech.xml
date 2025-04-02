@@ -281,7 +281,7 @@ Client <----------->|                    | facing
     but with the following differences: but with the following differences:
     <ol>
         <li>
-            The client-facing server, (CDS), is a load-balancer and
+            The client-facing server, (CFS), is a load-balancer and
             only does ECH decryption. The load-balancer is
             called cfs.lb.example.
         </li>
