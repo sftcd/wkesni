@@ -316,10 +316,12 @@ Client <----------->|                    | facing
             relevant ECH values, and confirms that all is
             working before updating the zone.
         </li>
-        <li>
-            Note that the ZF is not aware that ECH split-mode is in use.
-        </li>
     </ol>
+</t>
+
+<t>
+    Note that the in this example ZF does not necessarily know that ECH
+    split-mode is in use.
 </t>
 
 	 </section>
