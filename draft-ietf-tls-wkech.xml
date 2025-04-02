@@ -234,6 +234,14 @@ Client <----------->|                    | facing
 	  <t>
           The following diagram, and this entire section, is a place-holder just
           to have something on which to base discussion, and will change.</t>
+
+        <t>
+            In this section, we describe one possible way in which ECH
+            split-mode could be deployed and make use of this .well-known
+            scheme. There are of course various other deployment options that
+            might be more effective.
+        </t>
+
 <figure title="Split-Mode Topology with Zone Factory and DNS" anchor="split-mode"><artwork><![CDATA[
 
                     +--------------------+
@@ -809,6 +817,9 @@ Client <----------->|                    | facing
           and has editorial changes and clarifications.
       </t>
 
+    </section>
+    <section title="Examples">
+        <t>TBD - add some examples with names, JSON etc. and brief explanations.</t>
     </section>
   </back>
 </rfc>
