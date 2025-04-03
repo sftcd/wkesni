@@ -77,7 +77,8 @@
 	    defines how to handle information needed to make connections
 	    to services by using a new DNS record set (RRset).
 	    The <xref target="I-D.ietf-tls-svcb-ech"/> document defines
-	    an entry in that RRset for Encrypted Client Hello (ECH).
+        an entry in that RRset for Encrypted Client Hello (ECH) configuration
+        information.
 	</t>
 	<t>
 	    Many applications will require publication of SVCB data, such
@@ -117,7 +118,7 @@
             can similarly poll the ECH client-facing server at the
             well-known URI and then create it's own value to publish
             for the ZF to read. ECH split-mode is defined in
-	    <xref target="I-D.ietf-tls-esni"/> and some examples are shown
+	    <xref target="I-D.ietf-tls-esni"/> and an example is provided
 	    <xref target="examples">below</xref>.
         </t>
 
@@ -231,10 +232,6 @@ Client <----------->|                    | facing
         </section>
 
         <section title="Split-mode deployment.">
-	  <t>
-          The following diagram, and this entire section, is a place-holder just
-          to have something on which to base discussion, and will change.</t>
-
         <t>
             In this section, we describe one possible way in which ECH
             split-mode could be deployed and make use of this .well-known
@@ -278,10 +275,10 @@ Client <----------->|                    | facing
 
 <t>
     In this topology, the overall process is as in the previous section,
-    but with the following differences: but with the following differences:
+    but with the following differences:
     <ol>
         <li>
-            The client-facing server, (CFS), is a load-balancer and
+            The client-facing server (CFS) is a load-balancer and
             only does ECH decryption. The load-balancer is
             called cfs.lb.example.
         </li>
@@ -295,7 +292,7 @@ Client <----------->|                    | facing
         </li>
         <li>
             backend.example.com content is hosted on some machine(s)
-            accessible via the CFS and via the VPN.
+            accessible via the CFS and then via the VPN.
         </li>
         <li>
             backend.example.com wants to acquire the ECH config
@@ -320,7 +317,7 @@ Client <----------->|                    | facing
 </t>
 
 <t>
-    Note that the in this example ZF does not necessarily know that ECH
+    Note that in this example the ZF does not necessarily know that ECH
     split-mode is in use.
 </t>
 
@@ -821,7 +818,13 @@ Client <----------->|                    | facing
 
     </section>
     <section title="Examples">
-        <t>TBD - add some examples with names, JSON etc. and brief explanations.</t>
+
+        <t>
+            TBD - add more and more detailed examples with names, JSON etc. and
+            brief explanations.
+        </t>
+
     </section>
+
   </back>
 </rfc>

@@ -5,14 +5,14 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: 5 October 2025                              Akamai Technologies
+Expires: 4 April 2025                                Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                            3 April 2025
+                                                          1 October 2024
 
 
            A well-known URI for publishing service parameters
-                        draft-ietf-tls-wkech-07
+                        draft-ietf-tls-wkech-06
 
 Abstract
 
@@ -44,18 +44,18 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 October 2025.
+   This Internet-Draft will expire on 4 April 2025.
 
 Copyright Notice
 
-   Copyright (c) 2025 IETF Trust and the persons identified as the
+   Copyright (c) 2024 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 1]
+Farrell, et al.           Expires 4 April 2025                  [Page 1]
 
-Internet-Draft           Well-Known URI for SVCB              April 2025
+Internet-Draft           Well-Known URI for SVCB            October 2024
 
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -73,46 +73,30 @@ Table of Contents
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
    3.  Example uses of the well-known URI for ECH  . . . . . . . . .   4
      3.1.  Shared-mode deplpoyment.  . . . . . . . . . . . . . . . .   4
-     3.2.  Split-mode deployment.  . . . . . . . . . . . . . . . . .   5
+     3.2.  Split-mode, multi-CDN deplpoyment.  . . . . . . . . . . .   5
    4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   7
    5.  The JSON structure for origin service binding info  . . . . .   7
-   6.  Zone Factory behaviour  . . . . . . . . . . . . . . . . . . .  11
-   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  12
-   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  13
-   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  13
-     9.1.  Well-known endpoint registration  . . . . . . . . . . . .  13
-     9.2.  JSON Service Binding Info . . . . . . . . . . . . . . . .  14
-   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  15
-     10.1.  Normative References . . . . . . . . . . . . . . . . . .  15
-     10.2.  Informative References . . . . . . . . . . . . . . . . .  16
-   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  16
-   Appendix B.  Examples . . . . . . . . . . . . . . . . . . . . . .  17
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  17
+   6.  Zone Factory behaviour  . . . . . . . . . . . . . . . . . . .  10
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
+   8.  Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  12
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  12
+     9.1.  Well-known endpoint registration  . . . . . . . . . . . .  12
+     9.2.  JSON Service Binding Info . . . . . . . . . . . . . . . .  13
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .  14
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .  14
+     10.2.  Informative References . . . . . . . . . . . . . . . . .  15
+   Appendix A.  Change Log . . . . . . . . . . . . . . . . . . . . .  15
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  16
 
 1.  Introduction
 
    Encrypted ClientHello (ECH) [I-D.ietf-tls-esni] for TLS1.3 [RFC8446]
    defines a confidentiality mechanism for server names and other
-   ClientHello content in TLS.  The Service Bindings (SVCB) in DNS RFC
-   [RFC9460] defines how to handle information needed to make
+   ClientHello content in TLS.  The Service Bindings (SVCB) in DNS
+   [RFC9460] RFC defines how to put information needed to make
    connections to services by using a new DNS record set (RRset).  The
    [I-D.ietf-tls-svcb-ech] document defines an entry in that RRset for
-   Encrypted Client Hello (ECH) configuration information.
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 2]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
+   Encrypted Client Hello (ECH).
 
    Many applications will require publication of SVCB data, such as a
    list of ECHConfig values, in the DNS.  Each ECHConfig value contains
@@ -121,14 +105,20 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    infrastructures will have an API that can be used to dynamically
    update the DNS RRset to contain the current list of ECHConfig data,
    known as an ECHConfigList.  Some deployments, however, will not, and
-   those deployments could benefit from a mechanism like the one defined
-   here.
+   those deployments could
+
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 2]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
 
    Note that this is not intended for universal deployment, but rather
    for cases where the web server doesn't have write access to the
    relevant zone file (or equivalent).  This mechanism is extensible to
    deliver other kinds of information about the origin, that can be of
-   use in these circumstances.  This document uses the ECH data to
+   use in these circumstances.  This document will use the ECH data to
    provide a concrete example.
 
    We use the term "zone factory" (ZF) for the entity that does have
@@ -144,8 +134,8 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    If ECH is being operated in split-mode then the web server (backend)
    can similarly poll the ECH client-facing server at the well-known URI
    and then create it's own value to publish for the ZF to read.  ECH
-   split-mode is defined in [I-D.ietf-tls-esni] and an example is
-   provided below (Section 3).
+   split-mode is defined in [I-D.ietf-tls-esni] and some examples are
+   shown below (Section 3).
 
 2.  Terminology
 
@@ -160,16 +150,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    Zone factory (ZF):  an entity that has write-access to the DNS
 
    Client-Facing Server:  the web server that has an ECH private value.
-
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 3]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
       This processes the outer ClientHello and attempts ECH decryption.
       The name of client-facing server will typically be the public_name
       value used in an ECHConfig.
@@ -182,6 +162,14 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
       same web server.
 
    Split-mode:  this refers to the case where the client-facing server
+
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 3]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
+
       only does ECH decryption but the TLS session is between the client
       and backend, which will typically be on a different host to
       client-facing server
@@ -219,13 +207,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
                        |                    |
                        +--------------------+
 
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 4]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
           Figure 1: Shared-Mode Topology with Zone Factory and DNS
 
    The shared-mode ECH server generates new ECHConfigList values every
@@ -236,16 +217,21 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    Figure 3) at the well-known URI, https://backend.example.com/.well-
    known/origin-svcb.
 
-   These steps may then occur:
+   These steps then occur:
+
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 4]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
 
    1.  On the ZF, another regularly executed job uses an HTTP client to
        retrieve this JSON resource from backend.example.com.  The data
        MUST be fetched via HTTPS and the certificate validity MUST be
        verified.
 
-   2.  If there is no change to the JSON content, then the ZF is done
-       processing for this backend.  If there is a change to the JSON
-       content, the ZF attempts to connect to backend.example.com using
+   2.  The ZF next attempts to connect to backend.example.com using
        these ECH values and confirms that they are working.
 
    3.  The ZF observes that the JSON resource has a regeninterval of
@@ -257,12 +243,10 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    its cached copy of the JSON resource.  If the resource has changed,
    it repeats this process.
 
-3.2.  Split-mode deployment.
+3.2.  Split-mode, multi-CDN deplpoyment.
 
-   In this section, we describe one possible way in which ECH split-mode
-   could be deployed and make use of this .well-known scheme.  There are
-   of course various other deployment options that might be more
-   effective.
+   The following diagram, and this entire section, is a place-holder
+   just to have something on which to base discussion, and will change.
 
 
 
@@ -277,9 +261,25 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 5]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 5]
 
-Internet-Draft           Well-Known URI for SVCB              April 2025
+Internet-Draft           Well-Known URI for SVCB            October 2024
 
 
                        +--------------------+
@@ -287,17 +287,17 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
                        | backend.example.com|
                        |                    |
                        +--------------------+
-         (1) backend       ^^           ^^   (2) backend publishes
-             reads CFS'    ||    VPN    ||       backend's
-             .well-known   VV           VV       .well-known
-                       +--------------------+
-                       |                    |
-        TLS            |   2001:DB8::1111   |
-        Client <---->  |backend.example.com |
-                       |   cfs.lb.example   |
-                       +--------------------+
+                           ^^           ^^
+                           ||    VPN    ||
+                           VV           VV
+              +--------------------+ +--------------------+
+              |                    | |                    |
+    TLS       |   2001:DB8::1111   | |   2001:DB8::FFFF   | Client-
+   Client <-->|backend.example.com | | backend.example.com| facing
+              |  cfs.cdn1.example  | |  cfs.cdn2.example  | servers
+              +--------------------+ +--------------------+
                            ^            ^
-        (3) ZF reads       |            |  (4) ZF checks
+        (1) ZF reads       |            |  (2) ZF checks
             .well-known    V            V      ECHConfig
                        +--------------------+
                        |                    |
@@ -305,7 +305,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
                        |                    |
                        +--------------------+
                                  |
-                                 | (5) ZF publishes new HTTPS RR
+                                 | (3) ZF publishes new HTTPS RR
                                  V
                        +--------------------+
                        |                    |
@@ -313,46 +313,35 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
                        |                    |
                        +--------------------+
 
-          Figure 2: Split-Mode Topology with Zone Factory and DNS
+          Figure 2: Shared-Mode Topology with Zone Factory and DNS
 
    In this topology, the overall process is as in the previous section,
    but with the following differences:
 
-   1.  The client-facing server (CFS) is a load-balancer and only does
-       ECH decryption.  The load-balancer is called cfs.lb.example.
+   1.  There are two client-facing servers (in different CDNs) for the
+       one "REAL" backend server that hosts the actual web resources.
 
-   2.  Traffic between the CFS and backend is protected using some kind
-       of VPN.
+   2.  ECH split-mode is assumed to be supported by both CDNs.
 
-   3.  The A/AAAA values for backend.example.com and cfs.lb.example are
-       the same.
+   3.  The "REAL" backend.example.com content is hosted on some
+       machine(s) accessible from the client-facing servers via a VPN.
 
-   4.  backend.example.com content is hosted on some machine(s)
-       accessible via the CFS and then via the VPN.
-
-
+   4.  The ZF notes that backend.example.com has multiple AAAA RR values
+       published, so queries for the .well-known at each of those.  In
+       this case the values received differ.
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 6]
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 6]
 
-Internet-Draft           Well-Known URI for SVCB              April 2025
+Internet-Draft           Well-Known URI for SVCB            October 2024
 
 
-   5.  backend.example.com wants to acquire the ECH config information
-       from the CFS by querying the CFS' .well-known URL, in this case
-       https://cfs.lb.example/.well-known/origin-svcb
+   5.  The ZF next attempts to connect to each CFS using the relevant
+       ECH values and confirms that they are all working.
 
-   6.  backend.example.com then publishes its chosen JSON (presumably
-       including the relevant ECH config information) at
-       https://backend.example.com/.well-known/origin-svcb That resource
-       is hosted on the "real" backend.example.com machine.
-
-   7.  The ZF attempts to connect to https://backend.example.com using
-       the generated HTTPS record(s), including the relevant ECH values,
-       and confirms that all is working before updating the zone.
-
-   Note that in this example the ZF does not necessarily know that ECH
-   split-mode is in use.
+   6.  Note tha the ZF is not aware that ECH split-mode is in use.
 
 4.  The origin-svcb well-known URI
 
@@ -366,39 +355,13 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    If no new ECHConfig value verifies (as per Section 6), then the zone
    factory MUST NOT modify the zone.
 
-   With this scheme, web origins can only "speak for themselves" so that
-   if the backend is e.g. at port 8443 rather then the default 443, then
-   the ZF MUST access https://backend.example.com:8443/.well-known/
-   origin-scvb when considering modifications to the HTTPS/SVCB records
-   for _8443._https.example.com.  As a consequence, a ZF will need to be
-   configured to periodically refresh the JSON resource for each origin
-   separately, that is, a ZF cannot "discover" from port 443 that some
-   other service, for which the ZF is expected to update the DNS, is
-   also present on another port on the same host.
-
 5.  The JSON structure for origin service binding info
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 7]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
 
        {
            "regeninterval": 3600,
            "endpoints": [{
                "priority": 1,
-               "target": "cdn.example",
+               "target": "cdn.example.",
                "params": {
                    "ech": "AD7+DQA65wAgAC..AA=="
                }
@@ -422,6 +385,15 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
                     Figure 4: Sample JSON with aliasing
 
+
+
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 7]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
+
    The JSON file at the well-known URI MUST contain an object with two
    keys: "regeninterval", whose value is a number, and "endpoints" whose
    value is an array of objects.  All other keys MUST be ignored.
@@ -431,24 +403,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    a replacement ECHConfigList may be generated this often.  This is
    used by the ZF to generate DNS TTL values and to determine when to
    next poll the origin for updates.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 8]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
 
    More precise expiration times are common (e.g., the "notAfter" field
    in certificate lifetime validity, discussed in Section 4.1.2.5 of
@@ -489,30 +443,18 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    HTTPS records [RFC9460] in natural JSON while minimizing the risk of
    invalid configurations.
 
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 8]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
+
    The following keys are defined for ServiceMode entries:
 
    target:  The value is a string containing a fully qualified domain
-
-
-
-
-
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 9]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
-      name corresponding to the HTTPS record's TargetName with the final
-      "." removed.  The default value is the empty string (""),
-      corresponding to a TargetName of ".".  To avoid complex conversion
-      logic, the characters in this value MUST be limited to lower ASCII
-      letters, digits, "-", "_", and "."  (ALPHA / DIGIT / "-" / "_" /
-      "." in ABNF [RFC5234]).  These are the characters used in
-      preferred name syntax [RFC1034] and underscore labels.
+      name, corresponding to the HTTPS record's TargetName.  The default
+      value is ".".
 
    priority:  The value is a positive integer corresponding to the
       SvcPriority.  If omitted, the ZF MAY infer numerically increasing
@@ -557,23 +499,17 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 10]
+
+
+Farrell, et al.           Expires 4 April 2025                  [Page 9]
 
-Internet-Draft           Well-Known URI for SVCB              April 2025
+Internet-Draft           Well-Known URI for SVCB            October 2024
 
 
    *  Origins that simply alias to a single target can indicate this
       without copying the ECHConfig and other parameters, avoiding the
       maintenance burden of staying synchronized with the target's key
       rotations and configuration updates.
-
-   Note that there are multiple, and possibly confusing, port numbers
-   involved here.  The port that is part of the web origin in the .well-
-   known URL is part of the QNAME that will be used by clients in
-   accessing the origin's HTTPS/SVCB resource records.  The "port" field
-   in the RR value, and in the JSON structure, is the value to be used
-   in specifying an "alternative endpoint" as defined in section 1.3
-   [RFC9460].
 
 6.  Zone Factory behaviour
 
@@ -588,7 +524,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    A ZF MAY apply additional processing according to its own policy,
    such as adjusting TTL values and correcting common misconfigurations.
 
-   A ZF SHOULD check that ECH with the presented endpoints succeeds with
+   ZF SHOULD check that ECH with the presented endpoints succeeds with
    the backend before publication.  In order to make such checks, the ZF
    SHOULD attempt to access the well-known URI defined here while
    attempting ECH.
@@ -608,22 +544,23 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    SHOULD check that webPKI based authentication of the backend works at
    all of the relevant addresses.
 
-   A ZF SHOULD publish all the endpoints that are presented in the JSON
+   ZF SHOULD publish all the endpoints that are presented in the JSON
    file that pass the checks above.
 
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 11]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
-   A ZF SHOULD set a DNS TTL less than regeninterval, i.e. short enough
-   so that any cached DNS resource records are likely to have expired
+   ZF SHOULD set a DNS TTL less than regeninterval, i.e. short enough so
+   that any cached DNS resource records are likely to have expired
    before the JSON object's content is likely to have changed.  The ZF
    MUST attempt to refresh the JSON object and regenerate the zone
    before this time.  This aims to ensure that ECHConfig values are not
    used longer than intended by backend.
+
+
+
+
+Farrell, et al.           Expires 4 April 2025                 [Page 10]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
 
 7.  Security Considerations
 
@@ -639,7 +576,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    backend.
 
    When considering the content of SVCB/HTTPS RRs, the general argument
-   for the security of this scheme is that this scheme has the backend
+   for the security of this scheme is that, this scheme has the backend
    server authenticate the JSON structure that is mapped directly to the
    SVCB/HTTPS RR, to eventually be used by TLS clients when interacting
    with the backend server, via the client-facing server.
@@ -666,14 +603,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    servers to be cautious if using ipv4hints and ipv6hints, e.g.
    flagging divergence between those values and A/AAAA RRs.
 
-
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 12]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
    Although the .well-known URL defined here may well be publicly
    accessible, general HTTP clients SHOULD NOT attempt to use this
    resource in lieu of HTTPS records queries through their preferred DNS
@@ -682,9 +611,21 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    *  The bootstrap connection would not be able to use ECH, so it would
       reveal all the information that ECH seeks to protect.
 
+
+
+Farrell, et al.           Expires 4 April 2025                 [Page 11]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
+
    *  The origin could serve the user with a uniquely identifying
       configuration, potentially resulting in an unexpected tracking
       vector.
+
+   The .well-known URI chosen here means that services running on
+   different ports of the same backend are trusting the service running
+   on the default port (443) for that backend to provide correct
+   endpoint information.
 
    As described, in mutlti-CDN and simlar scenarios, a ZF might only
    test ECH success against one of the CDNs unless the ZF can make use
@@ -725,9 +666,12 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 13]
+
+
+
+Farrell, et al.           Expires 4 April 2025                 [Page 12]
 
-Internet-Draft           Well-Known URI for SVCB              April 2025
+Internet-Draft           Well-Known URI for SVCB            October 2024
 
 
             +---------------------+---------------------------+
@@ -781,9 +725,9 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 14]
+Farrell, et al.           Expires 4 April 2025                 [Page 13]
 
-Internet-Draft           Well-Known URI for SVCB              April 2025
+Internet-Draft           Well-Known URI for SVCB            October 2024
 
 
                   +---------------+------------+-------+
@@ -801,19 +745,10 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 10.1.  Normative References
 
-   [RFC1034]  Mockapetris, P., "Domain names - concepts and facilities",
-              STD 13, RFC 1034, DOI 10.17487/RFC1034, November 1987,
-              <https://www.rfc-editor.org/info/rfc1034>.
-
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/info/rfc2119>.
-
-   [RFC5234]  Crocker, D., Ed. and P. Overell, "Augmented BNF for Syntax
-              Specifications: ABNF", STD 68, RFC 5234,
-              DOI 10.17487/RFC5234, January 2008,
-              <https://www.rfc-editor.org/info/rfc5234>.
 
    [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
               Housley, R., and W. Polk, "Internet X.509 Public Key
@@ -833,33 +768,37 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
               (URIs)", RFC 8615, DOI 10.17487/RFC8615, May 2019,
               <https://www.rfc-editor.org/info/rfc8615>.
 
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 15]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
    [RFC9460]  Schwartz, B., Bishop, M., and E. Nygren, "Service Binding
               and Parameter Specification via the DNS (SVCB and HTTPS
               Resource Records)", RFC 9460, DOI 10.17487/RFC9460,
               November 2023, <https://www.rfc-editor.org/info/rfc9460>.
 
+
+
+
+
+
+
+
+
+Farrell, et al.           Expires 4 April 2025                 [Page 14]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
+
    [I-D.ietf-tls-esni]
               Rescorla, E., Oku, K., Sullivan, N., and C. A. Wood, "TLS
               Encrypted Client Hello", Work in Progress, Internet-Draft,
-              draft-ietf-tls-esni-24, 20 March 2025,
+              draft-ietf-tls-esni-22, 15 September 2024,
               <https://datatracker.ietf.org/doc/html/draft-ietf-tls-
-              esni-24>.
+              esni-22>.
 
    [I-D.ietf-tls-svcb-ech]
               Schwartz, B. M., Bishop, M., and E. Nygren, "Bootstrapping
               TLS Encrypted ClientHello with DNS Service Bindings", Work
-              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-07,
-              12 February 2025, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-tls-svcb-ech-07>.
+              in Progress, Internet-Draft, draft-ietf-tls-svcb-ech-05, 3
+              September 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-tls-svcb-ech-05>.
 
 10.2.  Informative References
 
@@ -889,15 +828,6 @@ Appendix A.  Change Log
    Version 04 matches a proof-of-concept bash script implementation and
    results of IETF-117 discussion.
 
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 16]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
    Version 05 updated the IANA and Security considerations and fixed
    conformance to HTTPS SVCB spec.  It also addressed early artart and
    dnsop reviews, and some list discussion/github issues.
@@ -905,13 +835,12 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    Version 06 changed the name and some of the text because it is no
    longer ECH-specific.
 
-   Version 07 clarifies that origins only speak for themselves and has
-   editorial changes and clarifications.
 
-Appendix B.  Examples
 
-   TBD - add more and more detailed examples with names, JSON etc. and
-   brief explanations.
+Farrell, et al.           Expires 4 April 2025                 [Page 15]
+
+Internet-Draft           Well-Known URI for SVCB            October 2024
+
 
 Authors' Addresses
 
@@ -949,4 +878,19 @@ Authors' Addresses
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 17]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Farrell, et al.           Expires 4 April 2025                 [Page 16]
