@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -x
+set -x
 
 # Copyright (C) 2023 Stephen Farrell, stephen.farrell@cs.tcd.ie
 #
@@ -22,45 +22,100 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# ECH keys update as per draft-ietf-tls-wkech-02
-# with the addition of 'regeninterval' to the JSON
-# and (so far) without support for the 'alias' option
+# ECH key management as per draft-ietf-tls-wkech-07
 # This is a work-in-progress, DON'T DEPEND ON THIS!!
 
-# This script handles ECH key updating for an ECH front-end (in ECH split-mode),
-# back-end (e.g. web server) or zone factory (the thing that publishes DNS RRs
-# containing ECH public values).
-
-# This iteration isn't yet tested in any deployment, whereas wkech-03.sh is.
-# The alpn TODO: is the main thing to fix before testing/deployment
+# This script handles ECH key updating for an ECH client-facing server or 
+# front-end (in ECH split-mode), back-end (e.g. web server) or zone factory
+# (the thing that publishes DNS RRs containing ECH public values).
 
 # This makes use of our ECH-enabled OpenSSL and curl forks. A
 # good place to start to get those working is:
-#   https://github.com/sftcd/curl/blob/ECH-experimental/docs/ECH.md 
+#   https://github.com/defo-project or https://defo.ie
 
 # Paths that  can be overidden
-: ${OSSL:=$HOME/code/openssl}
-: ${CTOP:=$HOME/code/curl}
+: ${OSSL:="$HOME/code/defo-project-org/openssl"}
+: ${ECHDT:="$HOME/code/defo-project-org/ech-dev-utils"}
+: ${CTOP:="$HOME/code/curl"}
+# whether ZF should really try publish via bind or just test up to that point
+: ${DOTEST:="no"}
 
 # variables/settings, some can be overwritten from environment
-. echvars.sh
+# all can be over-ridden via a local echvars-07.sh file to include
+# see explanations in echvars-07.sh for details
+
+: ${BE_RESTARTER:="$HOME/bin/be_restart.sh"}
+: ${FE_RESTARTER:="$HOME/bin/fe_restart.sh"}
+: ${ECHTOP:=$HOME/ech}
+ECHDIR="$ECHTOP/echkeydir"
+ECHOLD="$ECHDIR/old"
+: ${REGENINTERVAL:="3600"} # 1 hour
+: ${LONGTERMKEYS:="$ECHTOP/*.ech"}
+: ${DRTOP:="$ECHTOP/docroots"}
+declare -A fe_arr=(
+    [example.com]="$DRTOP/eg/"
+)
+declare -A fe_ipv4s=(
+    # because we use jq, you MUST NOT include spaces
+    # between the values and you MUST include the quotes
+    # as below.
+    [example.com]='["192.0.2.1","192.0.2.254"]'
+)
+declare -A fe_ipv6s=(
+    # because we use jq, you MUST NOT include spaces
+    # between the values and you MUST include the quotes
+    # as below.
+    [example.com]='["2001:DB::ec4"]'
+)
+declare -A be_arr=(
+    [foo.example.com]="$DRTOP/f.eg"
+    [foo.example.com:8443]="$DRTOP/f.eg.8443"
+    [alias.example.com]="$DRTOP/a.eg"
+    [empty.example.com]="$DRTOP/e.eg"
+)
+# Aliases also need to be mentioned in the be_arr
+# above so that we know where their DocRoot lives.
+# An empty value on the RHS here will (all going
+# well) result in publishing a "no HTTPS stuff" RR.
+declare -A be_alias_arr=(
+    [alias.example.com]="lb.example.com"
+    [empty.example.com]="DELETE"
+)
+declare -A be_alpn_arr=(
+    # because we use jq, you MUST NOT include spaces
+    # between the values and you MUST include the quotes
+    # as below.
+    [foo.example.com]='["h2","http/1.1"]'
+    [foo.example.com:8443]='["h2","h3"]'
+)
+WESTR="origin-svcb"
+: ${WWWUSER:="`whoami`"}
+: ${WWWGRP:="`whoami`"}
+: ${CURLTIMEOUT:="10s"}
+: ${ZFDIR:="$ECHTOP/zfdir"}
+ZFTMP="$ZFDIR/tmp"
+
+# these set the list of things managed, directory names, timings,
+# and names of scripts to run to re-start things if needed
+. echvars-07.sh
 
 # more paths, possibly partly overidden
 export LD_LIBRARY_PATH=$OSSL
-CURLBIN=$CTOP/src/curl
+CURLBIN="$CTOP/src/curl"
 CURLCMD="$CTOP/src/curl --doh-url https://one.one.one.one/dns-query"
+
+ECHCLI="$ECHDT/scripts/echcli.sh"
 
 # role strings
 FESTR="fe"
 BESTR="be"
 ZFSTR="zf"
+
+# default roles, works for shared-mode client-facing and backed instance
 ROLES="$FESTR,$BESTR"
 
 # whether to attempt checks that ECH works before publishing
 VERIFY="yes"
-
-# whether to really try publish via bind or just test to that point
-DOTEST="no"
 
 # whether to only make one public key available for publication
 # from front-end .well-known
@@ -212,6 +267,74 @@ function doaliasupdate()
     echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
 }
 
+function makejson()
+{
+    file=$1
+    dur=$2
+    priostr=$3
+    ipv4str=$4
+    echstr=$5
+    ipv6str=$6
+    alpnstr=$7
+    if [[ "$ipv4str" == ""  && "$echstr" == "" \
+        && "$ipv6str" == "" && "$alpnstr" == "" ]]
+    then
+        cat <<EOF >$file
+{
+ "regeninterval" : $dur,
+ "endpoints": []
+}
+EOF
+        return
+    fi
+    NL=$',\n      '
+    c2=""
+    if [ "$alpnstr" != "" ] && ([ "$ipv6str" != "" ] || [ "$echstr" != "" ] || [ "$ipv4str" != "" ])
+    then
+        c2=$NL
+    fi
+    c1=""
+    if [ "$ipv6str" != "" ] && ([ "$echstr" != "" ] || [ "$ipv4str" != "" ])
+    then
+        c1=$NL
+    fi
+    c0=""
+    if [ "$echstr" != "" ] && [ "$ipv4str" != "" ]
+    then
+        c0=$NL
+    fi
+    lpriostr=""
+    if [ "$priostr" != "0" ]
+    then
+        lpriostr='"priority" : '$priostr$',\n    '
+    fi
+    cat <<EOF >$file
+{
+ "regeninterval" : $dur,
+ "endpoints" : [ {
+    $lpriostr"params" : {
+      $ipv4str$c0$echstr$c1$ipv6str$c2$alpnstr
+    }
+ }]
+}
+EOF
+    return
+}
+
+function check_ech()
+{
+    list=$1
+    if [[ "$USE_CURL" == "no" ]]
+    then
+        $ECHCLI -P $list -H $behost -f $path -p $port \
+            $alpn_cla >/dev/null 2>&1
+    else
+        $CURLCMD --ech hard --ech ecl:$list $alpn_curl_cla \
+            "https://$beor/$path"
+    fi
+    echo $?
+}
+
 function usage()
 {
     echo "$0 [-h] [-r roles] [-d duration] - generate new ECHKeys as needed."
@@ -220,8 +343,8 @@ function usage()
     echo "  -n means to not verify that ECH is working before publishing"
     echo "  -r roles can be \"$FESTR\" or \"$FESTR,$BESTR\" or \"$ZFSTR\" " \
          "(default is \"$ROLES\")"
-    echo "  -t means to test $ZFSTR role up to, but not including, publication"
-    echo "  -1 means to only make 1 public key available from front-end at the .well-known"
+    echo "  -t test $ZFSTR role up to, but not including, publication"
+    echo "  -1 only make 1 public key available .well-known"
 
 	echo ""
 	echo "The following should work:"
@@ -234,7 +357,7 @@ NOW=$(whenisitagain)
 echo "Running $0 at $NOW"
 
 # options may be followed by one colon to indicate they have a required argument
-if ! options=$(/usr/bin/getopt -s bash -o 1cd:ehnr:t -l one,curl,duration:,echcli,help,no-verify,roles:,test -- "$@")
+if ! options=$(/usr/bin/getopt -s bash -o 1cehi:nr:t -l one,curl,echcli,help,intervaal:,no-verify,roles:,test -- "$@")
 then
     # something went wrong, getopt will put out an error message for us
     exit 2
@@ -246,9 +369,9 @@ do
     case "$1" in
         -1|--one) JUSTONE="yes";;
         -c|--curl) USE_CURL="yes";;
-        -d|--duration) DURATION=$2; shift;;
         -e|--echcli) USE_CURL="no";;
         -h|--help) usage;;
+        -i|--interval) REGENINTERVAL=$2; shift;;
         -n|--no-verify) VERIFY="no";;
         -r|--roles) ROLES=$2; shift;;
         -t|--test) DOTEST="yes";;
@@ -261,12 +384,12 @@ done
 
 # variables that can be influenced by command line options
 
-# Various multiples/fractions of DURATION
-duro2=$((DURATION/2))
-dur=$DURATION
-durt2=$((DURATION*2))
-durt3=$((DURATION*3 + 60)) # allow a bit of leeway
-durt5=$((DURATION*5))
+# Various multiples/fractions of REGENINTERVAL
+duro2=$((REGENINTERVAL/2))
+dur=$REGENINTERVAL
+durt2=$((REGENINTERVAL*2))
+durt3=$((REGENINTERVAL*3 + 60)) # allow a bit of leeway
+durt5=$((REGENINTERVAL*5))
 
 
 # set this if we did something that needs e.g. a server restart
@@ -298,9 +421,10 @@ then
         echo "OpenSSL not built - exiting"
         exit 5
     fi
-    if [ ! -f $OSSL/esnistuff/mergepems.sh ]
+    # check for another script we need
+    if [ ! -f $ECHDT/scripts/mergepems.sh ]
     then
-        echo "mergepems not seen - exiting"
+        echo "$ECHDT/scripts/mergepems.sh not seen - exiting"
         exit 6
     fi
     # check that our OpenSSL build supports ECH
@@ -344,7 +468,7 @@ then
         fewkechdir=$fedr/.well-known/
         if [ ! -d $fewkechdir ]
         then
-            sudo mkdir -p $fewkechdir
+            sudo -u $WWWUSER mkdir -p $fewkechdir
         fi
         if [ ! -d $fewkechdir ]
         then
@@ -404,9 +528,9 @@ then
         echo "$CURLBIN not built with ECH - exiting"
         exit 8
     fi
-    if [ "$USE_CURL" == "no" && ! -f $OSSL/esnistuff/echcli.sh ]
+    if [ "$USE_CURL" == "no" && ! -f $ECHCLI ]
     then
-        echo "Can't see $OSSL/esnistuff/echcli.sh - exiting"
+        echo "Can't see $ECHCLI - exiting"
         exit 11
     fi
     if [ ! -d $ZFDIR ]
@@ -458,11 +582,11 @@ then
         # Plan:
 
         # - check creation date of existing ECHConfig key pair files
-        # - if all ages < DURATION then we're done and exit
+        # - if all ages < REGENINTERVAL then we're done and exit
         # - Otherwise:
         #   - generate new instance of ECHKeys (same for backends)
-        #   - retire any keys >3*DURATION old
-        #   - delete any keys >5*DURATION old
+        #   - retire any keys >3*REGENINTERVAL old
+        #   - delete any keys >5*REGENINTERVAL old
         #   - push updated JSON (for all keys) to DocRoot dest
 
         newest=$durt5
@@ -470,7 +594,7 @@ then
         oldest=0
         oldf=""
 
-        echo "Prime key lifetime: $DURATION seconds"
+        echo "Prime key lifetime: $REGENINTERVAL seconds"
         echo "New key generated when latest is $dur old"
         echo "Old keys retired when older than $durt3"
         if [[ "$JUSTONE" == "yes" ]]
@@ -512,7 +636,7 @@ then
             fi
             if ((fage > durt3))
             then
-                echo "$file too old, (age==$fage >= $durt3)... moving to $ECHOLD"
+                echo "$file is old, (age==$fage >= $durt3)... moving to $ECHOLD"
                 mv $file $ECHOLD
                 actiontaken="true"
                 someactiontaken="true"
@@ -522,7 +646,7 @@ then
         echo "Oldest PEM file is $oldf (age: $oldest)"
         echo "Newest PEM file is $newf (age: $newest)"
 
-        # delete files older than 5*DURATION
+        # delete files older than 5*REGENINTERVAL
         oldies="$ECHOLD/*"
         for file in $oldies
         do
@@ -545,9 +669,9 @@ then
             $OSSL/apps/openssl ech \
                 -ech_version 0xfe0d \
                 -public_name $fehost \
-                -pemout $ECHDIR/$fehost.$feport/$keyn.pem.ech
+                -out $ECHDIR/$fehost.$feport/$keyn.pem.ech
             res=$?
-            if [[ "$res" != "1" ]]
+            if [[ "$res" != "0" ]]
             then
                 echo "Error generating $ECHDIR/$fehost.$feport/$keyn.pem.ech"
                 exit 15
@@ -586,32 +710,28 @@ then
         if [[ "$actiontaken" != "false" ]]
         then
             echo "Merging these files for publication: $mergefiles"
-            $OSSL/esnistuff/mergepems.sh -o $TMPF $mergefiles
-            echconfiglist=`cat $TMPF | sed -n '/BEGIN ECHCONFIG/,/END ECHCONFIG/p' \
-                | head -n -1 | tail -n -1`
+            $ECHDT/scripts/mergepems.sh -o $TMPF $mergefiles
+            echconfiglist=`cat $TMPF \
+                | sed '/BEGIN ECHCONFIG/,/END ECHCONFIG/{//!b};d' | tr -d '\n'`
             rm -f $TMPF
-            ipstr=""
+            echstr="\"ech\" : \"$echconfiglist\""
+            ipv4str=""
             cfgips=${fe_ipv4s[${feor}]}
             if [[ "$cfgips" != "" ]]
             then
-                ipstr=",\"ipv4hint\": \"$cfgips\""
+                ipv4str="\"ipv4hint\" : $cfgips"
             fi
+            ipv6str=""
             cfgips=${fe_ipv6s[${feor}]}
             if [[ "$cfgips" != "" ]]
             then
-                ipstr="$ipstr,\"ipv6hint\": \"$cfgips\""
+                ipv6str="\"ipv6hint\" : $cfgips"
             fi
-            cat <<EOF >$TMPF
-{
- "endpoints": [ {
-    "regeninterval" : $dur,
-    "priority" : 1,
-    "port":  $feport,
-    "ech": "$echconfiglist"$ipstr
- } ]
-}
-EOF
-            sudo cp $TMPF $fewkechfile
+            # for a FE we don't bother with alpn
+            alpnstr=""
+
+            makejson "$fewkechfile" "$dur" "1" \
+                "$ipv4str" "$echstr" "$ipv6str" "$alpnstr"
             sudo chown $WWWUSER:$WWWGRP $fewkechfile
             sudo chmod a+r $fewkechfile
         fi
@@ -622,6 +742,7 @@ if [[ $ROLES == *"$BESTR"* ]]
 then
     for beor in "${!be_arr[@]}"
     do
+        echo "Checking $beor"
         bedr=${be_arr[${beor}]}
         wkechfile=$bedr/.well-known/$WESTR
         behost=$(hostport2host $beor)
@@ -638,49 +759,12 @@ then
         lmf=$ECHDIR/$behost.$beport/latest-merged
         rm -f $lmf
         # is there an alias entry for this BE?
-        if [[ -n ${be_alias_arr[${beor}]} ]]
+        if [[ -z ${be_alias_arr[${beor}]} ]]
         then
-            alvals=${be_alias_arr[${beor}]}
-            if [[ "$alvals" == "" ]]
-            then
-                # that's a signal that BE doesn't do ECH so signal we want to publish
-                # an "empty" .well-known TODO: do that!
-                echo "TODO: handle empty alias"
-            else
-                # add in aliases if desired - these overwrite any of the above
-                alvals=${be_alias_arr[${beor}]}
-                if [[ "$alvals" != "" ]]
-                then
-                    for alval in $alvals
-                    do
-                        TMPF1=`mktemp`
-                        cat <<EOF >$TMPF1
-{ "endpoints": [ {
-    "alias": "$alval",
-    "regeninterval": $dur
-} ] }
-EOF
-                        if [ ! -f $lmf ] 
-                        then
-                            cp $TMPF1 $lmf
-                        else
-                            TMPF2=`mktemp`
-                            jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF1 >$TMPF2
-                            jres=$?
-                            if [[ "$jres" == 0 ]]
-                            then
-                                mv $TMPF2 $lmf
-                            else
-                                rm -f $TMPF2
-                            fi
-                        fi
-                        rm -f $TMPF1
-                    done
-                fi
-            fi
-        else
+
             # non-alias case
 	        # accumulate the various front-end files
+            echo "Setting up service mode for $beor"
 	        for feor in "${!fe_arr[@]}"
 	        do
 	            fehost=$(hostport2host $feor)
@@ -694,12 +778,14 @@ EOF
 	                cp $fewkechfile $TMPF
 	            else
 	                # split-mode, FE JSON file is non-local
-	                timeout $CURLTIMEOUT curl -o $TMPF -s https://$feor/.well-known/$WESTR
+	                timeout $CURLTIMEOUT curl -o $TMPF \
+                        -s https://$feor/.well-known/$WESTR
 	                if [[ "$tres" == "124" ]]
 	                then
 	                    # timeout returns 124 if it timed out, or else the
 	                    # result from curl otherwise
-	                    echo "Timed out after $CURLTIMEOUT waiting for https://$feor/.well-known/$WESTR"
+	                    echo "Timed out after $CURLTIMEOUT waiting for " \
+                            "https://$feor/.well-known/$WESTR"
 	                    exit 23
 	                fi
 	            fi
@@ -714,7 +800,8 @@ EOF
 	                cp $TMPF $lmf
 	            else
 	                TMPF1=`mktemp`
-	                jq -n '{ endpoints: [ inputs.endpoints ] | add }' $lmf $TMPF >$TMPF1
+	                jq -n '{ endpoints: [ inputs.endpoints ] | add }' \
+                        $lmf $TMPF >$TMPF1
 	                jres=$?
 	                if [[ "$jres" == 0 ]]
 	                then
@@ -724,12 +811,12 @@ EOF
 	                fi
 	            fi
 	        done
-	        # add alpn= to endpoints, if desired
+	        # add alpn= to endpoints.params, if desired
 	        alpnval=${be_alpn_arr[${beor}]}
 	        if [[ "$alpnval" != "" ]]
 	        then
 	            TMPF1=`mktemp`
-	            jq '.endpoints[] + { "alpn": "'$alpnval'" }' $lmf | jq -n '{ endpoints: [ inputs ] }' >$TMPF1
+                jq --argjson p "$alpnval" '.endpoints[].params.alpn += $p' $lmf >$TMPF1
 	            jres=$?
 	            if [[ "$jres" == 0 ]]
 	            then
@@ -738,20 +825,24 @@ EOF
 	                rm -f $TMPF1
 	            fi
 	        fi
-	        # fix port number everywhere if non default
-	        if [[ "$beport" != "$DEFPORT" ]]
-	        then
-	            TMPF1=`mktemp`
-	            jq '.endpoints[].port? |= "'$beport'"' $lmf >$TMPF1
-	            jres=$?
-	            if [[ "$jres" == 0 ]]
-	            then
-	                mv $TMPF1 $lmf
-	            else
-	                rm -f $TMPF1
-	            fi
-	        fi
+
+        else
+
+            # alias case
+            alvals=${be_alias_arr[${beor}]}
+            echo "Setting up alias for $beor as $alvals"
+            if [[ "$alvals" == "DELETE" ]]
+            then
+                # a signal that BE doesn't do ECH so signal we want to publish
+                # an "empty" .well-known TODO: figure is this reasonable!
+                makejson "$lmf" "$dur" "0"  '' '' '' ''
+            else
+                aliasstr='"alias" : "'$alvals'"'
+                makejson "$lmf" "$dur" "0"  "$aliasstr" '' '' ''
+            fi
+
         fi
+
         newcontent=`diff -q $wkechfile $lmf`
         if [[ -f $lmf && "$newcontent" != "" ]]
         then
@@ -760,7 +851,9 @@ EOF
             sudo chown $WWWUSER:$WWWGRP $wkechfile
             sudo chmod a+r $wkechfile
             someactiontaken="true"
+
         fi
+
     done
 fi
 
@@ -776,14 +869,14 @@ then
         # pull URL, and see if that has new stuff ...
         TMPF=`mktemp`
         path=".well-known/$WESTR"
-        # URL below should really be $behost, but needs change to defo.ie test setup
+        # URL below should be $behost, but needs change to defo.ie test setup
         URL="https://$beor/$path"
         # grab .well-known stuff
         if [[ "$USE_CURL" == "yes" ]]
         then
             timeout $CURLTIMEOUT $CURLCMD -s $URL -o $TMPF
         else
-            # use system curl
+            # use system curl - ECH is not needed here
             timeout $CURLTIMEOUT curl -s $URL -o $TMPF
         fi
         tres=$?
@@ -847,15 +940,17 @@ then
         for ((index=0;index!=$entries;index++))
         do
             echo "$behost:$beport Array element: $((index+1)) of $entries"
-            arrent=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq .[$index]`
-            regeninterval=`echo $arrent | jq .regeninterval`
+            arrent=`cat $ZFTMP/$behost.$beport.json \
+                | jq .endpoints | jq .[$index]`
+            regeninterval=`cat $ZFTMP/$behost.$beport.json \
+                | jq .regeninterval`
             aliasname=`echo $arrent | jq .alias | sed -e 's/"//g'`
             if [[ "$aliasname" != "" && "$aliasname" != "null" ]]
             then
                 # see if that alias works
                 if [[ "$USE_CURL" == "no" ]]
                 then
-                    $OSSL/esnistuff/echcli.sh -s $aliasname -H $behost \
+                    $ECHCLI -s $aliasname -H $behost \
                         -p $beport >/dev/null 2>&1
                 else
                     $CURLCMD --ech hard "https://$behost:$beport/"
@@ -875,13 +970,15 @@ then
                     # publish
                     if [[ "$DOTEST" == "no" ]]
                     then
-                        nres=`doaliasupdate $behost $beport $aliasname $regeninterval`
+                        nres=`doaliasupdate $behost $beport \
+                            $aliasname $regeninterval`
                         if [[ "$nres" == "0" ]]
                         then
                             echo "Published for $behost/$beport via $aliasname"
                             publishedsomething="true"
                         else
-                            echo "Failure ($nres) publishing for $behost/$beport via $aliasname"
+                            echo "Failure ($nres) publishing " \
+                                "for $behost/$beport via $aliasname"
                         fi
                     else
                         echo "Testing, so not publishing"
@@ -890,7 +987,7 @@ then
                 continue
             fi
             # non-alias case
-            list=`echo $arrent | jq .ech | sed -e 's/\"//g'`
+            list=`echo $arrent | jq params.ech | sed -e 's/\"//g'`
             if [[ "$list" == "null" ]]
             then
                 # skip if no ECH value (aliases handled above)
@@ -900,46 +997,48 @@ then
             #echo "splitlists: $splitlists"
             listarr=( $splitlists )
             listcount=${#listarr[@]}
-            port=`echo $arrent | jq .port | sed -e 's/"//g'`
-            if [[ "$port" == "null" ]]
-            then
-                port=443
-            fi
-            #echo "port: $port"
-            priority=`echo $arrent | jq .priority`
+            port=$beport
+            #echo "port: $beport"
+            priority=`echo $arrent | jq priority`
             if [[ "$priority" == "null" ]]
             then
                 priority=1
             fi
-            regeninterval=`echo $arrent | jq .regeninterval`
             if [[ "$regeninterval" == "null" ]]
             then
                 regeninterval=3600
             fi
-            alpn=`echo $arrent | jq .alpn | sed -e 's/"//g'`
+            alpn=`echo $arrent | jq params.alpn \
+                | sed -e 's/\[//' | sed -e 's/\]//' \
+                | tr -d '\n' | sed -e 's/"//g' \
+                | sed -e 's/ //g'`
             if [[ "$alpn" == "null" ]]
             then
                 alpn_cla="" # command line arg
+                alpn_curl_cla="" # command line arg
                 alpn_str="" # value for HTTPS RR
             else
-                alpn_cla="-a $alpn"
-                alpn_str="alpn=$alpn"
+                alpn_cla="-a \"$alpn\""
+                alpn_curl_cla="--alpn \"$alpn\""
+                alpn_str="alpn=\"$alpn\""
             fi
-            ipv4hints=`echo $arrent | jq .ipv4hint | sed -e 's/"//g'`
+            # TODO: make an effort to verify addrs - or maybe leave that for
+            # non-bash implementation?
+            ipv4hints=`echo $arrent | jq params.ipv4hint | sed -e 's/"//g'`
             if [[ "$ipv4hints" == "null" ]]
             then
                 ipv4hints_str=""
             else
                 ipv4hints_str="ipv4hint=$ipv4hints"
             fi
-            ipv6hints=`echo $arrent | jq .ipv6hint | sed -e 's/"//g'`
+            ipv6hints=`echo $arrent | jq params.ipv6hint | sed -e 's/"//g'`
             if [[ "$ipv6hints" == "null" ]]
             then
                 ipv6hints_str=""
             else
                 ipv6hints_str="ipv6hint=$ipv6hints"
             fi
-            target=`echo $arrent | jq .target`
+            target=`echo $arrent | jq params.target`
             if [[ "$target" == "null" ]]
             then
                 target=""
@@ -953,14 +1052,7 @@ then
             else
                 echworked="false"
                 # first test entire list then each element
-                if [[ "$USE_CURL" == "no" ]]
-                then
-                    $OSSL/esnistuff/echcli.sh -P $list -H $behost \
-                        -p $port $alpn_cla >/dev/null 2>&1
-                else
-                    # TODO: find a way to pass alpn params
-                    $CURLCMD --ech hard --ech ecl:$list "https://$behost:$port/"
-                fi
+                check_ech $list
                 res=$?
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
@@ -984,21 +1076,16 @@ then
                     then
                         continue
                     fi
-                    if [[ "$USE_CURL" == "no" ]]
-                    then
-                        $OSSL/esnistuff/echcli.sh -P $singletonlist -H $behost \
-                            -p $beport $alpn_cla >/dev/null 2>&1
-                    else
-                        # TODO: find a way to pass alpn params
-                        $CURLCMD --ech hard --ech ecl:$singletonlist "https://$behost:$port/"
-                    fi
+                    check_ech $singletonlist
                     res=$?
                     if [[ "$res" != "0" ]]
                     then
-                            echo "ECH single error at $behost $beport $singletonlist"
+                            echo "ECH single error at $behost $beport " \
+                                "$singletonlist"
                             echerror="true"
                         else
-                            echo "ECH single ($snum/$listcount) fine at $behost $beport"
+                            echo "ECH single ($snum/$listcount) fine " \
+                                "at $behost $beport"
                             echworked="true"
                         fi
                     snum=$((snum+1))
@@ -1016,27 +1103,30 @@ then
                     #echo "Will try publish for $behost:$port"
                     if [[ "$target" == "" ]]
                     then
-                        if [[ "$port" == "443" ]]
+                        if [[ "$beport" == "443" ]]
                         then
                             target="."
                         else
                             target=$behost
                         fi
                     fi
-                    if [[ "$alpn_str" != "" || "$ipv4hints_str" != "" || "$ipv6hints_str" != "" ]]
+                    if [[ "$alpn_str" != "" || "$ipv4hints_str" != "" \
+                        || "$ipv6hints_str" != "" ]]
                     then
                         extraparams="$alpn_str $ipv4hints_str $ipv6hints_str"
                     else
                         extraparams=""
                     fi
                     sleep 3
-                    nres=`donsupdate $behost $list $desired_ttl $priority $target $beport $extraparams`
+                    nres=`donsupdate $behost $list $desired_ttl \
+                        $priority $target $beport $extraparams`
                     if [[ "$nres" == "0" ]]
                     then
                         echo "Published for $behost/$beport"
                         publishedsomething="true"
                     else
-                        echo "Failure ($nres) in publishing for $behost/$beport"
+                        echo "Failure ($nres) in publishing for " \
+                            "$behost/$beport"
                     fi
                 else
                     echo "Just testing so won't add $behost/$beport"
