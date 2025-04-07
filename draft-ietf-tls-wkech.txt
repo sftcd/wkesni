@@ -5,14 +5,14 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: 5 October 2025                              Akamai Technologies
+Expires: 9 October 2025                              Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                            3 April 2025
+                                                            7 April 2025
 
 
            A well-known URI for publishing service parameters
-                        draft-ietf-tls-wkech-07
+                        draft-ietf-tls-wkech-08
 
 Abstract
 
@@ -44,7 +44,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 October 2025.
+   This Internet-Draft will expire on 9 October 2025.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 1]
+Farrell, et al.          Expires 9 October 2025                 [Page 1]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -72,7 +72,7 @@ Table of Contents
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
    2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
    3.  Example uses of the well-known URI for ECH  . . . . . . . . .   4
-     3.1.  Shared-mode deplpoyment.  . . . . . . . . . . . . . . . .   4
+     3.1.  Shared-mode deployment. . . . . . . . . . . . . . . . . .   4
      3.2.  Split-mode deployment.  . . . . . . . . . . . . . . . . .   5
    4.  The origin-svcb well-known URI  . . . . . . . . . . . . . . .   7
    5.  The JSON structure for origin service binding info  . . . . .   7
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 2]
+Farrell, et al.          Expires 9 October 2025                 [Page 2]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -165,7 +165,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 3]
+Farrell, et al.          Expires 9 October 2025                 [Page 3]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -193,7 +193,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
    Some example deployments are described here.
 
-3.1.  Shared-mode deplpoyment.
+3.1.  Shared-mode deployment.
 
                        +--------------------+
                        |                    |
@@ -221,7 +221,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 4]
+Farrell, et al.          Expires 9 October 2025                 [Page 4]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 5]
+Farrell, et al.          Expires 9 October 2025                 [Page 5]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 6]
+Farrell, et al.          Expires 9 October 2025                 [Page 6]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -389,27 +389,25 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                 [Page 7]
+Farrell, et al.          Expires 9 October 2025                 [Page 7]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
+   {
+     "regeninterval": 3600,
+     "endpoints": [
        {
-           "regeninterval": 3600,
-           "endpoints": [{
-               "priority": 1,
-               "target": "cdn.example",
-               "params": {
-                   "ech": "AD7+DQA65wAgAC..AA=="
-               }
-           }, {
-               "priority": 1,
-               "params": {
-                   "port": 8413,
-                   "ech": "AD7+DQA65wAgAC..AA=="
-               }
-           }]
+         "priority": 1,
+         "params": {
+           "ipv4hint": [ "192.0.2.1", "192.0.2.254" ],
+           "ech": "AD7+DQA6NAAgACCn3zNTeX/WOD...AAA==",
+           "ipv6hint": [ "2001:DB::ec4" ],
+           "alpn": [ "h2", "http/1.1" ]
+         }
        }
+     ]
+   }
 
                Figure 3: Sample JSON for ECH without aliases
 
@@ -432,24 +430,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    used by the ZF to generate DNS TTL values and to determine when to
    next poll the origin for updates.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 8]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
    More precise expiration times are common (e.g., the "notAfter" field
    in certificate lifetime validity, discussed in Section 4.1.2.5 of
    [RFC5280]), but are too stringent for this use-case.  The ZF cannot
@@ -461,6 +441,14 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    intended update frequency.  This also make it clear the origin must
    tolerate some amount of version skew, and gives operational
    flexibility to avoid unreasonable update frequencies.
+
+
+
+
+Farrell, et al.          Expires 9 October 2025                 [Page 8]
+
+Internet-Draft           Well-Known URI for SVCB              April 2025
+
 
    The "endpoints" key is an array of objects.
 
@@ -492,20 +480,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    The following keys are defined for ServiceMode entries:
 
    target:  The value is a string containing a fully qualified domain
-
-
-
-
-
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                 [Page 9]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
       name corresponding to the HTTPS record's TargetName with the final
       "." removed.  The default value is the empty string (""),
       corresponding to a TargetName of ".".  To avoid complex conversion
@@ -522,6 +496,15 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
       in the dictionary is a string containing a registered SvcParamKey
       name (e.g., "ipv6hint") or a SvcParamKey in generic form (e.g.,
       "key65528").  The default value is "{}".
+
+
+
+
+
+Farrell, et al.          Expires 9 October 2025                 [Page 9]
+
+Internet-Draft           Well-Known URI for SVCB              April 2025
+
 
       *  For single-valued SvcParams (e.g., "ech"), the value is a JSON
          String.  A JSON String is a sequence of Unicode codepoints,
@@ -553,15 +536,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
       by HTTPS records, including multiple endpoints representing
       different ports, providers, etc.
 
-
-
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 10]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
    *  Origins that simply alias to a single target can indicate this
       without copying the ECHConfig and other parameters, avoiding the
       maintenance burden of staying synchronized with the target's key
@@ -574,6 +548,19 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    in the RR value, and in the JSON structure, is the value to be used
    in specifying an "alternative endpoint" as defined in section 1.3
    [RFC9460].
+
+
+
+
+
+
+
+
+
+Farrell, et al.          Expires 9 October 2025                [Page 10]
+
+Internet-Draft           Well-Known URI for SVCB              April 2025
+
 
 6.  Zone Factory behaviour
 
@@ -611,19 +598,25 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    A ZF SHOULD publish all the endpoints that are presented in the JSON
    file that pass the checks above.
 
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 11]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
    A ZF SHOULD set a DNS TTL less than regeninterval, i.e. short enough
    so that any cached DNS resource records are likely to have expired
    before the JSON object's content is likely to have changed.  The ZF
    MUST attempt to refresh the JSON object and regenerate the zone
    before this time.  This aims to ensure that ECHConfig values are not
    used longer than intended by backend.
+
+
+
+
+
+
+
+
+
+Farrell, et al.          Expires 9 October 2025                [Page 11]
+
+Internet-Draft           Well-Known URI for SVCB              April 2025
+
 
 7.  Security Considerations
 
@@ -666,14 +659,6 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
    servers to be cautious if using ipv4hints and ipv6hints, e.g.
    flagging divergence between those values and A/AAAA RRs.
 
-
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 12]
-
-Internet-Draft           Well-Known URI for SVCB              April 2025
-
-
    Although the .well-known URL defined here may well be publicly
    accessible, general HTTP clients SHOULD NOT attempt to use this
    resource in lieu of HTTPS records queries through their preferred DNS
@@ -681,6 +666,13 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
    *  The bootstrap connection would not be able to use ECH, so it would
       reveal all the information that ECH seeks to protect.
+
+
+
+Farrell, et al.          Expires 9 October 2025                [Page 12]
+
+Internet-Draft           Well-Known URI for SVCB              April 2025
+
 
    *  The origin could serve the user with a uniquely identifying
       configuration, potentially resulting in an unexpected tracking
@@ -725,7 +717,15 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 13]
+
+
+
+
+
+
+
+
+Farrell, et al.          Expires 9 October 2025                [Page 13]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -781,7 +781,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 14]
+Farrell, et al.          Expires 9 October 2025                [Page 14]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -837,7 +837,7 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 15]
+Farrell, et al.          Expires 9 October 2025                [Page 15]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -893,7 +893,7 @@ Appendix A.  Change Log
 
 
 
-Farrell, et al.          Expires 5 October 2025                [Page 16]
+Farrell, et al.          Expires 9 October 2025                [Page 16]
 
 Internet-Draft           Well-Known URI for SVCB              April 2025
 
@@ -907,6 +907,8 @@ Internet-Draft           Well-Known URI for SVCB              April 2025
 
    Version 07 clarifies that origins only speak for themselves and has
    editorial changes and clarifications.
+
+   Version 08-to-be will fix typos and add more examples.
 
 Appendix B.  Examples
 
@@ -947,6 +949,4 @@ Authors' Addresses
 
 
 
-
-
-Farrell, et al.          Expires 5 October 2025                [Page 17]
+Farrell, et al.          Expires 9 October 2025                [Page 17]

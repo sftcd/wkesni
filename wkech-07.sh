@@ -93,6 +93,7 @@ WESTR="origin-svcb"
 : ${WWWGRP:="`whoami`"}
 : ${CURLTIMEOUT:="10s"}
 : ${ZFDIR:="$ECHTOP/zfdir"}
+: ${ZFEXCEPTIONS:="$ZFDIR/exceptions.csv"}
 ZFTMP="$ZFDIR/tmp"
 
 # these set the list of things managed, directory names, timings,
@@ -267,7 +268,8 @@ function doaliasupdate()
     echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
 }
 
-function makejson()
+# Make the JSON structure to be published at a wkech .well-known 
+function makesvcjson()
 {
     file=$1
     dur=$2
@@ -321,6 +323,35 @@ EOF
     return
 }
 
+function makealiasjson()
+{
+    file=$1
+    dur=$2
+    aliasstr=$3
+
+    if [ "$aliasstr" == "" ] 
+    then
+        cat <<EOF >$file
+{
+ "regeninterval" : $dur,
+ "endpoints": []
+}
+EOF
+        return
+    fi
+    cat <<EOF >$file
+{
+ "regeninterval" : $dur,
+ "endpoints" : [{
+    "alias" : "$aliasstr"
+  }]
+}
+EOF
+    return
+}
+
+# use curl or echcli.sh to check if an ECH with an ECHConfigList (multiple or
+# singleton) works as expected
 function check_ech()
 {
     list=$1
@@ -333,6 +364,49 @@ function check_ech()
             "https://$beor/$path"
     fi
     echo $?
+}
+
+# When the ZF notes an exception (e.g. ECH not validating, IP address
+# discrepency) they it doesn't publish all requested new records, but 
+# creates an entry in the exceptions file.
+function zf_exception()
+{
+    msg=$1
+    NOW=$(whenisitagain)
+    echo "$NOW,$beor,$msg" >> $ZFEXCEPTIONS
+}
+
+# Check consistency between the ip hints requested to be pubilshed in
+# an SVCB/HTTPS RR compared to what's currently published in the DNS
+# via A/AAAA
+# All of these things can be multivalued so it's not a simple exact
+# match, we just check the hint addrs are a subset of those already
+# published in the DNS.
+# We don't do any fancy address matching, so there's any oddness about
+# use of "::" in IPv6 addrs, we'll wrongly claim a mismatch.
+# We will allow case insensitivity for matching though.
+function check_ips()
+{
+    name=$1 # dns name
+    hint4s=$2 # space-sep list of IPv4 addrs
+    hint6s=$3 # space-sep list of IPv6 addrs
+    aval=`dig +short $name`
+    for hint in $hint4s
+    do
+        case ${aval,,} in
+            *${hint,,}*) continue;;
+            *) return "IPV4 mismatch";;
+        esac
+    done
+    aaaaval=`dig +short aaaa $name`
+    for hint in $hint6s
+    do
+        case ${aaaaval,,} in
+            *${hint,,}*) continue;;
+            *) return "IPV4 mismatch";;
+        esac
+    done
+    return "match"
 }
 
 function usage()
@@ -730,7 +804,7 @@ then
             # for a FE we don't bother with alpn
             alpnstr=""
 
-            makejson "$fewkechfile" "$dur" "1" \
+            makesvcjson "$fewkechfile" "$dur" "1" \
                 "$ipv4str" "$echstr" "$ipv6str" "$alpnstr"
             sudo chown $WWWUSER:$WWWGRP $fewkechfile
             sudo chmod a+r $fewkechfile
@@ -835,10 +909,9 @@ then
             then
                 # a signal that BE doesn't do ECH so signal we want to publish
                 # an "empty" .well-known TODO: figure is this reasonable!
-                makejson "$lmf" "$dur" "0"  '' '' '' ''
+                makealiasjson "$lmf" "$dur" ''
             else
-                aliasstr='"alias" : "'$alvals'"'
-                makejson "$lmf" "$dur" "0"  "$aliasstr" '' '' ''
+                makealiasjson "$lmf" "$dur" "$alvals"
             fi
 
         fi

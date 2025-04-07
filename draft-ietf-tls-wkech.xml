@@ -8,7 +8,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-07"
+<rfc category="exp" docName="draft-ietf-tls-wkech-08"
   ipr="trust200902" submissionType="IETF" xmlns:xi="http://www.w3.org/2001/XInclude">
   <front>
     <title abbrev="Well-Known URI for SVCB">A well-known URI for publishing service parameters</title>
@@ -162,7 +162,7 @@
 
         <t>Some example deployments are described here.</t>
 
-        <section title="Shared-mode deplpoyment.">
+        <section title="Shared-mode deployment.">
 
 
 <figure title="Shared-Mode Topology with Zone Factory and DNS" anchor="shared-mode"><artwork><![CDATA[
@@ -361,22 +361,20 @@ Client <----------->|                    | facing
 
 <figure anchor="sample-json" title="Sample JSON for ECH without aliases" >
 <artwork><![CDATA[
+{
+  "regeninterval": 3600,
+  "endpoints": [
     {
-        "regeninterval": 3600,
-        "endpoints": [{
-            "priority": 1,
-            "target": "cdn.example",
-            "params": {
-                "ech": "AD7+DQA65wAgAC..AA=="
-            }
-        }, {
-            "priority": 1,
-            "params": {
-                "port": 8413,
-                "ech": "AD7+DQA65wAgAC..AA=="
-            }
-        }]
+      "priority": 1,
+      "params": {
+        "ipv4hint": [ "192.0.2.1", "192.0.2.254" ],
+        "ech": "AD7+DQA6NAAgACCn3zNTeX/WOD...AAA==",
+        "ipv6hint": [ "2001:DB::ec4" ],
+        "alpn": [ "h2", "http/1.1" ]
+      }
     }
+  ]
+}
   ]]></artwork>
 </figure>
 
@@ -814,6 +812,10 @@ Client <----------->|                    | facing
       <t>
           Version 07 clarifies that origins only speak for themselves
           and has editorial changes and clarifications.
+      </t>
+
+      <t>
+          Version 08-to-be will fix typos and add more examples.
       </t>
 
     </section>
