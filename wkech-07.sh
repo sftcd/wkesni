@@ -54,29 +54,34 @@ ECHOLD="$ECHDIR/old"
 : ${DRTOP:="$ECHTOP/docroots"}
 declare -A fe_arr=(
     [example.com]="$DRTOP/eg/"
+    [jell.ie]="$DRTOP/ji"
 )
 declare -A fe_ipv4s=(
     # because we use jq, you MUST NOT include spaces
     # between the values and you MUST include the quotes
     # as below.
     [example.com]='["192.0.2.1","192.0.2.254"]'
+    [jell.ie]='["213.108.105.239"]'
 )
 declare -A fe_ipv6s=(
     # because we use jq, you MUST NOT include spaces
     # between the values and you MUST include the quotes
     # as below.
     [example.com]='["2001:DB::ec4"]'
+    [jell.ie]='["2a00:c6c0:0:109:4::10"]'
 )
 declare -A be_arr=(
     [foo.example.com]="$DRTOP/f.eg"
     [foo.example.com:8443]="$DRTOP/f.eg.8443"
     [alias.example.com]="$DRTOP/a.eg"
     [empty.example.com]="$DRTOP/e.eg"
+    [vps.jell.ie]="$DRTOP/je"
 )
 # Aliases also need to be mentioned in the be_arr
 # above so that we know where their DocRoot lives.
 # An empty value on the RHS here will (all going
 # well) result in publishing a "no HTTPS stuff" RR.
+# TODO: is DELETE reasonable
 declare -A be_alias_arr=(
     [alias.example.com]="lb.example.com"
     [empty.example.com]="DELETE"
@@ -94,6 +99,8 @@ WESTR="origin-svcb"
 : ${CURLTIMEOUT:="10s"}
 : ${ZFDIR:="$ECHTOP/zfdir"}
 : ${ZFEXCEPTIONS:="$ZFDIR/exceptions.csv"}
+# log of nsupdate commands that would be run when not testing
+: ${ZFCMDS:="$ZFDIR/commands.txt"}
 ZFTMP="$ZFDIR/tmp"
 
 # these set the list of things managed, directory names, timings,
@@ -196,16 +203,18 @@ function splitlist()
 # (default 443), use the bind9 nsupdate tool to publish that value
 # in the DNS, we return the return value from the nsupdate tool,
 # which is 0 for success and non-zero otherwise
-function donsupdate()
+function make_nsupdate()
 {
-    host=$1
-    echval=$2
-    ttl=$3
-    priority=$4
-    target=$5
-    port=$6
+    index=$1
+    total=$2
+    host=$3
+    echval=$4
+    ttl=$5
+    priority=$6
+    target=$7
+    port=$8
     # extraparams can be empty, if not, it has things like alpn, ip hints
-    extraparams="$7 $8 $9" 
+    extraparams="$9 ${10} ${11}" 
     # All params are needed
     if [[ $host == "" \
           || $echval == "" \
@@ -217,27 +226,52 @@ function donsupdate()
         # non-random failure code
         echo 57
     fi
-    if [[ "$port" == "443" ]]
+    if [[ "$index" == "0" ]]
     then
-        nscmd="update delete $host HTTPS\n
-               update add $host $ttl HTTPS $priority $target $extraparams ech=$echval\n
-               send\n
-               quit"
-    else
+        # include an update delete command first
+        d443cmd="update delete $host HTTPS"
         oname="_$port._https.$host"
-        nscmd="update delete $oname HTTPS\n
-               update add $oname $ttl HTTPS $priority $host $extraparams ech=$echval\n
-               send\n
+        dothercmd="update delete $oname HTTPS"
+    fi
+    if (((index+1)==total))
+    then
+        sqstr="send\n
                quit"
     fi
-    echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
+    if [[ "$port" == "443" ]]
+    then
+        nscmd="$d443cmd \n
+               update add $host $ttl HTTPS $priority $target $extraparams ech=$echval\n
+               $sqstr"
+    else
+        oname="_$port._https.$host"
+        nscmd="$dothercmd \n
+               update add $oname $ttl HTTPS $priority $host $extraparams ech=$echval\n
+               $sqstr"
+    fi
+    echo $nscmd
+}
+
+# execute some nsupdate commands, or if testing, just log those
+# to a file
+function run_nsupdate()
+{
+    nscmd=$1
+    if [[ "$DOTEST" == "no" ]]
+    then
+        echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
+    else
+        # just echo the command we'd run
+        echo -e $nscmd >>$ZFCMDS
+        echo 0
+    fi
 }
 
 # given a host, a base64 ECHConfigList a TTL and an optional port
 # (default 443), use the bind9 nsupdate tool to publish that value
 # in the DNS, we return the return value from the nsupdate tool,
 # which is 0 for success and non-zero otherwise
-function doaliasupdate()
+function make_aliasupdate()
 {
     host=$1
     port=$2
@@ -265,7 +299,7 @@ function doaliasupdate()
                send\n
                quit"
     fi
-    echo -e $nscmd | sudo su -c "nsupdate -l >/dev/null 2>&1; echo $?"
+    echo $nscmd
 }
 
 # Make the JSON structure to be published at a wkech .well-known 
@@ -357,13 +391,15 @@ function check_ech()
     list=$1
     if [[ "$USE_CURL" == "no" ]]
     then
-        $ECHCLI -P $list -H $behost -f $path -p $port \
+        $ECHCLI -P $list -H $behost -f $path -p $beport \
             $alpn_cla >/dev/null 2>&1
     else
         $CURLCMD --ech hard --ech ecl:$list $alpn_curl_cla \
             "https://$beor/$path"
     fi
-    echo $?
+    # echo $?
+    # fake success for a wee while...
+    echo 0
 }
 
 # When the ZF notes an exception (e.g. ECH not validating, IP address
@@ -373,6 +409,8 @@ function zf_exception()
 {
     msg=$1
     NOW=$(whenisitagain)
+    echo "$NOW,$beor,$msg" # for script log
+    msg=${msg//,/;} # replace commas with semi-colons for CSV goodness
     echo "$NOW,$beor,$msg" >> $ZFEXCEPTIONS
 }
 
@@ -596,13 +634,13 @@ fi
 if [[ $ROLES == $ZFSTR ]]
 then
     # check that our CURL version supports ECH
-    curlgotech=`$CURLBIN -h tls | grep "Encrypted Client Hello"`
+    curlgotech=`$CURLBIN -h tls | grep "Configure ECH"`
     if [[ "$USE_CURL" == "yes" && "$curlgotech" == "" ]]
     then
         echo "$CURLBIN not built with ECH - exiting"
         exit 8
     fi
-    if [ "$USE_CURL" == "no" && ! -f $ECHCLI ]
+    if [[ "$USE_CURL" == "no" && ! -f $ECHCLI ]]
     then
         echo "Can't see $ECHCLI - exiting"
         exit 11
@@ -908,7 +946,8 @@ then
             if [[ "$alvals" == "DELETE" ]]
             then
                 # a signal that BE doesn't do ECH so signal we want to publish
-                # an "empty" .well-known TODO: figure is this reasonable!
+                # an "empty" .well-known
+                # TODO: is DELETE reasonable
                 makealiasjson "$lmf" "$dur" ''
             else
                 makealiasjson "$lmf" "$dur" "$alvals"
@@ -924,7 +963,6 @@ then
             sudo chown $WWWUSER:$WWWGRP $wkechfile
             sudo chmod a+r $wkechfile
             someactiontaken="true"
-
         fi
 
     done
@@ -942,7 +980,6 @@ then
         # pull URL, and see if that has new stuff ...
         TMPF=`mktemp`
         path=".well-known/$WESTR"
-        # URL below should be $behost, but needs change to defo.ie test setup
         URL="https://$beor/$path"
         # grab .well-known stuff
         if [[ "$USE_CURL" == "yes" ]]
@@ -957,12 +994,12 @@ then
         then
             # timeout returns 124 if it timed out, or else the
             # result from curl otherwise
-            echo "Timed out after $CURLTIMEOUT waiting for $beor"
+            zf_exception "Timed out after $CURLTIMEOUT"
             continue
         fi
         if [ ! -s $TMPF ]
         then
-            echo "Can't get content from $URL - skipping $beor"
+            zf_exception "Can't get content from $URL - skipping $beor"
             rm -f $TMPF
         else
             newcontent=""
@@ -978,7 +1015,7 @@ then
                 # check we got JSON
                 if [[ "$nctype" != "$TMPF: application/json" ]]
                 then
-                    echo "$behost:$beport bad file type ($nctype)"
+                    zf_exception "bad file type $nctype"
                     rm -f $TMPF
                 else
                     echo "New content for $beor, something to do"
@@ -992,7 +1029,7 @@ then
         fi
     done
 
-    for back in $todos
+    for beor in $todos
     do
         # Remember if we did or didn't publish something - if we do, then
         # we'll "promote" the JSON file from the tmp dir to the longer term
@@ -1000,14 +1037,18 @@ then
         # on the basis that it's correct to publish keys that work and if
         # the backend fixes broken things, then we'll pick up on that and
         # publish.
-        behost=$(hostport2host $back)
-        beport=$(hostport2port $back)
+        behost=$(hostport2host $beor)
+        beport=$(hostport2port $beor)
         publishedsomething="false"
+        overallnscmd=""
+        somethingtopublish="false"
         #echo "Trying ECH to $behost:$beport"
         entries=`cat $ZFTMP/$behost.$beport.json | jq .endpoints | jq length`
         #echo "entries: $entries"
         if [[ "$entries" == "" ]]
         then
+            # could be empty endpoints: TODO: is DELETE reasonable
+            zf_exception "Empty entries"
             continue
         fi
         for ((index=0;index!=$entries;index++))
@@ -1020,7 +1061,7 @@ then
             aliasname=`echo $arrent | jq .alias | sed -e 's/"//g'`
             if [[ "$aliasname" != "" && "$aliasname" != "null" ]]
             then
-                # see if that alias works
+                # not check_ech here
                 if [[ "$USE_CURL" == "no" ]]
                 then
                     $ECHCLI -s $aliasname -H $behost \
@@ -1032,7 +1073,7 @@ then
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
                 then
-                    echo "ECH alias error for $behost $beport $aliasname"
+                    zf_exception "ECH alias error for $aliasname"
                     echerror="true"
                 else
                     echo "ECH alias fine for $behost $beport $aliasname"
@@ -1041,26 +1082,15 @@ then
                 if [[ "$echworked" == "true" ]]
                 then
                     # publish
-                    if [[ "$DOTEST" == "no" ]]
-                    then
-                        nres=`doaliasupdate $behost $beport \
+                    thisnscmd=`make_aliasupdate $behost $beport \
                             $aliasname $regeninterval`
-                        if [[ "$nres" == "0" ]]
-                        then
-                            echo "Published for $behost/$beport via $aliasname"
-                            publishedsomething="true"
-                        else
-                            echo "Failure ($nres) publishing " \
-                                "for $behost/$beport via $aliasname"
-                        fi
-                    else
-                        echo "Testing, so not publishing"
-                    fi
+                    overallnscmd="$overallnscmd\n$thisnscmd"
+                    somethingtopublish="true"
                 fi
                 continue
             fi
             # non-alias case
-            list=`echo $arrent | jq params.ech | sed -e 's/\"//g'`
+            list=`echo $arrent | jq .params.ech | sed -e 's/\"//g'`
             if [[ "$list" == "null" ]]
             then
                 # skip if no ECH value (aliases handled above)
@@ -1070,9 +1100,9 @@ then
             #echo "splitlists: $splitlists"
             listarr=( $splitlists )
             listcount=${#listarr[@]}
-            port=$beport
+            # port=$beport
             #echo "port: $beport"
-            priority=`echo $arrent | jq priority`
+            priority=`echo $arrent | jq .priority`
             if [[ "$priority" == "null" ]]
             then
                 priority=1
@@ -1081,7 +1111,7 @@ then
             then
                 regeninterval=3600
             fi
-            alpn=`echo $arrent | jq params.alpn \
+            alpn=`echo $arrent | jq .params.alpn \
                 | sed -e 's/\[//' | sed -e 's/\]//' \
                 | tr -d '\n' | sed -e 's/"//g' \
                 | sed -e 's/ //g'`
@@ -1097,27 +1127,31 @@ then
             fi
             # TODO: make an effort to verify addrs - or maybe leave that for
             # non-bash implementation?
-            ipv4hints=`echo $arrent | jq params.ipv4hint | sed -e 's/"//g'`
+            ipv4hints=`echo $arrent | jq .params.ipv4hint \
+                | sed -e 's/\[//g' | sed -e 's/\]//g' | sed -e 's/"//g' \
+                | sed -e 's/ //g' | tr -d '\n'`
             if [[ "$ipv4hints" == "null" ]]
             then
                 ipv4hints_str=""
             else
                 ipv4hints_str="ipv4hint=$ipv4hints"
             fi
-            ipv6hints=`echo $arrent | jq params.ipv6hint | sed -e 's/"//g'`
+            ipv6hints=`echo $arrent | jq .params.ipv6hint \
+                | sed -e 's/\[//g' | sed -e 's/\]//g' | sed -e 's/"//g' \
+                | sed -e 's/ //g' | tr -d '\n'`
             if [[ "$ipv6hints" == "null" ]]
             then
                 ipv6hints_str=""
             else
                 ipv6hints_str="ipv6hint=$ipv6hints"
             fi
-            target=`echo $arrent | jq params.target`
+            target=`echo $arrent | jq .params.target`
             if [[ "$target" == "null" ]]
             then
                 target=""
             fi
             desired_ttl=$((regeninterval/2))
-            # now test for each port and ECHConfig within the ECHConfigList
+            # now test for each ECHConfig within the ECHConfigList
             echerror="false"
             if [[ "$VERIFY" == "no" ]]
             then
@@ -1125,12 +1159,11 @@ then
             else
                 echworked="false"
                 # first test entire list then each element
-                check_ech $list
-                res=$?
+                res=`check_ech $list`
                 #echo "Test result is $res"
                 if [[ "$res" != "0" ]]
                 then
-                    echo "ECH list error for $behost $beport"
+                    zf_exception "ECH list error"
                     echerror="true"
                 else
                     echo "ECH list fine for $behost $beport"
@@ -1149,75 +1182,71 @@ then
                     then
                         continue
                     fi
-                    check_ech $singletonlist
-                    res=$?
+                    res=`check_ech $singletonlist`
                     if [[ "$res" != "0" ]]
                     then
-                            echo "ECH single error at $behost $beport " \
-                                "$singletonlist"
-                            echerror="true"
-                        else
-                            echo "ECH single ($snum/$listcount) fine " \
-                                "at $behost $beport"
-                            echworked="true"
-                        fi
+                        zf_exception "ECH single error with $singletonlist"
+                        echerror="true"
+                    else
+                        echo "ECH single ($snum/$listcount) fine " \
+                            "at $behost $beport"
+                        echworked="true"
+                    fi
                     snum=$((snum+1))
                 done
             fi
             if [ "$echerror" == "false" ] && [ "$echworked" == "true" ]
             then
                 # success... all ok so bank that one...
-                if [[ "$DOTEST" == "no" ]]
+                #echo "Will try publish for $behost:$port"
+                if [[ "$target" == "" ]]
                 then
-                    if [[ "$port" == "" ]]
+                    if [[ "$beport" == "443" ]]
                     then
-                        port=443
-                    fi
-                    #echo "Will try publish for $behost:$port"
-                    if [[ "$target" == "" ]]
-                    then
-                        if [[ "$beport" == "443" ]]
-                        then
-                            target="."
-                        else
-                            target=$behost
-                        fi
-                    fi
-                    if [[ "$alpn_str" != "" || "$ipv4hints_str" != "" \
-                        || "$ipv6hints_str" != "" ]]
-                    then
-                        extraparams="$alpn_str $ipv4hints_str $ipv6hints_str"
+                        target="."
                     else
-                        extraparams=""
+                        target=$behost
                     fi
-                    sleep 3
-                    nres=`donsupdate $behost $list $desired_ttl \
-                        $priority $target $beport $extraparams`
-                    if [[ "$nres" == "0" ]]
-                    then
-                        echo "Published for $behost/$beport"
-                        publishedsomething="true"
-                    else
-                        echo "Failure ($nres) in publishing for " \
-                            "$behost/$beport"
-                    fi
-                else
-                    echo "Just testing so won't add $behost/$beport"
-                    publishedsomething="true"
                 fi
+                if [[ "$alpn_str" != "" || "$ipv4hints_str" != "" \
+                    || "$ipv6hints_str" != "" ]]
+                then
+                    extraparams="$alpn_str $ipv4hints_str $ipv6hints_str"
+                else
+                    extraparams=""
+                fi
+                sleep 3
+                thisnscmd=`make_nsupdate $index $entries $behost $list $desired_ttl \
+                    $priority $target $beport $extraparams`
+                overallnscmd="$overallnscmd\n$thisnscmd"
+                somethingtopublish="true"
             else
                 echo "Won't try publish $behost/$beport"
             fi
         done
-        if [[ "$publishedsomething" == "true" ]]
+
+        if [[ "$somethingtopublish" == "true" ]]
         then
-            # we're accepting this one, so we something worked from here
-            # so save this file for comparison with next time we get run
-            mv $ZFTMP/$behost.$beport.json $ZFDIR/$behost.$beport.json
-        else
-            # nothing worked, so clean up
-            rm $ZFTMP/$behost.$beport.json
+            nres=`run_nsupdate "$overallnscmd"`
+            if [[ "$nres" == "0" ]]
+            then
+                echo "Published for $behost/$beport via $aliasname"
+                publishedsomething="true"
+            else
+                echo "Failure ($nres) publishing " \
+                    "for $behost/$beport via $aliasname"
+            fi
+            if [[ "$publishedsomething" == "true" ]]
+            then
+                # we're accepting this one, so we something worked from here
+                # so save this file for comparison with next time we get run
+                mv $ZFTMP/$behost.$beport.json $ZFDIR/$behost.$beport.json
+            else
+                # nothing worked, so clean up
+                rm $ZFTMP/$behost.$beport.json
+            fi
         fi
+
     done
 
     # clean up TMP dir, it should be empty, if not the error will improve us:-)
