@@ -99,7 +99,7 @@
 # : ${CURLTIMEOUT:="10s"}
 # : ${ZFDIR:="$ECHTOP/zfdir"}
 # : ${ZFEXCEPTIONS:="$ZFDIR/exceptions.csv"}
-# # log of nsupdate commands that would be run when not testing
+# log of nsupdate commands that would be run when not testing
 # : ${ZFCMDS:="$ZFDIR/commands.txt"}
 # ZFTMP="$ZFDIR/tmp"
 # 
@@ -395,11 +395,9 @@ function check_ech()
             $alpn_cla >/dev/null 2>&1
     else
         $CURLCMD --ech hard --ech ecl:$list $alpn_curl_cla \
-            "https://$beor/$path"
+            "https://$beor/$path" >/dev/null 2>&1
     fi
-    # echo $?
-    # fake success for a wee while...
-    echo 0
+    echo $?
 }
 
 # When the ZF notes an exception (e.g. ECH not validating, IP address
@@ -1162,7 +1160,7 @@ then
                 echworked="false"
                 # first test entire list then each element
                 res=`check_ech $list`
-                #echo "Test result is $res"
+                echo "Test result is |$res|"
                 if [[ "$res" != "0" ]]
                 then
                     zf_exception "ECH list error"
@@ -1232,11 +1230,11 @@ then
             nres=`run_nsupdate "$overallnscmd"`
             if [[ "$nres" == "0" ]]
             then
-                echo "Published for $behost/$beport via $aliasname"
+                echo "Published for $behost/$beport"
                 publishedsomething="true"
             else
                 echo "Failure ($nres) publishing " \
-                    "for $behost/$beport via $aliasname"
+                    "for $behost/$beport"
             fi
             if [[ "$publishedsomething" == "true" ]]
             then
