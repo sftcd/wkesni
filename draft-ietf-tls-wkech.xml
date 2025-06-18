@@ -673,6 +673,10 @@ Client <----------->|                    | facing
                 </li>
             </ul>
         </t>
+	<t>
+	    Operators should be careful not to put confidential information,
+	    such as private key material, in the .well-known URL.
+	</t>
 
         <t>
             As described, in mutlti-CDN and simlar scenarios, a ZF might
