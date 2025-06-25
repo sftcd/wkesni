@@ -674,8 +674,9 @@ Client <----------->|                    | facing
             </ul>
         </t>
 	<t>
-	    Operators should be careful not to put confidential information,
-	    such as private key material, in the .well-known URL.
+	    Operators should be careful to avoid directory enumeration or traversal attacks
+	    if the .well-known/ URLs are served directly from a filesystem.  For example, a
+	    misconfiguration of this kind could expose the ECH private keys.
 	</t>
 
         <t>
