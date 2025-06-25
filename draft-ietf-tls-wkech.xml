@@ -673,6 +673,11 @@ Client <----------->|                    | facing
                 </li>
             </ul>
         </t>
+	<t>
+	    Operators should be careful to avoid directory enumeration or traversal attacks
+	    if the .well-known/ URLs are served directly from a filesystem.  For example, a
+	    misconfiguration of this kind could expose the ECH private keys.
+	</t>
 
         <t>
             As described, in mutlti-CDN and simlar scenarios, a ZF might
