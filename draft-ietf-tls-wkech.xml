@@ -89,17 +89,18 @@
 	    dynamically update the DNS RRset to contain the current
 	    list of ECHConfig data, known as an ECHConfigList.
             Some deployments, however, will not, and those deployments could
-            benefit from a mechanism like the one defined here.
+            benefit from the mechanism defined here.
         </t>
 
         <t>
-	    Note that this is not intended for universal deployment, but
-	    rather for cases where the web server doesn't have write
-	    access to the relevant zone file (or equivalent).
-	    This mechanism is extensible to deliver other kinds of
-	    information about the origin, that can be of use in these
-	    circumstances. This document uses the ECH data to provide
-	    a concrete example.
+            Note that this protocol is not intended for universal deployment,
+            but rather for cases where the web server doesn't have write
+            access to the relevant zone file (or equivalent). This
+            document uses the ECH data to provide a concrete
+            motivating example. The mechanism defined here is
+            extensible so can be used to deliver other kinds of
+            information about the origin, intended to be published
+            in HTTPS RRs.
         </t>
 
         <t>
@@ -471,10 +472,14 @@ Client <----------->|                    | facing
       underscore labels.
       </dd>
       <dt>priority:</dt>
-      <dd>The value is a positive integer corresponding to the
-      SvcPriority.  If omitted, the ZF SHOULD use the SvcPriority from
-      the previous element of the endpoints array (or one for the first element).
-	  </dd>
+
+        <dd>
+            The value is a positive integer corresponding to the
+            SvcPriority. If omitted, the ZF SHOULD use the SvcPriority from
+            the previous element of the endpoints array (or the value one for
+            the first element).
+        </dd>
+
       <dt>params:</dt>
       <dd>A JSON Dictionary representing the SVCB SvcParams.  Each
 	  key in the dictionary is a string containing a registered
@@ -706,17 +711,32 @@ Client <----------->|                    | facing
             might signal to a ZF that it wishes all HTTPS RRs to be deleted.
       </t>
 
-      <t>
-            To reduce the frequency of DNS zone updates, ZF implementations
-            MAY defer any DNS updates until they detect a
-            change to the JSON value.  Changes can be detected
-            using HTTP cache headers, comparison of normalized JSON or
-            internal data structures to a cached copy, or comparison of the
-            generated DNS records (including TTLs) with those currently
-            published in the zone.  If DNS records are retrieved for this purpose
-            using a DNS query, it MUST use an authenticated secure transport
-            directly to the authoritative server, in order to ensure integrity of
-            the returned TTL value.
+    <t>
+        To reduce the frequency of DNS zone updates, ZF implementations
+        MAY defer any DNS updates until they detect a a change to the JSON
+        value. Changes can be detected using HTTP cache headers,
+        comparison of normalized JSON or internal data structures to a
+        cached copy, or comparison of the generated DNS records
+        (including TTLs) with those currently published in the zone. If
+        DNS records are retrieved for this purpose using a DNS query, it
+        MUST use an authenticated secure transport directly to the
+        authoritative server, in order to ensure integrity of the
+        returned TTL value. For clarity: a localhost connection between
+        the ZF implementation and the authoritative server process that does not
+        use the system stub resolver is considered sufficently secure
+        for this protocol, should that be an acceptable local policy.
+    </t>
+
+        <t>
+            Using this protocol, a ZF SHOULD only publish RRs for origins that
+            are actively taking part in this protocol. If an origin
+            used to use this protocol, but since stopped, this
+            protocol. If an origin used to use this protocol, but
+            since stopped, and if a ZF was still polling for that
+            origin's .well-known and the origin hadn't deleted the
+            origin-svcb JSON, then undesired publication of RRs
+            could occur. Implementations SHOULD take steps to try
+            ensure such accidental publication does not happen.
         </t>
 
     </section>
@@ -853,7 +873,9 @@ Client <----------->|                    | facing
       </t>
 
       <t>
-          Version 08-to-be will fix typos and add more examples.
+          Version 08 resolves a number of issues identified in discussion
+          between authors and arising from implementation and (a very
+          tiny) deployment.
       </t>
 
     </section>
