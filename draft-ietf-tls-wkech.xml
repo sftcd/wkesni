@@ -474,7 +474,7 @@ Client <----------->|                    | facing
       <dt>priority:</dt>
       <dd>The value is a positive integer corresponding to the
       SvcPriority.  If omitted, the ZF SHOULD use the SvcPriority from
-      the previous element of the endpoints array (or 1 for the first element).
+      the previous element of the endpoints array (or one for the first element).
 	  </dd>
       <dt>params:</dt>
       <dd>A JSON Dictionary representing the SVCB SvcParams.  Each
