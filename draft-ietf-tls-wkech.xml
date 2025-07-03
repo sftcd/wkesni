@@ -644,7 +644,7 @@ Client <----------->|                    | facing
             over a DNS name, e.g. when using the ACME protocol
             <xref target="RFC8555"/> with the HTTP-01 challenge type. A
             temporary breach of a backend server that allows the attacker to
-            contol the JSON content described here could be used to bootsrap
+            contol the JSON content described here could be used to bootstrap
             more long-lasting control over the backend's DNS name if the
             attacker were to request new certificates during the time when
             the attacker's chosen values were published in the DNS, and if
@@ -685,6 +685,20 @@ Client <----------->|                    | facing
             can make use of the ipv4hints and/or ipv6hint values, or the
             ZF has out of band information about the different addresses
             at which backend.example.com can be accessed.
+        </t>
+
+        <t>
+            This protocol requires the ZF to detect when a change to the
+            JSON value warrants a related change in the published HTTPS
+            RRs. If a ZF makes this determination based on the currently
+            published RRs (not unreasonable if the ZF is co-located with
+            the authoritative resolver DB), then ZF implementers need to
+            separately handle changes to the regeninterval, which is not
+            directly represented in the DNS. Future specifications
+            for JSON params and related SvcParams could also have
+            similar properties (where the latter is derived from,
+            but not the same as, the former), could create similar
+            issues.
         </t>
 
     </section>
