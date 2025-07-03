@@ -473,9 +473,9 @@ Client <----------->|                    | facing
       </dd>
       <dt>priority:</dt>
       <dd>The value is a positive integer corresponding to the
-	  SvcPriority.  If omitted, the ZF MAY infer
-	  numerically increasing SvcPriority from the order of the
-	  endpoints array.</dd>
+      SvcPriority.  If omitted, the ZF SHOULD use the SvcPriority from
+      the previous element of the endpoints array (or 1 for the first element).
+	  </dd>
       <dt>params:</dt>
       <dd>A JSON Dictionary representing the SVCB SvcParams.  Each
 	  key in the dictionary is a string containing a registered
