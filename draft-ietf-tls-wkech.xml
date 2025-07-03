@@ -420,8 +420,7 @@ Client <----------->|                    | facing
         The "endpoints" key is an array of objects.
     <ul>
       <li>
-	  An empty endpoints array means that all HTTPS records that the
-	  ZF has published for the origin should be deleted.
+	  An empty endpoints array MUST be treated as an error.
 	</li>
       <li>
 	  An endpoints array with one element can be one of
