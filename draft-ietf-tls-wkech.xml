@@ -630,8 +630,9 @@ Client <----------->|                    | facing
         <t>
             If a ZF is also authoritative for the CAA RR <xref target="RFC8659"/>
             for a CFS, then, as part of verifying the origin of the .well-known JSON,
-            that ZF is in a position to verify that the CA that issues the CFS
-            TLS server certificate is one of the expected set.
+            that ZF is in a position to evaluate whether the CA that issues the CFS
+            TLS server certificate was authorized to do so at the time of issuance.
+            A check of this kind can reduce exposure to attacks by an untrustworthy CA.
         </t>
 
         <t>
