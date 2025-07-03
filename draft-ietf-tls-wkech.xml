@@ -472,9 +472,9 @@ Client <----------->|                    | facing
       </dd>
       <dt>priority:</dt>
       <dd>The value is a positive integer corresponding to the
-	  SvcPriority.  If omitted, the ZF MAY infer
-	  numerically increasing SvcPriority from the order of the
-	  endpoints array.</dd>
+      SvcPriority.  If omitted, the ZF SHOULD use the SvcPriority from
+      the previous element of the endpoints array (or one for the first element).
+	  </dd>
       <dt>params:</dt>
       <dd>A JSON Dictionary representing the SVCB SvcParams.  Each
 	  key in the dictionary is a string containing a registered
@@ -531,6 +531,12 @@ Client <----------->|                    | facing
     </li>
 </ul>
 </t>
+
+        <t>
+            If the origin makes use of intermediaries, it is the origin's
+            responsibility to ensure that the origin-svcb JSON document
+            correctly accounts for their current configuration.
+        </t>
 
     <t>
         Note that there are multiple, and possibly confusing, port numbers
@@ -627,6 +633,14 @@ Client <----------->|                    | facing
         </t>
 
         <t>
+            If a ZF is also authoritative for the CAA RR <xref target="RFC8659"/>
+            for a CFS, then, as part of verifying the origin of the .well-known JSON,
+            that ZF is in a position to evaluate whether the CA that issues the CFS
+            TLS server certificate was authorized to do so at the time of issuance.
+            A check of this kind can reduce exposure to attacks by an untrustworthy CA.
+        </t>
+
+        <t>
             ECH split-mode security also requires that the backend server
             acquire SvcParamKey values from the client-facing server via some
             authenticated means. If the backend server acquires the JSON
@@ -643,7 +657,7 @@ Client <----------->|                    | facing
             over a DNS name, e.g. when using the ACME protocol
             <xref target="RFC8555"/> with the HTTP-01 challenge type. A
             temporary breach of a backend server that allows the attacker to
-            contol the JSON content described here could be used to bootsrap
+            contol the JSON content described here could be used to bootstrap
             more long-lasting control over the backend's DNS name if the
             attacker were to request new certificates during the time when
             the attacker's chosen values were published in the DNS, and if
@@ -690,6 +704,19 @@ Client <----------->|                    | facing
             This document doesn't specify how origins are added to the list used
             by a ZF, nor how those are deleted, nor does it specify how a CFS
             might signal to a ZF that it wishes all HTTPS RRs to be deleted.
+      </t>
+
+      <t>
+            To reduce the frequency of DNS zone updates, ZF implementations
+            MAY defer any DNS updates until they detect a
+            change to the JSON value.  Changes can be detected
+            using HTTP cache headers, comparison of normalized JSON or
+            internal data structures to a cached copy, or comparison of the
+            generated DNS records (including TTLs) with those currently
+            published in the zone.  If DNS records are retrieved for this purpose
+            using a DNS query, it MUST use an authenticated secure transport
+            directly to the authoritative server, in order to ensure integrity of
+            the returned TTL value.
         </t>
 
     </section>
@@ -773,6 +800,7 @@ Client <----------->|                    | facing
 
     <references title="Informative References">
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8555.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8659.xml"/>
       <reference anchor="ISOMORPHIC-DECODE"
                    target="https://infra.spec.whatwg.org/#isomorphic-decode">
           <front>
