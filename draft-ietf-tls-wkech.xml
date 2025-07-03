@@ -628,6 +628,13 @@ Client <----------->|                    | facing
         </t>
 
         <t>
+            If a ZF is also authoritative for the CAA RR <xref target="RFC8659"/>
+            for a CFS, then, as part of verifying the origin of the .well-known JSON,
+            such a ZF is in a position to verify that the CA that issues the CFS
+            TLS server certificate is one of the expected set.
+        </t>
+
+        <t>
             ECH split-mode security also requires that the backend server
             acquire SvcParamKey values from the client-facing server via some
             authenticated means. If the backend server acquires the JSON
@@ -768,6 +775,7 @@ Client <----------->|                    | facing
 
     <references title="Informative References">
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8555.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8659.xml"/>
       <reference anchor="ISOMORPHIC-DECODE"
                    target="https://infra.spec.whatwg.org/#isomorphic-decode">
           <front>
