@@ -420,8 +420,7 @@ Client <----------->|                    | facing
         The "endpoints" key is an array of objects.
     <ul>
       <li>
-	  An empty endpoints array means that all HTTPS records that the
-	  ZF has published for the origin should be deleted.
+	  An empty endpoints array MUST be treated as an error.
 	</li>
       <li>
 	  An endpoints array with one element can be one of
@@ -702,6 +701,12 @@ Client <----------->|                    | facing
         </t>
 
         <t>
+            This document doesn't specify how origins are added to the list used
+            by a ZF, nor how those are deleted, nor does it specify how a CFS
+            might signal to a ZF that it wishes all HTTPS RRs to be deleted.
+      </t>
+
+      <t>
             To reduce the frequency of DNS zone updates, ZF implementations
             MAY defer any DNS updates until they detect a
             change to the JSON value.  Changes can be detected
