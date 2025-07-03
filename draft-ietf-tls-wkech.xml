@@ -688,17 +688,16 @@ Client <----------->|                    | facing
         </t>
 
         <t>
-            This protocol requires the ZF to detect when a change to the
-            JSON value warrants a related change in the published HTTPS
-            RRs. If a ZF makes this determination based on the currently
-            published RRs (not unreasonable if the ZF is co-located with
-            the authoritative resolver DB), then ZF implementers need to
-            separately handle changes to the regeninterval, which is not
-            directly represented in the DNS. Future specifications
-            for JSON params and related SvcParams could also have
-            similar properties (where the latter is derived from,
-            but not the same as, the former), could create similar
-            issues.
+            To reduce the frequency of DNS zone updates, ZF implementations
+            MAY defer any DNS updates until they detect a
+            change to the JSON value.  Changes can be detected
+            using HTTP cache headers, comparison of normalized JSON or
+            internal data structures to a cached copy, or comparison of the
+            generated DNS records (including TTLs) with those currently
+            published in the zone.  If DNS records are retrieved for this purpose
+            using a DNS query, it MUST use an authenticated secure transport
+            directly to the authoritative server, in order to ensure integrity of
+            the returned TTL value.
         </t>
 
     </section>
