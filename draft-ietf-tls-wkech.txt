@@ -142,7 +142,7 @@ Internet-Draft           Well-Known URI for SVCB               July 2025
 
    If ECH is being operated in split-mode then the web server (backend)
    can similarly poll the ECH client-facing server at the well-known URI
-   and then create it's own value to publish for the ZF to read.  ECH
+   and then create its own value to publish for the ZF to read.  ECH
    split-mode is defined in [I-D.ietf-tls-esni] and an example is
    provided below (Section 3).
 
@@ -158,10 +158,10 @@ Internet-Draft           Well-Known URI for SVCB               July 2025
 
    Zone factory (ZF):  an entity that has write-access to the DNS
 
-   Client-Facing Server:  the web server that has an ECH private value.
-      This processes the outer ClientHello and attempts ECH decryption.
-      The name of client-facing server will typically be the public_name
-      value used in an ECHConfig.
+   Client-Facing Server (CFS):  the web server that has an ECH private
+      value.  This processes the outer ClientHello and attempts ECH
+      decryption.  The name of client-facing server will typically be
+      the public_name value used in an ECHConfig.
 
 
 
@@ -318,8 +318,8 @@ Internet-Draft           Well-Known URI for SVCB               July 2025
    In this topology, the overall process is as in the previous section,
    but with the following differences:
 
-   1.  The client-facing server (CFS) is a load-balancer and only does
-       ECH decryption.  The load-balancer is called cfs.lb.example.
+   1.  The CFS is a load-balancer and only does ECH decryption.  The
+       load-balancer is called cfs.lb.example.
 
    2.  Traffic between the CFS and backend is protected using some kind
        of VPN.
@@ -372,7 +372,7 @@ Internet-Draft           Well-Known URI for SVCB               July 2025
    origin-scvb when considering modifications to the HTTPS/SVCB records
    for _8443._https.example.com.  As a consequence, a ZF will need to be
    configured to periodically refresh the JSON resource for each origin
-   separately, that is, a ZF cannot "discover" from port 443 that some
+   separately; that is, a ZF cannot "discover" from port 443 that some
    other service, for which the ZF is expected to update the DNS, is
    also present on another port on the same host.
 

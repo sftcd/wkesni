@@ -117,7 +117,7 @@
         <t>
             If ECH is being operated in split-mode then the web server (backend)
             can similarly poll the ECH client-facing server at the
-            well-known URI and then create it's own value to publish
+            well-known URI and then create its own value to publish
             for the ZF to read. ECH split-mode is defined in
 	    <xref target="I-D.ietf-tls-esni"/> and an example is provided
 	    <xref target="examples">below</xref>.
@@ -136,7 +136,7 @@
     <dl>
       <dt>Zone factory (ZF):</dt>
       <dd>an entity that has write-access to the DNS</dd>
-      <dt>Client-Facing Server:</dt>
+      <dt>Client-Facing Server (CFS):</dt>
       <dd>the web server that has an ECH private value. This
 	processes the outer ClientHello and attempts ECH decryption.
 	The name of client-facing server will typically be the public_name value used in an
@@ -279,7 +279,7 @@ Client <----------->|                    | facing
     but with the following differences:
     <ol>
         <li>
-            The client-facing server (CFS) is a load-balancer and
+            The CFS is a load-balancer and
             only does ECH decryption. The load-balancer is
             called cfs.lb.example.
         </li>
@@ -349,7 +349,7 @@ Client <----------->|                    | facing
                 _8443._https.example.com.
                 As a consequence, a ZF will need to be configured to
                 periodically refresh the JSON resource for each origin
-                separately, that is, a ZF cannot "discover" from port
+                separately; that is, a ZF cannot "discover" from port
                 443 that some other service, for which the ZF is
                 expected to update the DNS, is also present on another
                 port on the same host.
