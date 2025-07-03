@@ -533,6 +533,12 @@ Client <----------->|                    | facing
 </ul>
 </t>
 
+        <t>
+            If the origin makes use of intermediaries, it is the origin's
+            responsibility to ensure that the origin-svcb JSON document
+            correctly accounts for their current configuration.
+        </t>
+
     <t>
         Note that there are multiple, and possibly confusing, port numbers
         involved here. The port that is part of the web origin in the 
