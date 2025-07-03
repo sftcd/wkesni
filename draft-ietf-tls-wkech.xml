@@ -658,7 +658,7 @@ Client <----------->|                    | facing
             over a DNS name, e.g. when using the ACME protocol
             <xref target="RFC8555"/> with the HTTP-01 challenge type. A
             temporary breach of a backend server that allows the attacker to
-            contol the JSON content described here could be used to bootsrap
+            contol the JSON content described here could be used to bootstrap
             more long-lasting control over the backend's DNS name if the
             attacker were to request new certificates during the time when
             the attacker's chosen values were published in the DNS, and if
@@ -699,6 +699,19 @@ Client <----------->|                    | facing
             can make use of the ipv4hints and/or ipv6hint values, or the
             ZF has out of band information about the different addresses
             at which backend.example.com can be accessed.
+        </t>
+
+        <t>
+            To reduce the frequency of DNS zone updates, ZF implementations
+            MAY defer any DNS updates until they detect a
+            change to the JSON value.  Changes can be detected
+            using HTTP cache headers, comparison of normalized JSON or
+            internal data structures to a cached copy, or comparison of the
+            generated DNS records (including TTLs) with those currently
+            published in the zone.  If DNS records are retrieved for this purpose
+            using a DNS query, it MUST use an authenticated secure transport
+            directly to the authoritative server, in order to ensure integrity of
+            the returned TTL value.
         </t>
 
     </section>
