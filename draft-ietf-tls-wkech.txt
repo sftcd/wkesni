@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: 7 February 2026                             Akamai Technologies
+Expires: 12 February 2026                            Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                           6 August 2025
+                                                          11 August 2025
 
 
            A well-known URI for publishing service parameters
@@ -19,14 +19,13 @@ Abstract
    We define a well-known URI at which an HTTP origin can inform an
    authoritative DNS server, or other interested parties, about its
    Service Bindings.  Service binding data can include Encrypted
-   ClientHello (ECH) configurations, that may change frequently,
-   allowing the origin, in collaboration with DNS infrastructure
-   elements, to publish and rotate its own ECH keys.  Other service
-   bindng data such as information about TLS supported groups is
-   unlikely to change quickly, but the origin is much more likely to be
-   authoritative when changes do occur.  Sevice data published via this
-   mechanism is typically available via an HTTPS or SVCB resource
-   record.
+   ClientHello (ECH) configurations, that may change frequently.  This
+   allows the origin, in collaboration with DNS infrastructure elements,
+   to publish and rotate its own ECH keys.  Other service bindng data
+   such as information about TLS supported groups is unlikely to change
+   quickly, but the origin is much more likely to be authoritative when
+   changes do occur.  Sevice data published via this mechanism is
+   typically available via an HTTPS or SVCB resource record.
 
 Note
 
@@ -50,15 +49,14 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
+   This Internet-Draft will expire on 12 February 2026.
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 1]
+Farrell, et al.         Expires 12 February 2026                [Page 1]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
-
-   This Internet-Draft will expire on 7 February 2026.
 
 Copyright Notice
 
@@ -106,15 +104,15 @@ Table of Contents
    could benefit from the mechanism defined here.  Note that this
    protocol is not intended for universal deployment, but rather for
    cases where the origin doesn't have write access to the relevant zone
+   file (or equivalent).
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 2]
+
+Farrell, et al.         Expires 12 February 2026                [Page 2]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
-
-   file (or equivalent).
 
    Encrypted ClientHello (ECH) [I-D.ietf-tls-esni] for TLS1.3 [RFC8446]
    defines a confidentiality mechanism for server names and other
@@ -163,14 +161,15 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
       decryption.  The name of client-facing server will typically be
       the public_name value used in an ECHConfig.
 
+   Backend:  the web server that will process the inner ClientHello.
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 3]
+
+Farrell, et al.         Expires 12 February 2026                [Page 3]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
-   Backend:  the web server that will process the inner ClientHello.
       Note that even if client-facing server and backend are on the same
       web server, they almost certainly have different DNS names.
 
@@ -221,7 +220,8 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 4]
+
+Farrell, et al.         Expires 12 February 2026                [Page 4]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -277,7 +277,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 5]
+Farrell, et al.         Expires 12 February 2026                [Page 5]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -333,7 +333,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 6]
+Farrell, et al.         Expires 12 February 2026                [Page 6]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -364,7 +364,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
    the ZF can verify the correct backend is being accessed.
 
    If new service binding data fails to validate (as per Section 6),
-   then the zone factory MUST NOT modify the zone.
+   then the ZF factory MUST NOT modify the zone.
 
    If the origin desires some particular service binding data be
    included in an HTTPS or SVCB resource record, then it MUST include
@@ -389,7 +389,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 7]
+Farrell, et al.         Expires 12 February 2026                [Page 7]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -426,7 +426,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
    The "regeninterval" must be a positive integer and specifies the
    number of seconds between e.g.  ECH key generation actions at the
-   origin, that is, a replacement ECHConfigList may be generated this
+   origin; that is, a replacement ECHConfigList may be generated this
    often.  This is used to determine when to next poll the origin for
    updates, and MAY be used by the ZF to generate DNS TTL values, for
    example with a TTL that is half of the regeninterval.
@@ -445,7 +445,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 8]
+Farrell, et al.         Expires 12 February 2026                [Page 8]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -501,7 +501,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026                [Page 9]
+Farrell, et al.         Expires 12 February 2026                [Page 9]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -557,7 +557,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 10]
+Farrell, et al.         Expires 12 February 2026               [Page 10]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -613,7 +613,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 11]
+Farrell, et al.         Expires 12 February 2026               [Page 11]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -669,7 +669,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 12]
+Farrell, et al.         Expires 12 February 2026               [Page 12]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -691,11 +691,10 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
    filesystem.  For example, a misconfiguration of this kind could
    expose the ECH private keys.
 
-   As described, in multi-CDN and simlar scenarios, a ZF might only test
-   ECH success against one of the CDNs unless the ZF can make use of the
-   ipv4hints and/or ipv6hint values, or the ZF has out of band
-   information about the different addresses at which
-   backend.example.com can be accessed.
+   In multi-CDN and simlar scenarios, a ZF might only test ECH success
+   against one of the CDNs unless the ZF can make use of the ipv4hints
+   and/or ipv6hint values, or the ZF has out of band information about
+   the different addresses at which backend.example.com can be accessed.
 
    This document doesn't specify how origins are added to the list used
    by a ZF, nor how those are deleted, nor does it specify how a CFS
@@ -725,7 +724,8 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 13]
+
+Farrell, et al.         Expires 12 February 2026               [Page 13]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -781,7 +781,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 14]
+Farrell, et al.         Expires 12 February 2026               [Page 14]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -837,7 +837,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 15]
+Farrell, et al.         Expires 12 February 2026               [Page 15]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -893,7 +893,7 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 16]
+Farrell, et al.         Expires 12 February 2026               [Page 16]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -949,7 +949,7 @@ Authors' Addresses
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 17]
+Farrell, et al.         Expires 12 February 2026               [Page 17]
 
 Internet-Draft           Well-Known URI for SVCB             August 2025
 
@@ -1005,4 +1005,4 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.          Expires 7 February 2026               [Page 18]
+Farrell, et al.         Expires 12 February 2026               [Page 18]
