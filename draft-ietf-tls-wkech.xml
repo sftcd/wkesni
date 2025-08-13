@@ -112,7 +112,7 @@
             We use the term "zone factory" (ZF) for the entity that does have write
             access to the zone file. We assume the ZF can also
             make secure HTTP requests to the origin to validate service binding
-            data that the origin has asked  to be published.
+            data that the origin has asked to be published.
             We define a well-known URI <xref target="RFC8615"/> on the origin server that
             allows the ZF to poll for changes to service binding data.
         </t>
