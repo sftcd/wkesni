@@ -59,7 +59,7 @@
             Other service bindng data such as information about TLS supported groups
             is unlikely to change quickly, but the origin is much more likely
             to have accurate information when changes do occur.
-            Sevice data published via this mechanism is typically available
+            Service data published via this mechanism is typically available
             via an HTTPS or SVCB resource record.
         </t>
       </abstract>
