@@ -125,7 +125,7 @@
             those work, and if they do, then update the zone file
             and re-publish the zone. If ECH is being operated in
             split-mode then the web server (backend) can similarly
-            poll the ECH client-facing server at the well-known URI
+            poll via the ECH client-facing server at the well-known URI
             and then create its own value to publish for the ZF to
             read. ECH split-mode is defined in <xref target="I-D.ietf-tls-esni"/>
             and an example is provided <xref target="examples"> below</xref>.
