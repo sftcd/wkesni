@@ -76,8 +76,8 @@
 	<t>
 	    The <xref target="RFC9460">Service Bindings (SVCB) in DNS RFC</xref>
 	    defines how to handle information needed to make connections
-        to services by using a new DNS record set (RRset) that defines
-        the HTTPS and SVCB resource record types.
+        to services by using a new DNS record set (RRset) with
+        the HTTPS or SVCB resource record type.
         Many origins will have an API that can be used to
 	    dynamically update the DNS RRset to contain the current
 	    list of SVCB data.
