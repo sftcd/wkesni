@@ -345,7 +345,7 @@ Client <----------->|                    | facing
         </t>
 
         <t>
-            The well-known URI defined here MUST be an https URL and therefore the ZF
+            The well-known URI defined here MUST be an "https" URL and therefore the ZF
             can verify the correct backend is being accessed.
         </t>
 
