@@ -731,7 +731,7 @@ Client <----------->|                    | facing
 	</t>
 
         <t>
-            In multi-CDN and simlar scenarios, a ZF might
+            In multi-CDN and similar scenarios, a ZF might
             only test ECH success against one of the CDNs unless the ZF
             can make use of the ipv4hints and/or ipv6hint values, or the
             ZF has out of band information about the different addresses
