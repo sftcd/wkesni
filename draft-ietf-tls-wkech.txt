@@ -5,10 +5,10 @@
 TLS                                                           S. Farrell
 Internet-Draft                                    Trinity College Dublin
 Intended status: Experimental                                    R. Salz
-Expires: 3 March 2026                                Akamai Technologies
+Expires: 5 March 2026                                Akamai Technologies
                                                              B. Schwartz
                                                     Meta Platforms, Inc.
-                                                          30 August 2025
+                                                        1 September 2025
 
 
            A well-known URI for publishing service parameters
@@ -53,12 +53,12 @@ Status of This Memo
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 1]
+Farrell, et al.           Expires 5 March 2026                  [Page 1]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
-   This Internet-Draft will expire on 3 March 2026.
+   This Internet-Draft will expire on 5 March 2026.
 
 Copyright Notice
 
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 2]
+Farrell, et al.           Expires 5 March 2026                  [Page 2]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    TLS server to the DNS zone.
@@ -165,9 +165,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 3]
+Farrell, et al.           Expires 5 March 2026                  [Page 3]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
       value.  This processes the outer ClientHello and attempts ECH
@@ -221,9 +221,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 4]
+Farrell, et al.           Expires 5 March 2026                  [Page 4]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
           Figure 1: Shared-Mode Topology with Zone Factory and DNS
@@ -277,9 +277,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 5]
+Farrell, et al.           Expires 5 March 2026                  [Page 5]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
                        +--------------------+
@@ -333,9 +333,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 6]
+Farrell, et al.           Expires 5 March 2026                  [Page 6]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    5.  backend.example.com wants to acquire the ECH config information
@@ -389,9 +389,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 7]
+Farrell, et al.           Expires 5 March 2026                  [Page 7]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    {
@@ -445,9 +445,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 8]
+Farrell, et al.           Expires 5 March 2026                  [Page 8]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    The "endpoints" key is an array of objects.
@@ -501,9 +501,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                  [Page 9]
+Farrell, et al.           Expires 5 March 2026                  [Page 9]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
       in the dictionary is a string containing a registered SvcParamKey
@@ -557,9 +557,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 10]
+Farrell, et al.           Expires 5 March 2026                 [Page 10]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    Note that there are multiple, and possibly confusing, port numbers
@@ -613,9 +613,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 11]
+Farrell, et al.           Expires 5 March 2026                 [Page 11]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    A ZF SHOULD set a DNS TTL less than regeninterval, i.e. short enough
@@ -669,9 +669,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 12]
+Farrell, et al.           Expires 5 March 2026                 [Page 12]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    during the time when the attacker's chosen values were published in
@@ -725,9 +725,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 13]
+Farrell, et al.           Expires 5 March 2026                 [Page 13]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    Using this protocol, a ZF SHOULD only publish RRs for origins that
@@ -740,7 +740,8 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 8.  Acknowledgements
 
-   Thanks to Niall O'Reilly, Martin Thomson and David Black for reviews.
+   Thanks to David Adrian, David Benjamin, David Blacka Tim Chown, Niall
+   O'Reilly, Yakov Stein and Martin Thomson for reviews.
 
    Stephen Farrell's work on this specification was supported in part by
    the Open Technology Fund.
@@ -780,10 +781,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-
-Farrell, et al.           Expires 3 March 2026                 [Page 14]
+Farrell, et al.           Expires 5 March 2026                 [Page 14]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    Items in curly braces should be replaced with their actual values.
@@ -837,9 +837,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 15]
+Farrell, et al.           Expires 5 March 2026                 [Page 15]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    [RFC5280]  Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
@@ -893,9 +893,9 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 16]
+Farrell, et al.           Expires 5 March 2026                 [Page 16]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    [ISOMORPHIC-DECODE]
@@ -934,7 +934,7 @@ Appendix A.  Change Log
    deployment.
 
    Version 09 generalised the text some more in response to comments at
-   IETF-123 and resolved a few more issues.
+   IETF-123 and resolved a few more issues and updated the acks section.
 
 Authors' Addresses
 
@@ -949,9 +949,9 @@ Authors' Addresses
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 17]
+Farrell, et al.           Expires 5 March 2026                 [Page 17]
 
-Internet-Draft           Well-Known URI for SVCB             August 2025
+Internet-Draft           Well-Known URI for SVCB          September 2025
 
 
    Rich Salz
@@ -1005,4 +1005,4 @@ Internet-Draft           Well-Known URI for SVCB             August 2025
 
 
 
-Farrell, et al.           Expires 3 March 2026                 [Page 18]
+Farrell, et al.           Expires 5 March 2026                 [Page 18]

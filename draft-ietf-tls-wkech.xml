@@ -780,7 +780,16 @@ Client <----------->|                    | facing
     </section>
 
     <section title="Acknowledgements">
-        <t>Thanks to Niall O'Reilly, Martin Thomson and David Black for reviews.</t>
+        <t>Thanks to
+            David Adrian,
+            David Benjamin,
+            David Blacka
+            Tim Chown,
+            Niall O'Reilly,
+            Yakov Stein
+            and
+            Martin Thomson
+            for reviews.</t>
         <t>Stephen Farrell's work on this specification was supported in part by
             the Open Technology Fund.</t>
     </section>
@@ -918,7 +927,8 @@ Client <----------->|                    | facing
 
       <t>
           Version 09 generalised the text some more in response to
-          comments at IETF-123 and resolved a few more issues.
+          comments at IETF-123 and resolved a few more issues and
+          updated the acks section.
       </t>
 
     </section>
