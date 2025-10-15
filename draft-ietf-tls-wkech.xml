@@ -91,7 +91,7 @@
             Encrypted ClientHello (ECH) <xref target="I-D.ietf-tls-esni"/>
             for TLS1.3 <xref target="RFC8446"/>
             defines a confidentiality mechanism for server names and other
-            ClientHello content in TLS, and there is a well-defined way 
+            ClientHello content in TLS, and there is a well-defined way
             <xref target="I-D.ietf-tls-svcb-ech"/>
             to include Encrypted Client Hello (ECH) configuration
             information (ECHConfigList values) in HTTPS or SVCB RRsets.
@@ -357,7 +357,7 @@ Client <----------->|                    | facing
 
         <t>
             If the origin desires some particular service binding data be
-            included in an HTTPS or SVCB resource record, then it MUST 
+            included in an HTTPS or SVCB resource record, then it MUST
             include the relevant value(s) in the JSON resource published
             at the well-known URI. A ZF may seperately be configured to
             add additional information to the published resource records
@@ -500,7 +500,7 @@ Client <----------->|                    | facing
       The default value is the empty string (""), corresponding to
       a TargetName of ".". To avoid complex conversion logic, the characters
       in this value MUST be limited to lower ASCII letters, digits,
-      "-", "_", and "." (ALPHA / DIGIT / "-" / "_" / "." in 
+      "-", "_", and "." (ALPHA / DIGIT / "-" / "_" / "." in
       <xref target="RFC5234">ABNF</xref>).
       These are the characters used in preferred name syntax <xref target="RFC1034"/> and
       underscore labels.
@@ -582,7 +582,7 @@ Client <----------->|                    | facing
 
     <t>
         Note that there are multiple, and possibly confusing, port numbers
-        involved here. The port that is part of the web origin in the 
+        involved here. The port that is part of the web origin in the
         .well-known URL is part of the QNAME that will be used by clients
         in accessing the origin's HTTPS/SVCB resource records. The "port"
         field in the RR value, and in the JSON structure, is the value
@@ -593,7 +593,46 @@ Client <----------->|                    | facing
 </section>
 
 <section anchor="zfbehave" title="Zone Factory behaviour">
+  <t>
+    The behaviours of the zone factory can be divided into two categories:
+    behaviors that occur once, when configuring the zone factory to use a
+    JSON document, and synchronization behaviors that occur on an ongoing
+    basis after configuration is complete.
+  </t>
+  <section title="Configuration behaviours">
+    <t>
+      In its default configuration, the zone factory SHOULD NOT perform
+      record synthesis from any origin-svcb JSON documents.  Activating
+      record synthesis SHOULD require a configuration change by the operator.
+      This avoids surprising additions of records to the DNS zone.
+    </t>
+    <t>
+      A zone factory MAY offer a configuration option (off by default) to
+      detect A and AAAA records in the DNS zone that correspond to HTTP
+      origins with a well-known JSON resource, and automatically synthesize
+      HTTPS records for all such origins.  This procedure can work when the
+      A or AAAA records' owner name is sufficient to generate the correct
+      "https://" URL for the well-known JSON resource.  Note that this
+      mechanism is limited to "https://" origins with a port number of 443.
+    </t>
+    <t>
+      To generate specific HTTPS records, a zone factory MAY offer a
+      configuration option to specify a list of secure HTTP origins.  The
+      zone factory can use these origins to produce well-known URIs (to
+      retrieve the origin-svcb JSON resource) and port-prefixed owner names
+      (for the generated HTTPS records).
+    </t>
+    <t>
+      To generate records with arbitrary SVCB-compatible record types, a zone
+      factory MAY allow the operator to configure the full owner name and
+      record type of the records to be generated, and the full URL or local
+      filesystem path of an origin-svcb resource.  A full URL is required
+      because there is not, in general, an HTTP origin that is intrinsically
+      authorized to control the content of a SVCB-compatible DNS record.
+    </t>
+  </section>
 
+  <section title="Ongoing synchronization behaviours">
     <t>
 	If the ZF is unable to convert the JSON into a DNS zone fragment (e.g., due
 	to an unrecognized SvcParamKey), or if the resulting zone fails
@@ -647,6 +686,7 @@ Client <----------->|                    | facing
         are not used longer than intended by backend.
     </t>
 
+  </section>
 </section>
 
 
