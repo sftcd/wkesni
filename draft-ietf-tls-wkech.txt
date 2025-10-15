@@ -859,7 +859,7 @@ Internet-Draft           Well-Known URI for SVCB            October 2025
 
 8.  Acknowledgements
 
-   Thanks to David Adrian, David Benjamin, David Blacka Tim Chown, Ted
+   Thanks to David Adrian, David Benjamin, David Blacka, Tim Chown, Ted
    Hardie, Watson Ladd, Niall O'Reilly, Yaakov Stein and Martin Thomson
    for reviews.
 
