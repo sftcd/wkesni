@@ -8,7 +8,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-09"
+<rfc category="exp" docName="draft-ietf-tls-wkech-10"
   ipr="trust200902" submissionType="IETF" xmlns:xi="http://www.w3.org/2001/XInclude">
   <front>
     <title abbrev="Well-Known URI for SVCB">A well-known URI for publishing service parameters</title>
@@ -54,10 +54,10 @@
             inform an authoritative DNS server, or other interested parties,
             about its Service Bindings.
             Service binding data can include Encrypted ClientHello (ECH)
-            configurations, that may change frequently. This allows the origin, in collaboration with DNS
+            configurations, that may change frequently. This allows the HTTP origin, in collaboration with DNS
             infrastructure elements, to publish and rotate its own ECH keys.
-            Other service bindng data such as information about TLS supported groups
-            is unlikely to change quickly, but the origin is much more likely
+            Other service binding data such as information about TLS supported groups
+            is unlikely to change quickly, but the HTTP origin is much more likely
             to have accurate information when changes do occur.
             Service data published via this mechanism is typically available
             via an HTTPS or SVCB resource record.
@@ -78,7 +78,7 @@
 	    defines how to handle information needed to make connections
         to services by using a new DNS record set (RRset) with
         the HTTPS or SVCB resource record type.
-        Many origins are managed by proprietary systems that enable coordinated
+        Many HTTP origins are managed by proprietary systems that enable coordinated
         control of the TLS server configuration and the DNS zone file contents.
         For example, a single configuration source might be used to set the ECH
         keys for TLS and populate the DNS zone file.
@@ -106,12 +106,16 @@
             motivating example, but the mechanism defined here
             can be used to deliver other kinds of
             service information about the origin, intended to be published
-            in HTTPS or SVCB RRs.
+            in HTTPS or SVCB RRs. Other use cases, such as the
+            TLS preferred groups service parameter defined in
+            <xref target="I-D.ietf-tls-key-share-prediction"/>, can also
+            be supported via this mechanism.
         </t>
 
         <t>
-            We use the term "zone factory" (ZF) for the entity that does have write
-            access to the zone file. We assume the ZF can also
+            We use the term "zone factory" (ZF) for an entity which can validate
+            service binding data and that has write access to the zone file.
+            We assume the ZF can also
             make secure HTTP requests to the origin to validate service binding
             data that the origin has asked to be published.
             We define a well-known URI <xref target="RFC8615"/> on the origin server that
@@ -238,6 +242,33 @@ Client <----------->|                    | facing
             refresh its cached copy of the JSON resource. If the resource has
             changed, it repeats this process.
         </t>
+
+        <t>
+            The JSON file produced in this example might be as shown in
+            <xref target="jsoneg"/>, and the resulting HTTPS RR might then 
+            be as shown in <xref target="httpsrr"/>.
+            (New-lines are added for presentation.)
+        </t>
+
+<figure title="Shared-Mode JSON Example" anchor="jsoneg"><artwork><![CDATA[
+{
+ "regeninterval" : 3600,
+ "endpoints" : [ {
+    "priority" : 1,
+    "params" : {
+      "ech" : "AEL+DQA+ogAgACDzFvDxhHtneEqwlof1omyso8XXzskgR5w\
+               wuDxe3EweawAEAAEAAQAPY2ZzLmV4YW1wbGUuY29tAAA="
+    }
+ }]
+}
+]]></artwork></figure>
+
+
+<figure title="Shared-Mode HTTPS RR" anchor="httpsrr"><artwork><![CDATA[
+    $ dig +short HTTPS backend.example.com
+    1 . ech=AEL+DQA+ogAgACDzFvDxhHtneEqwlof1omyso8XXzskgR5w\
+            wuDxe3EweawAEAAEAAQAPY2ZzLmV4YW1wbGUuY29tAAA=
+]]></artwork></figure>
 
         </section>
 
@@ -713,7 +744,9 @@ Client <----------->|                    | facing
             this scheme has the backend server authenticate
             the JSON structure that is mapped directly to the SVCB/HTTPS RR, to
             eventually be used by TLS clients when interacting with the backend
-            server, via the client-facing server.
+            server, via the client-facing server. Note that if an SVCB record is
+            being published to support access via some non-HTTP protocol, then
+            additional checks may be required.
         </t>
 
         <t>
@@ -823,10 +856,12 @@ Client <----------->|                    | facing
         <t>Thanks to
             David Adrian,
             David Benjamin,
-            David Blacka
+            David Blacka,
             Tim Chown,
+            Ted Hardie,
+            Watson Ladd,
             Niall O'Reilly,
-            Yakov Stein
+            Yaakov Stein
             and
             Martin Thomson
             for reviews.</t>
@@ -886,6 +921,11 @@ Client <----------->|                    | facing
 	  </tbody>
 	</table>
 
+    <t>
+        If additional entries are added to this table, then the relevant
+        RFC should update this one.
+    </t>
+
       </section>
 
     </section>
@@ -903,6 +943,7 @@ Client <----------->|                    | facing
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.9460.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-key-share-prediction"/>
     </references>
 
     <references title="Informative References">
