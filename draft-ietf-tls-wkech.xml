@@ -8,7 +8,7 @@
 <?rfc rfcedstyle="yes"?>
 <?rfc comments="yes"?>
 <?rfc inline="yes"?>
-<rfc category="exp" docName="draft-ietf-tls-wkech-11"
+<rfc category="exp" docName="draft-ietf-tls-wkech-12"
   ipr="trust200902" submissionType="IETF" xmlns:xi="http://www.w3.org/2001/XInclude">
   <front>
     <title abbrev="Well-Known URI for SVCB">A well-known URI for publishing service parameters</title>
@@ -42,7 +42,7 @@
       </address>
     </author>
 
-    <date year="2025"/>
+    <date year="2026"/>
     <area>Security Area</area>
     <workgroup>TLS</workgroup>
     <keyword>TLS</keyword>
@@ -88,11 +88,11 @@
         </t>
 
         <t>
-            Encrypted ClientHello (ECH) <xref target="I-D.ietf-tls-esni"/>
+            Encrypted ClientHello (ECH) <xref target="RFC9849"/>
             for TLS1.3 <xref target="RFC8446"/>
             defines a confidentiality mechanism for server names and other
             ClientHello content in TLS, and there is a well-defined way
-            <xref target="I-D.ietf-tls-svcb-ech"/>
+            <xref target="RFC9848"/>
             to include Encrypted Client Hello (ECH) configuration
             information (ECHConfigList values) in HTTPS or SVCB RRsets.
             Each ECHConfigList value contains a list of the public components of
@@ -132,7 +132,7 @@
             split-mode then the web server (backend) can similarly
             poll via the ECH client-facing server at the well-known URI
             and then create its own value to publish for the ZF to
-            read. ECH split-mode is defined in <xref target="I-D.ietf-tls-esni"/>
+            read. ECH split-mode is defined in <xref target="RFC9849"/>
             and an example is provided <xref target="examples"> below</xref>.
         </t>
 
@@ -697,7 +697,7 @@ Client <----------->|                    | facing
         Note that the ECHConfigList could contain some ECHConfig
         values that work and some that deliberately do not work if,
         for example, the TLS server wishes to GREASE it's ECHConfigList
-        according to <xref target="I-D.ietf-tls-esni"/> section 6.2.2.
+        according to <xref target="RFC9849"/> section 6.2.2.
     </t>
 
    <t>If ipv4hints or ipv6hints are present, and if those are not
@@ -941,8 +941,8 @@ Client <----------->|                    | facing
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8446.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8615.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.9460.xml"/>
-      <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-esni.xml"/>
-      <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-svcb-ech.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.9848.xml"/>
+      <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.9849.xml"/>
       <xi:include href="https://bib.ietf.org/public/rfc/bibxml3/reference.I-D.ietf-tls-key-share-prediction"/>
     </references>
 
@@ -1010,6 +1010,10 @@ Client <----------->|                    | facing
           Version 09 generalised the text some more in response to
           comments at IETF-123 and resolved a few more issues and
           updated the acks section.
+      </t>
+
+      <t>
+          Versions 10 to 12 are mostly keep-alives and updating refs.
       </t>
 
     </section>
